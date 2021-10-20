@@ -51,9 +51,8 @@ storage_type = virtdisk.VIRTUAL_STORAGE_TYPE()
 
 ext = path.rsplit(".", 1)[1].lower()
 if ext == "iso":
-    read_only = True
     oparams.Version = OPEN_VIRTUAL_DISK_VERSION_1
-    acc_masc = VIRTUAL_DISK_ACCESS_READ
+    acc_mask = VIRTUAL_DISK_ACCESS_READ
     aflags = (
         ATTACH_VIRTUAL_DISK_FLAG_PERMANENT_LIFETIME
         | ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY
@@ -61,15 +60,14 @@ if ext == "iso":
 else:
     oparams.Version = OPEN_VIRTUAL_DISK_VERSION_2
     oparams.Version2.GetInfoOnly = False
-    acc_masc = VIRTUAL_DISK_ACCESS_NONE # change this
     aflags = ATTACH_VIRTUAL_DISK_FLAG_PERMANENT_LIFETIME
 
     # not tested -> CHANGE THIS
-    acc_masc = VIRTUAL_DISK_ACCESS_NONE
+    acc_mask = VIRTUAL_DISK_ACCESS_NONE
 
 
-hdl = virtdisk.OpenVirtualDisk(storage_type, path, acc_masc, oflags, oparams)
+hdl = virtdisk.OpenVirtualDisk(storage_type, path, acc_mask, oflags, oparams)
 if do_detach:
     virtdisk.DetachVirtualDisk(hdl)
 else:
-    virtdisk.AttachVirtualDisk(hdl, flags_ro if read_only else flags_rw)
+    virtdisk.AttachVirtualDisk(hdl, aflags)
