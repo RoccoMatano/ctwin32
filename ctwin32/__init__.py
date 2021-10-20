@@ -61,7 +61,7 @@ else:
 
 ################################################################################
 
-class GUID(_ct.c_ubyte * 16):
+class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
     def __init__(self, u=UUID(int=0)):
         # u is either GUID or uuid.UUID
         src = u if isinstance(u, GUID) else u.bytes_le
