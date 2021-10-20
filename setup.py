@@ -34,7 +34,7 @@ params = {
     "install_requires" : [],
     "author_email": empty,
     "platforms": ["win32"],
-    "url": empty,
+    "url": "https://github.com/RoccoMatano/ctwin32",
     "python_requires": ">=3.6",
     "classifiers": [
         "License :: OSI Approved :: MIT License",
