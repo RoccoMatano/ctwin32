@@ -25,6 +25,7 @@
 import ctypes as _ct
 import ctypes.wintypes as _wt
 from types import SimpleNamespace as _namespace
+from datetime import datetime as _dt
 
 from . import (
     _raise_if,
@@ -42,7 +43,11 @@ from . import (
     SC_ENUM_PROCESS_INFO,
     SC_STATUS_PROCESS_INFO,
     ERROR_MORE_DATA,
+    ERROR_HANDLE_EOF,
+    ERROR_INSUFFICIENT_BUFFER,
     CRED_TYPE_GENERIC,
+    EVENTLOG_SEQUENTIAL_READ,
+    EVENTLOG_BACKWARDS_READ,
     )
 from .kernel import LocalFree, GetLastError, FILETIME
 
@@ -967,5 +972,142 @@ def CredWrite(Credential, Flags=0):
         cred.Attributes = _ct.cast(attr, PCREDENTIAL_ATTRIBUTE)
 
     _raise_if(not _CredWrite(_ref(cred), Flags))
+
+################################################################################
+
+_OpenEventLog = _fun_fact(
+    _a32.OpenEventLogW, (_wt.HANDLE, _wt.LPCWSTR, _wt.LPCWSTR,)
+    )
+
+def OpenEventLog(server, source):
+    hdl = _OpenEventLog(server, source)
+    _raise_if(not hdl)
+    return hdl
+
+################################################################################
+
+_CloseEventLog = _fun_fact(_a32.CloseEventLog, (_wt.BOOL, _wt.HANDLE))
+
+def CloseEventLog(hdl):
+    _raise_if(not _CloseEventLog(hdl))
+
+################################################################################
+
+class EVENTLOGRECORD(_ct.Structure):
+    _fields_ = (
+        ("Length", _wt.DWORD),
+        ("Reserved", _wt.DWORD),
+        ("RecordNumber", _wt.DWORD),
+        ("TimeGenerated", _wt.DWORD),
+        ("TimeWritten", _wt.DWORD),
+        ("EventID", _wt.DWORD),
+        ("EventType", _wt.WORD),
+        ("NumStrings", _wt.WORD),
+        ("EventCategory", _wt.WORD),
+        ("ReservedFlags", _wt.WORD),
+        ("ClosingRecordNumber", _wt.DWORD),
+        ("StringOffset", _wt.DWORD),
+        ("UserSidLength", _wt.DWORD),
+        ("UserSidOffset", _wt.DWORD),
+        ("DataLength", _wt.DWORD),
+        ("DataOffset", _wt.DWORD),
+        #
+        # followed by:
+        #
+        # WCHAR SourceName[]
+        # WCHAR Computername[]
+        # SID   UserSid
+        # WCHAR Strings[]
+        # BYTE  Data[]
+        # CHAR  Pad[]
+        # DWORD Length;
+        )
+
+PEVENTLOGRECORD = _ct.POINTER(EVENTLOGRECORD)
+
+################################################################################
+
+def _evt_from_void_p(vpelr):
+    # vpelr is _ct.c_void_p for simpler address calculations
+    strins = []
+    elr = _ct.cast(vpelr, PEVENTLOGRECORD).contents
+    if elr.NumStrings:
+        stroffs = elr.StringOffset
+        for i in range(elr.NumStrings):
+            nxt = _ct.wstring_at(vpelr.value + stroffs)
+            stroffs += (len(nxt) + 1) * _ct.sizeof(_wt.WCHAR)
+            strins.append(nxt)
+    sid = ""
+    if elr.UserSidLength:
+        sid = ConvertSidToStringSid(
+            _ct.string_at(vpelr.value + elr.UserSidOffset)
+            )
+    data = _ct.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
+    p_str = vpelr.value + _ct.sizeof(EVENTLOGRECORD);
+    src_name = _ct.wstring_at(p_str)
+    p_str += (len(src_name) + 1) * _ct.sizeof(_wt.WCHAR)
+    computer_name = _ct.wstring_at(p_str)
+
+    return elr.Length, _namespace(
+        ClosingRecordNumber=elr.ClosingRecordNumber,
+        ComputerName=computer_name,
+        Data=data,
+        EventCategory=elr.EventCategory,
+        EventID=elr.EventID,
+        EventType=elr.EventType,
+        RecordNumber=elr.RecordNumber,
+        Reserved=elr.Reserved,
+        ReservedFlags=elr.ReservedFlags,
+        Sid=sid,
+        SourceName=src_name,
+        StringInserts=strins,
+        TimeGenerated=_dt.fromtimestamp(elr.TimeGenerated),
+        TimeWritten=_dt.fromtimestamp(elr.TimeWritten),
+        )
+
+################################################################################
+
+_ReadEventLog = _fun_fact(
+    _a32.ReadEventLogW, (
+        _wt.BOOL,
+        _wt.HANDLE,
+        _wt.DWORD,
+        _wt.DWORD,
+        _wt.LPVOID,
+        _wt.DWORD,
+        _wt.PDWORD,
+        _wt.PDWORD,
+        )
+    )
+
+def ReadEventLog(hdl, flags=None, offs=0, size=16384):
+    if flags is None:
+        flags = EVENTLOG_SEQUENTIAL_READ | EVENTLOG_BACKWARDS_READ
+    want = _wt.DWORD(size)
+    while True:
+        got = _wt.DWORD()
+        buf = _ct.create_string_buffer(want.value)
+        ok = _ReadEventLog(hdl, flags, offs, buf, want, _ref(got), _ref(want))
+        got = got.value
+        if not ok:
+            err = GetLastError()
+            if err == ERROR_HANDLE_EOF:
+                got = 0
+                break
+            elif err == ERROR_INSUFFICIENT_BUFFER:
+                continue
+            else:
+                raise _ct.WinError(err)
+        else:
+            break
+
+    res = []
+    offs = 0
+    while got > 0:
+        elen, evt = _evt_from_void_p(_wt.LPVOID(_ct.addressof(buf) + offs))
+        res.append(evt)
+        offs += elen
+        got -= elen
+    return res
 
 ################################################################################
