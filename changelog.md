@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
  - The functions OpenEventLog, CloseEventLog and ReadEventLog were added to
    advapi.
  - The sample uptime_evt.py demonstrates a way how these functions can be used.
+ - The module msi and the accompanying sample exbinmsi.py were added.
 
 ## [1.0.0]
 
