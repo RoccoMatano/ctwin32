@@ -29,10 +29,12 @@ from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
 
 from . import (
+    kernel,
     _fun_fact,
     UINT_PTR,
     LONG_PTR,
     ERROR_FILE_NOT_FOUND,
+    ERROR_NO_MORE_FILES,
     SystemProcessInformation,
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
@@ -48,6 +50,7 @@ def _ntstatus(status):
     return _wt.LONG(status).value
 
 STATUS_INFO_LENGTH_MISMATCH = _ntstatus(0xC0000004)
+STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
 STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 
 ################################################################################
@@ -74,6 +77,8 @@ class UNICODE_STRING(_ct.Structure):
         ("MaximumLength", _wt.WORD),
         ("Buffer", _wt.LPWSTR),
         )
+
+PUNICODE_STRING = _ct.POINTER(UNICODE_STRING)
 
 ################################################################################
 
@@ -416,5 +421,125 @@ def get_proc_ext_basic_info(proc_handle):
 
 def pid_from_handle(handle):
     return get_proc_ext_basic_info(handle).BasicInfo.UniqueProcessId
+
+################################################################################
+
+class _DUMMY_STATUS_UNION(_ct.Union):
+    _fields_ = (
+        ("Status", _wt.LONG),
+        ("Pointer", _wt.LPVOID),
+        )
+
+class IO_STATUS_BLOCK(_ct.Structure):
+    _anonymous_ = ("anon",)
+    _fields_ = (
+        ("anon", _DUMMY_STATUS_UNION),
+        ("Information", UINT_PTR),
+        )
+PIO_STATUS_BLOCK = _ct.POINTER(IO_STATUS_BLOCK)
+
+################################################################################
+
+class FILE_DIRECTORY_INFORMATION(_ct.Structure):
+    _fields_ = (
+    ("NextEntryOffset", _wt.ULONG),
+    ("FileIndex", _wt.ULONG),
+    ("CreationTime", _wt.LARGE_INTEGER),
+    ("LastAccessTime", _wt.LARGE_INTEGER),
+    ("LastWriteTime", _wt.LARGE_INTEGER),
+    ("ChangeTime", _wt.LARGE_INTEGER),
+    ("EndOfFile", _wt.LARGE_INTEGER),
+    ("AllocationSize", _wt.LARGE_INTEGER),
+    ("FileAttributes", _wt.ULONG),
+    ("FileNameLength", _wt.ULONG),
+    ("FileName", _wt.WCHAR * 1),
+    )
+PFILE_DIRECTORY_INFORMATION = _ct.POINTER(FILE_DIRECTORY_INFORMATION)
+
+################################################################################
+
+_NtQueryDirectoryFile = _fun_fact(
+    _nt.NtQueryDirectoryFile, (
+        _wt.LONG,
+        _wt.HANDLE,
+        _wt.HANDLE,
+        _wt.LPVOID, # PIO_APC_ROUTINE
+        _wt.LPVOID,
+        PIO_STATUS_BLOCK,
+        _wt.LPVOID,
+        _wt.ULONG,
+        _wt.INT,
+        _wt.BOOLEAN,
+        PUNICODE_STRING,
+        _wt.BOOLEAN,
+        )
+    )
+
+################################################################################
+
+def get_directory_info(hdir, restart_scan):
+    iosb = IO_STATUS_BLOCK()
+    bsize = 256
+    while True:
+        buf = _ct.create_string_buffer(bsize)
+        stat = _NtQueryDirectoryFile(
+            hdir,
+            None,
+            None,
+            None,
+            _ct.byref(iosb),
+            buf,
+            bsize,
+            1, # FileDirectoryInformation
+            False,
+            None,
+            restart_scan
+            )
+        too_short = (
+            stat == STATUS_BUFFER_OVERFLOW
+            or stat == STATUS_INFO_LENGTH_MISMATCH
+            )
+        if too_short:
+            bsize *= 2
+        else:
+            break
+    _raise_failed_status(stat)
+
+    pv = _ct.cast(_ct.addressof(buf), _wt.LPVOID)
+    dinfo = _ct.cast(_ct.addressof(buf), PFILE_DIRECTORY_INFORMATION).contents
+    name_addr = pv.value + FILE_DIRECTORY_INFORMATION.FileName.offset
+    name = _ct.wstring_at(name_addr, dinfo.FileNameLength // 2)
+
+    def la2dt(la):
+        return kernel.FileTimeToLocalSystemTime(
+            kernel.FILETIME(la)
+            ).to_datetime()
+
+    return _namespace(
+        FileIndex=dinfo.FileIndex,
+        CreationTime=la2dt(dinfo.CreationTime),
+        LastAccessTime=la2dt(dinfo.LastAccessTime),
+        LastWriteTime=la2dt(dinfo.LastWriteTime),
+        ChangeTime=la2dt(dinfo.ChangeTime),
+        EndOfFile=dinfo.EndOfFile,
+        AllocationSize=dinfo.AllocationSize,
+        FileAttributes=dinfo.FileAttributes,
+        FileName=name,
+        )
+
+################################################################################
+
+def enum_directory_info(hdir):
+    restart_scan = True
+    while True:
+        try:
+            info = get_directory_info(hdir, restart_scan)
+            restart_scan = False
+            yield info
+        except OSError as e:
+            if e.winerror == ERROR_NO_MORE_FILES:
+                break
+            else:
+                raise
 
 ################################################################################

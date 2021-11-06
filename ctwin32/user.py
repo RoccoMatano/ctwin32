@@ -351,7 +351,7 @@ class _DUMMY_INPUT_UNION(_ct.Union):
         ("mi", MOUSEINPUT),
         ("ki", KEYBDINPUT),
         ("hi", HARDWAREINPUT),
-    )
+        )
 
 class INPUT(_ct.Structure):
     _anonymous_ = ("anon",)
