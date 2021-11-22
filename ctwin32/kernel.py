@@ -31,7 +31,9 @@ from . import (
     _raise_if,
     _fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
-    INVALID_FILE_ATTRIBUTES
+    INVALID_FILE_ATTRIBUTES,
+    INVALID_HANDLE_VALUE,
+    ULONG_PTR,
     )
 
 _k32 = _ct.windll.kernel32
@@ -54,6 +56,168 @@ _CloseHandle = _fun_fact(_k32.CloseHandle, (_wt.BOOL, _wt.HANDLE))
 
 def CloseHandle(handle):
     _raise_if(not _CloseHandle(handle))
+
+################################################################################
+
+class CT_HANDLE(_wt.HANDLE):
+
+    ############################################################################
+
+    def __init__(self, x):
+        if (isinstance(x, _ct._SimpleCData)):
+            self.value = x.value
+        else:
+            self.value = x
+
+    ############################################################################
+
+    # support for ctypes
+    @classmethod
+    def from_param(cls, obj):
+        if isinstance(obj, cls) or isinstance(obj, _wt.HKEY):
+            return obj
+        elif isinstance(obj, int):
+            return _wt.HKEY(obj)
+        else:
+            msg = (
+                "Don't know how to convert from " +
+                f"{type(obj).__name__} to {cls.__name__}"
+                )
+            raise TypeError(msg)
+
+    ############################################################################
+
+    def close(self):
+        if self.value != 0 and self.value != INVALID_HANDLE_VALUE:
+            CloseHandle(self.value)
+            self.value = 0
+
+    Close = close
+
+    ############################################################################
+
+    def __enter__(self):
+        return self
+
+    ############################################################################
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
+    ############################################################################
+
+    def __int__(self):
+        return self.value
+
+_PCT_HANDLE = _ct.POINTER(CT_HANDLE)
+
+################################################################################
+
+class SECURITY_ATTRIBUTES(_ct.Structure):
+    _fields_ = (
+        ("lpSecurityDescriptor", _wt.LPVOID),
+        ("nLength", _wt.DWORD),
+        ("bInheritHandle", _wt.BOOL),
+    )
+PSECURITY_ATTRIBUTES = _ct.POINTER(SECURITY_ATTRIBUTES)
+
+################################################################################
+
+_CreateFile = _fun_fact(
+    _k32.CreateFileW, (
+        _wt.HANDLE,
+        _wt.LPWSTR,
+        _wt.DWORD,
+        _wt.DWORD,
+        PSECURITY_ATTRIBUTES,
+        _wt.DWORD,
+        _wt.DWORD,
+        _wt.HANDLE
+        )
+    )
+
+def CreateFile(file_name, access, share_mode, sec_attr, dispo, flags, template):
+    hdl = _CreateFile(
+        file_name,
+        access,
+        share_mode,
+        sec_attr,
+        dispo,
+        flags,
+        template
+        )
+    _raise_if(hdl == INVALID_HANDLE_VALUE)
+    return CT_HANDLE(hdl)
+
+################################################################################
+
+class _DUMMY_OVRLPD_STRUCT(_ct.Structure):
+    _fields_ = (
+        ("Offset", _wt.DWORD),
+        ("OffsetHigh", _wt.DWORD),
+        )
+
+class _DUMMY_OVRLPD_UNION(_ct.Structure):
+    _anonymous_ = ("anon",)
+    _fields_ = (
+        ("anon", _DUMMY_OVRLPD_STRUCT),
+        ("Pointer", _wt.LPVOID),
+        )
+
+class OVERLAPPED(_ct.Structure):
+    _anonymous_ = ("anon",)
+    _fields_ = (
+        ("Internal", ULONG_PTR),
+        ("InternalHigh", ULONG_PTR),
+        ("anon", _DUMMY_OVRLPD_UNION),
+        ("hEvent", _wt.HANDLE)
+        )
+
+POVERLAPPED = _ct.POINTER(OVERLAPPED)
+
+################################################################################
+
+_DeviceIoControl = _fun_fact(
+    _k32.DeviceIoControl, (
+        _wt.BOOL,
+        _wt.HANDLE,
+        _wt.DWORD,
+        _wt.LPVOID,
+        _wt.DWORD,
+        _wt.LPVOID,
+        _wt.DWORD,
+        _wt.PDWORD,
+        POVERLAPPED
+        )
+    )
+
+def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
+    bytes_returned = _wt.DWORD(0)
+
+    if in_bytes is None:
+        iptr, ilen = None, 0
+    else:
+        iptr, ilen = _ref(in_bytes), len(in_bytes)
+
+    if out_len is None or out_len == 0:
+        out, optr, olen = None, None, 0
+    else:
+        out = _ct.create_string_buffer(out_len)
+        optr, olen = _ref(out), out_len
+
+    _raise_if(
+        not _DeviceIoControl(
+            hdl,
+            ioctl,
+            iptr,
+            ilen,
+            optr,
+            olen,
+            _ref(bytes_returned),
+            None
+            )
+        )
+    return out.raw[:bytes_returned.value] if out else None
 
 ################################################################################
 
@@ -89,7 +253,7 @@ _OpenProcess = _fun_fact(
 def OpenProcess(desired_acc, inherit, pid):
     res = _OpenProcess(desired_acc, inherit, pid)
     _raise_if(not res)
-    return res
+    return CT_HANDLE(res)
 
 ################################################################################
 

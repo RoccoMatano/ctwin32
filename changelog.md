@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+ - kernel.CreateFile
+ - kernel.DeviceIoControl
+ - setupapi.CM_Get_Parent
+ - setupapi.CM_Request_Device_Eject
+ - setupapi.SetupDiEnumDeviceInterfaces
+ - setupapi.enum_dev_interfaces
+ - setupapi.SetupDiGetDeviceInterfaceDetail
+ - All the above was added to implement the sample remove_drive_by_letter.py
+
+### Fixed
+
+ - Fixed memory allocation race in ntdll.enum_processes
+ - Fixed unreliable cleanup in setupapi.enum_info_set
+
 ## [1.1.0]
 
 ### Added

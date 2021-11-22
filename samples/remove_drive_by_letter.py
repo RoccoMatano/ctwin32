@@ -1,0 +1,147 @@
+################################################################################
+#
+# Copyright 2021 Rocco Matano
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
+################################################################################
+# This sample was inspired by
+# https://www.codeproject.com/Articles/13839/How-to-Prepare-a-USB-Drive-for-Safe-Removal
+#
+# It demonstrates how to prepare a disk drive for safe removal. The easy part
+# is calling CM_Request_Device_Eject. The difficult one is to find the devinst
+# that corresponds to a certain drive letter. There are lots cases where this
+# will NOT work (e.g. mounted ISO, VHD or VeraCrypt volumes). In fact, it is
+# a oversimplification to assume that there is always a one-to-one relationship
+# between drive letter and disk device. But for the simple cases like USB
+# sticks or USB harddisks this should work.
+#
+################################################################################
+
+import sys
+import uuid
+import time
+import ctypes
+
+from ctwin32 import (
+    kernel,
+    setupapi,
+    FILE_SHARE_READ,
+    FILE_SHARE_WRITE,
+    OPEN_EXISTING,
+    FILE_DEVICE_CD_ROM,
+    FILE_DEVICE_DVD,
+    FILE_DEVICE_DISK,
+    SPDRP_REMOVAL_POLICY,
+    )
+
+################################################################################
+
+# from winioctl.h
+
+class STORAGE_DEVICE_NUMBER(ctypes.Structure):
+    _fields_ = (
+    ("DeviceType", ctypes.c_int),
+    ("DeviceNumber", ctypes.c_ulong),
+    ("PartitionNumber", ctypes.c_ulong),
+    )
+IOCTL_STORAGE_GET_DEVICE_NUMBER = 0x002d1080
+GUID_IFACE_DISK = uuid.UUID("{53f56307-b6bf-11d0-94f2-00a0c91efb8b}")
+GUID_IFACE_CDROM = uuid.UUID("{53f56308-b6bf-11d0-94f2-00a0c91efb8b}")
+
+################################################################################
+
+def get_drive_type_number(file_name):
+    with kernel.CreateFile(
+        file_name,
+        0,
+        FILE_SHARE_READ | FILE_SHARE_WRITE,
+        None,
+        OPEN_EXISTING,
+        0,
+        None
+        ) as vol:
+        sdn = kernel.DeviceIoControl(
+            vol,
+            IOCTL_STORAGE_GET_DEVICE_NUMBER,
+            None,
+            ctypes.sizeof(STORAGE_DEVICE_NUMBER)
+            )
+    sdn = STORAGE_DEVICE_NUMBER.from_buffer_copy(sdn)
+    return sdn.DeviceType, sdn.DeviceNumber
+
+################################################################################
+
+def get_drive_devinst(drv_type, drv_num):
+    # In order to find the devinst that corresponds to a certain drive, we
+    # have to iterate over all device interfaces that match the drive type. The
+    # drive number is only unique within the group of devices that share the
+    # same interface.
+    if drv_type == FILE_DEVICE_CD_ROM or FILE_DEVICE_DVD:
+        guid = GUID_IFACE_CDROM
+    if drv_type == FILE_DEVICE_DISK:
+        # ignoring that floppies ever existed
+        guid = GUID_IFACE_DISK
+    else:
+        raise ValueError(f"unhandled drive type: {drv_type}")
+
+    for iset, did in setupapi.enum_dev_interfaces(guid):
+        dev_path, deinda = setupapi.SetupDiGetDeviceInterfaceDetail(iset, did)
+        dtype, dnum = get_drive_type_number(dev_path)
+        if dtype == drv_type and dnum == drv_num:
+            return deinda.DevInst
+
+    raise EnvironmentError(f"devinst not found for {drv_type} {drv_num}")
+
+################################################################################
+
+def remove_drive_by_letter(letter):
+    o = ord(letter)
+    if o < ord("A") or o > ord("Z"):
+        raise ValueError(f"invalid drive letter: {letter}")
+
+    drv_type, drv_num = get_drive_type_number(f"\\\\.\\{letter}:")
+    devinst = get_drive_devinst(drv_type, drv_num)
+    parent = setupapi.CM_Get_Parent(devinst)
+
+    MAX_TRIES = 3
+    for i in range(MAX_TRIES):
+        try:
+            setupapi.CM_Request_Device_Eject(parent)
+            err = None
+            break
+        except OSError as e:
+            err = e
+        if i < MAX_TRIES - 1:
+            time.sleep(0.5)
+
+    if err is None:
+        print("--> Sucess <--")
+    else:
+        print(err)
+
+################################################################################
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("need drive letter")
+    else:
+        remove_drive_by_letter(sys.argv[1][0].upper())
+
+################################################################################

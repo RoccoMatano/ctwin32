@@ -1102,11 +1102,11 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
             break
 
     res = []
-    offs = 0
+    addr = _ct.addressof(buf)
     while got > 0:
-        elen, evt = _evt_from_void_p(_wt.LPVOID(_ct.addressof(buf) + offs))
+        elen, evt = _evt_from_void_p(_ct.c_void_p(addr))
         res.append(evt)
-        offs += elen
+        addr += elen
         got -= elen
     return res
 

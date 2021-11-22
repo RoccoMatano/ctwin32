@@ -32,7 +32,6 @@ import msvcrt
 def list_pipes():
     with open("\\\\.\\Pipe\\", "rb") as pipes:
         handle = msvcrt.get_osfhandle(pipes.fileno())
-        find_first = True
         print("Inst  Max  Pipe Name")
         print("----  ---  ---------")
         for info in ntdll.enum_directory_info(handle):

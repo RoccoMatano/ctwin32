@@ -30,20 +30,22 @@ import re
 from . import (
     _raise_if,
     _fun_fact,
-    UINT_PTR,
-    LONG_PTR,
+    ULONG_PTR,
     INVALID_HANDLE_VALUE,
     GUID,
     PGUID,
     DIGCF_PRESENT,
     DIGCF_ALLCLASSES,
+    DIGCF_DEVICEINTERFACE,
     DICS_ENABLE,
     DICS_DISABLE,
     DICS_FLAG_CONFIGSPECIFIC,
     MAX_DEVICE_ID_LEN,
+    MAX_PATH,
     DIF_PROPERTYCHANGE,
     CR_SUCCESS,
     SPDRP_DEVICEDESC,
+    ERROR_NO_MORE_ITEMS,
     )
 from .advapi import registry_to_py
 
@@ -57,7 +59,7 @@ class SP_DEVINFO_DATA(_ct.Structure):
         ("cbSize", _wt.DWORD),
         ("ClassGuid", GUID),
         ("DevInst", _wt.DWORD),
-        ("Reserved", UINT_PTR),
+        ("Reserved", ULONG_PTR),
         )
     def __init__(self):
         self.cbSize = _ct.sizeof(self)
@@ -89,6 +91,26 @@ class SP_PROPCHANGE_PARAMS(_ct.Structure):
         self.HwProfile = prof
 
 PSP_PROPCHANGE_PARAMS = _ct.POINTER(SP_PROPCHANGE_PARAMS)
+
+################################################################################
+
+class SP_DEVICE_INTERFACE_DATA(_ct.Structure):
+    _fields_ = [
+        ("cbSize", _wt.DWORD),
+        ("InterfaceClassGuid", GUID),
+        ("Flags", _wt.DWORD),
+        ("Reserved", ULONG_PTR),
+        ]
+    def __init__(self):
+        self.cbSize = _ct.sizeof(self)
+
+PSP_DEVICE_INTERFACE_DATA = _ct.POINTER(SP_DEVICE_INTERFACE_DATA)
+
+class SP_DEVICE_INTERFACE_DETAIL_DATA(_ct.Structure):
+    _fields_ = [
+        ("cbSize", _wt.DWORD),
+        ("DevicePath", _wt.WCHAR * 1),
+        ]
 
 ################################################################################
 
@@ -169,6 +191,45 @@ def CM_Enumerate_Enumerators(idx):
     size = _wt.ULONG(MAX_DEVICE_ID_LEN)
     _raise_if(_CM_Enumerate_Enumerators(idx, enum_str, _ref(size), 0))
     return enum_str.value
+
+################################################################################
+
+_CM_Get_Parent = _fun_fact(
+    _sua.CM_Get_Parent, (_wt.DWORD, _wt.PDWORD, _wt.DWORD, _wt.ULONG)
+    )
+
+def CM_Get_Parent(devinst):
+    parent = _wt.DWORD()
+    _raise_if(_CM_Get_Parent(_ref(parent), devinst, 0))
+    return parent.value
+
+################################################################################
+
+_CM_Request_Device_Eject = _fun_fact(
+    _sua.CM_Request_Device_EjectW, (
+        _wt.DWORD,
+        _wt.DWORD,
+        _wt.PINT,
+        _wt.LPWSTR,
+        _wt.ULONG,
+        _wt.ULONG
+        )
+    )
+
+def CM_Request_Device_Eject(devinst):
+    veto_type = _wt.INT()
+    veto_name = _ct.create_unicode_buffer(MAX_PATH)
+    err = _CM_Request_Device_Eject(
+        devinst,
+        _ref(veto_type),
+        veto_name,
+        MAX_PATH,
+        0
+        )
+    if err != 0 or veto_type.value != 0:
+        vv = veto_type.value
+        vn = veto_name.value
+        raise OSError(16, f"device removal was vetoed ({vv}): {vn}")
 
 ################################################################################
 
@@ -383,11 +444,13 @@ def get_non_present_info_set():
 def enum_info_set(info_set, cleanup=True):
     deinda = SP_DEVINFO_DATA()
     idx = 0
-    while SetupDiEnumDeviceInfo(info_set, idx, _ref(deinda)):
-        yield info_set, deinda
-        idx += 1
-    if cleanup:
-        SetupDiDestroyDeviceInfoList(info_set)
+    try:
+        while SetupDiEnumDeviceInfo(info_set, idx, _ref(deinda)):
+            yield info_set, deinda
+            idx += 1
+    finally:
+        if cleanup:
+            SetupDiDestroyDeviceInfoList(info_set)
 
 ################################################################################
 
@@ -505,5 +568,99 @@ def desc_from_info_set(info_set, deinda):
         deinda,
         SPDRP_DEVICEDESC
         )[0]
+
+################################################################################
+
+_SetupDiEnumDeviceInterfaces = _fun_fact(
+    _sua.SetupDiEnumDeviceInterfaces, (
+        _wt.BOOL,
+        _wt.HANDLE,
+        PSP_DEVINFO_DATA,
+        PGUID,
+        _wt.DWORD,
+        PSP_DEVICE_INTERFACE_DATA
+        )
+    )
+
+def SetupDiEnumDeviceInterfaces(info_set, guid, idx):
+    did = SP_DEVICE_INTERFACE_DATA()
+    _raise_if(
+        not _SetupDiEnumDeviceInterfaces(
+            info_set,
+            None,
+            _ref(GUID(guid)),
+            idx,
+            _ref(did)
+            )
+        )
+    return did
+
+################################################################################
+
+def enum_dev_interfaces(guid):
+    info_set = SetupDiGetClassDevs(
+        flags=DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
+        guid=guid
+        )
+    idx = 0
+    try:
+        while True:
+            try:
+                did = SetupDiEnumDeviceInterfaces(info_set, guid, idx)
+            except OSError as e:
+                if e.winerror == ERROR_NO_MORE_ITEMS:
+                    break
+                raise
+            idx += 1
+            yield info_set, did
+    finally:
+        SetupDiDestroyDeviceInfoList(info_set)
+
+################################################################################
+
+_SetupDiGetDeviceInterfaceDetail = _fun_fact(
+    _sua.SetupDiGetDeviceInterfaceDetailW, (
+        _wt.BOOL,
+        _wt.HANDLE,
+        PSP_DEVICE_INTERFACE_DATA,
+        _wt.LPVOID,
+        _wt.DWORD,
+        _wt.PDWORD,
+        PSP_DEVINFO_DATA
+        )
+    )
+
+def SetupDiGetDeviceInterfaceDetail(info_set, did):
+    req_size = _wt.DWORD(0)
+    _SetupDiGetDeviceInterfaceDetail(
+        info_set,
+        _ref(did),
+        None,
+        0,
+        _ref(req_size),
+        None
+        )
+
+    diff = req_size.value - _ct.sizeof(_wt.DWORD)
+    class LOCAL_SPDIDD(_ct.Structure):
+        _fields_ = [
+            ("cbSize", _wt.DWORD),
+            ("DevicePath", _wt.BYTE * diff),
+            ]
+    ifdetail = LOCAL_SPDIDD()
+    ifdetail.cbSize = _ct.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
+    deinda = SP_DEVINFO_DATA()
+
+    _raise_if(
+        not _SetupDiGetDeviceInterfaceDetail(
+            info_set,
+            _ref(did),
+            _ref(ifdetail),
+            req_size,
+            _ref(req_size),
+            _ref(deinda),
+            )
+        )
+    return _ct.wstring_at(_ct.addressof(ifdetail.DevicePath)), deinda
 
 ################################################################################

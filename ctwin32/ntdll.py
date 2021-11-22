@@ -277,14 +277,16 @@ def enum_processes():
         return _namespace(name=name, pid=pid)
 
     res = []
-    size = required_sys_info_size(SystemProcessInformation)
-    buf = _ct.create_string_buffer(size.value)
-    status = NtQuerySystemInformation(
-        SystemProcessInformation,
-        _ref(buf),
-        size,
-        _ref(size)
-        )
+    status = STATUS_INFO_LENGTH_MISMATCH
+    while status == STATUS_INFO_LENGTH_MISMATCH:
+        size = required_sys_info_size(SystemProcessInformation)
+        buf = _ct.create_string_buffer(size.value)
+        status = NtQuerySystemInformation(
+            SystemProcessInformation,
+            _ref(buf),
+            size,
+            _ref(size)
+            )
     _raise_failed_status(status)
 
     pi = SYSTEM_PROCESS_INFORMATION.from_address(_ct.addressof(buf))
@@ -487,7 +489,7 @@ def get_directory_info(hdir, restart_scan):
             None,
             None,
             None,
-            _ct.byref(iosb),
+            _ref(iosb),
             buf,
             bsize,
             1, # FileDirectoryInformation
