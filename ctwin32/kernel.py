@@ -23,17 +23,16 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
-from datetime import datetime as _datetime
 import collections as _collections
 
+from .wtypes import *
 from . import (
     _raise_if,
     _fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
-    ULONG_PTR,
+    multi_str_from_addr,
     )
 
 _k32 = _ct.windll.kernel32
@@ -45,79 +44,40 @@ GetLastError = _ct.GetLastError
 
 ################################################################################
 
-_LocalFree = _fun_fact(_k32.LocalFree, (_wt.HLOCAL, _wt.HLOCAL))
+_LocalFree = _fun_fact(_k32.LocalFree, (HANDLE, HANDLE))
 
 def LocalFree(hmem):
     _raise_if(_LocalFree(hmem))
 
 ################################################################################
 
-_CloseHandle = _fun_fact(_k32.CloseHandle, (_wt.BOOL, _wt.HANDLE))
+_CloseHandle = _fun_fact(_k32.CloseHandle, (BOOL, HANDLE))
 
 def CloseHandle(handle):
     _raise_if(not _CloseHandle(handle))
 
 ################################################################################
 
-class CT_HANDLE(_wt.HANDLE):
+class KHANDLE(ScdToBeClosed, HANDLE, close_func=CloseHandle, invalid=0):
+    pass
 
-    ############################################################################
+################################################################################
 
-    def __init__(self, x):
-        if (isinstance(x, _ct._SimpleCData)):
-            self.value = x.value
-        else:
-            self.value = x
-
-    ############################################################################
-
-    # support for ctypes
-    @classmethod
-    def from_param(cls, obj):
-        if isinstance(obj, cls) or isinstance(obj, _wt.HKEY):
-            return obj
-        elif isinstance(obj, int):
-            return _wt.HKEY(obj)
-        else:
-            msg = (
-                "Don't know how to convert from " +
-                f"{type(obj).__name__} to {cls.__name__}"
-                )
-            raise TypeError(msg)
-
-    ############################################################################
-
-    def close(self):
-        if self.value != 0 and self.value != INVALID_HANDLE_VALUE:
-            CloseHandle(self.value)
-            self.value = 0
-
-    Close = close
-
-    ############################################################################
-
-    def __enter__(self):
-        return self
-
-    ############################################################################
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    ############################################################################
-
-    def __int__(self):
-        return self.value
-
-_PCT_HANDLE = _ct.POINTER(CT_HANDLE)
+class FHANDLE(
+    ScdToBeClosed,
+    HANDLE,
+    close_func=CloseHandle,
+    invalid=INVALID_HANDLE_VALUE
+    ):
+    pass
 
 ################################################################################
 
 class SECURITY_ATTRIBUTES(_ct.Structure):
     _fields_ = (
-        ("lpSecurityDescriptor", _wt.LPVOID),
-        ("nLength", _wt.DWORD),
-        ("bInheritHandle", _wt.BOOL),
+        ("lpSecurityDescriptor", PVOID),
+        ("nLength", DWORD),
+        ("bInheritHandle", BOOL),
     )
 PSECURITY_ATTRIBUTES = _ct.POINTER(SECURITY_ATTRIBUTES)
 
@@ -125,43 +85,45 @@ PSECURITY_ATTRIBUTES = _ct.POINTER(SECURITY_ATTRIBUTES)
 
 _CreateFile = _fun_fact(
     _k32.CreateFileW, (
-        _wt.HANDLE,
-        _wt.LPWSTR,
-        _wt.DWORD,
-        _wt.DWORD,
+        HANDLE,
+        PWSTR,
+        DWORD,
+        DWORD,
         PSECURITY_ATTRIBUTES,
-        _wt.DWORD,
-        _wt.DWORD,
-        _wt.HANDLE
+        DWORD,
+        DWORD,
+        HANDLE
         )
     )
 
 def CreateFile(file_name, access, share_mode, sec_attr, dispo, flags, template):
-    hdl = _CreateFile(
-        file_name,
-        access,
-        share_mode,
-        sec_attr,
-        dispo,
-        flags,
-        template
+    hdl = FHANDLE(
+        _CreateFile(
+            file_name,
+            access,
+            share_mode,
+            sec_attr,
+            dispo,
+            flags,
+            template
+            )
         )
-    _raise_if(hdl == INVALID_HANDLE_VALUE)
-    return CT_HANDLE(hdl)
+    _raise_if(not hdl.is_valid())
+    return hdl
 
 ################################################################################
 
 class _DUMMY_OVRLPD_STRUCT(_ct.Structure):
     _fields_ = (
-        ("Offset", _wt.DWORD),
-        ("OffsetHigh", _wt.DWORD),
+        ("Offset", DWORD),
+        ("OffsetHigh", DWORD),
         )
 
 class _DUMMY_OVRLPD_UNION(_ct.Structure):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", _DUMMY_OVRLPD_STRUCT),
-        ("Pointer", _wt.LPVOID),
+        ("Pointer", PVOID),
         )
 
 class OVERLAPPED(_ct.Structure):
@@ -170,7 +132,7 @@ class OVERLAPPED(_ct.Structure):
         ("Internal", ULONG_PTR),
         ("InternalHigh", ULONG_PTR),
         ("anon", _DUMMY_OVRLPD_UNION),
-        ("hEvent", _wt.HANDLE)
+        ("hEvent", HANDLE)
         )
 
 POVERLAPPED = _ct.POINTER(OVERLAPPED)
@@ -179,20 +141,20 @@ POVERLAPPED = _ct.POINTER(OVERLAPPED)
 
 _DeviceIoControl = _fun_fact(
     _k32.DeviceIoControl, (
-        _wt.BOOL,
-        _wt.HANDLE,
-        _wt.DWORD,
-        _wt.LPVOID,
-        _wt.DWORD,
-        _wt.LPVOID,
-        _wt.DWORD,
-        _wt.PDWORD,
+        BOOL,
+        HANDLE,
+        DWORD,
+        PVOID,
+        DWORD,
+        PVOID,
+        DWORD,
+        PDWORD,
         POVERLAPPED
         )
     )
 
 def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
-    bytes_returned = _wt.DWORD(0)
+    bytes_returned = DWORD(0)
 
     if in_bytes is None:
         iptr, ilen = None, 0
@@ -221,14 +183,14 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
 
 ################################################################################
 
-_GetCurrentProcess = _fun_fact(_k32.GetCurrentProcess, (_wt.HANDLE,))
+_GetCurrentProcess = _fun_fact(_k32.GetCurrentProcess, (HANDLE,))
 
 def GetCurrentProcess():
     return _GetCurrentProcess()
 
 ################################################################################
 
-_GetCurrentProcessId = _fun_fact(_k32.GetCurrentProcessId, (_wt.DWORD,))
+_GetCurrentProcessId = _fun_fact(_k32.GetCurrentProcessId, (DWORD,))
 
 def GetCurrentProcessId():
     return _GetCurrentProcessId()
@@ -236,7 +198,7 @@ def GetCurrentProcessId():
 ################################################################################
 
 _WaitForSingleObject = _fun_fact(
-    _k32.WaitForSingleObject, (_wt.DWORD, _wt.HANDLE, _wt.DWORD)
+    _k32.WaitForSingleObject, (DWORD, HANDLE, DWORD)
     )
 
 def WaitForSingleObject(handle, timeout):
@@ -247,18 +209,18 @@ def WaitForSingleObject(handle, timeout):
 ################################################################################
 
 _OpenProcess = _fun_fact(
-    _k32.OpenProcess, (_wt.HANDLE, _wt.DWORD, _wt.BOOL, _wt.DWORD)
+    _k32.OpenProcess, (HANDLE, DWORD, BOOL, DWORD)
     )
 
 def OpenProcess(desired_acc, inherit, pid):
-    res = _OpenProcess(desired_acc, inherit, pid)
-    _raise_if(not res)
-    return CT_HANDLE(res)
+    res = KHANDLE(_OpenProcess(desired_acc, inherit, pid))
+    _raise_if(not res.is_valid())
+    return res
 
 ################################################################################
 
 _TerminateProcess = _fun_fact(
-    _k32.TerminateProcess, (_wt.BOOL, _wt.HANDLE, _wt.UINT)
+    _k32.TerminateProcess, (BOOL, HANDLE, UINT)
     )
 
 def TerminateProcess(handle, exit_code):
@@ -267,7 +229,7 @@ def TerminateProcess(handle, exit_code):
 ################################################################################
 
 _QueryDosDevice = _fun_fact(
-    _k32.QueryDosDeviceW, (_wt.DWORD, _wt.LPCWSTR, _wt.LPWSTR, _wt.DWORD)
+    _k32.QueryDosDeviceW, (DWORD, PWSTR, PWSTR, DWORD)
     )
 
 def QueryDosDevice(device_name):
@@ -280,97 +242,6 @@ def QueryDosDevice(device_name):
         _raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2
         buf = _ct.create_unicode_buffer(size)
-
-################################################################################
-
-class FILETIME(_ct.Structure):
-    "100-nanoseconds since 12:00 AM January 1, 1601"
-    # cannot represent FILETIME as _ct.c_longlong since that would change
-    # the alignment
-    _fields_ = (
-        ("LowDateTime", _wt.DWORD),
-        ("HighDateTime", _wt.DWORD),
-        )
-    def __init__(self, i64=0):
-        self.LowDateTime = i64 & 0xffffffff
-        self.HighDateTime = i64 >> 32
-
-    def __int__(self):
-        return self.LowDateTime | (self.HighDateTime << 32)
-
-    def __iadd__(self, other):
-        i64 = int(self) + other
-        self.LowDateTime = i64 & 0xffffffff
-        self.HighDateTime = i64 >> 32
-        return self
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}({int(self)})"
-
-################################################################################
-
-class SYSTEMTIME(_ct.Structure):
-    _fields_ = (
-        ("Year",         _wt.WORD),
-        ("Month",        _wt.WORD),
-        ("DayOfWeek",    _wt.WORD),
-        ("Day",          _wt.WORD),
-        ("Hour",         _wt.WORD),
-        ("Minute",       _wt.WORD),
-        ("Second",       _wt.WORD),
-        ("Milliseconds", _wt.WORD)
-        )
-
-    ############################################################################
-
-    def to_datetime(self):
-        return _datetime(
-            self.Year,
-            self.Month,
-            self.Day,
-            self.Hour,
-            self.Minute,
-            self.Second,
-            self.Milliseconds * 1000
-            )
-
-    ############################################################################
-
-    def from_datetime(self, dt):
-        self.Year = dt.year
-        self.Month = dt.month
-        self.Day = dt.day
-        self.Hour = dt.hour
-        self.Minute = dt.minute
-        self.Second = dt.second
-        self.Milliseconds = dt.microsecond // 1000
-        dow = dt.isoweekday()
-        self.DayOfWeek = 0 if dow == 7 else dow
-        return self
-
-    ############################################################################
-
-    def to_struct_time(self):
-        return self.to_datetime().timetuple()
-
-    ############################################################################
-
-    def from_struct_time(self, st):
-        self.Year = st.tm_year
-        self.Month = st.tm_mon
-        self.Day = st.tm_mday
-        self.Hour = st.tm_hour
-        self.Minute = st.tm_min
-        self.Second = st.tm_sec
-        self.Milliseconds = 0
-        self.DayOfWeek = 0 if st.tm_wday == 6 else st.tm_wday + 1
-        return self
-
-    ############################################################################
-
-    def __repr__(self):
-        flds = ", ".join([f"{n}={getattr(self, n)}" for n, _ in self._fields_])
-        return f"{self.__class__.__name__}({flds})"
 
 ################################################################################
 
@@ -456,7 +327,7 @@ def GetFileAttributes(fname):
 ################################################################################
 
 _SetFileAttributes = _fun_fact(
-    _k32.SetFileAttributesW, (_wt.BOOL, _wt.LPCWSTR, _wt.DWORD)
+    _k32.SetFileAttributesW, (BOOL, PWSTR, DWORD)
     )
 
 ################################################################################
@@ -467,14 +338,14 @@ def SetFileAttributes(fname, attribs):
 
 ################################################################################
 
-_GetACP = _fun_fact(_k32.GetACP, (_wt.DWORD,))
+_GetACP = _fun_fact(_k32.GetACP, (DWORD,))
 
 def GetACP():
     return _GetACP()
 
 ################################################################################
 
-_OutputDebugStringW = _fun_fact(_k32.OutputDebugStringW, (None, _wt.LPCWSTR))
+_OutputDebugStringW = _fun_fact(_k32.OutputDebugStringW, (None, PWSTR))
 
 def OutputDebugString(dstr):
     _OutputDebugStringW(dstr)
@@ -482,7 +353,7 @@ def OutputDebugString(dstr):
 ################################################################################
 
 _SetThreadExecutionState = _fun_fact(
-    _k32.SetThreadExecutionState, (_wt.DWORD, _wt.DWORD)
+    _k32.SetThreadExecutionState, (DWORD, DWORD)
     )
 
 def SetThreadExecutionState(es_flags):
@@ -492,7 +363,7 @@ def SetThreadExecutionState(es_flags):
 
 _GetPrivateProfileSectionNames = _fun_fact(
     _k32.GetPrivateProfileSectionNamesW,
-    (_wt.DWORD, _wt.LPWSTR, _wt.DWORD, _wt.LPWSTR)
+    (DWORD, PWSTR, DWORD, PWSTR)
     )
 
 def GetPrivateProfileSectionNames(filename):
@@ -509,7 +380,7 @@ def GetPrivateProfileSectionNames(filename):
 
 _GetPrivateProfileSection = _fun_fact(
     _k32.GetPrivateProfileSectionW,
-    (_wt.DWORD, _wt.LPWSTR, _wt.LPWSTR, _wt.DWORD, _wt.LPWSTR)
+    (DWORD, PWSTR, PWSTR, DWORD, PWSTR)
     )
 
 def GetPrivateProfileSection(secname, filename):
@@ -531,7 +402,7 @@ def GetPrivateProfileSection(secname, filename):
 
 _WritePrivateProfileSection = _fun_fact(
     _k32.WritePrivateProfileSectionW,
-    (_wt.DWORD, _wt.LPWSTR, _wt.LPWSTR, _wt.LPWSTR)
+    (DWORD, PWSTR, PWSTR, PWSTR)
     )
 
 def WritePrivateProfileSection(secname, secdata, filename):
@@ -549,5 +420,88 @@ def WritePrivateProfileSection(secname, secdata, filename):
     # That's why we need to detour 'secdata' through a unicode buffer.
     buf = _ct.create_unicode_buffer(secdata, len(secdata))
     _raise_if(not _WritePrivateProfileSection(secname, buf, filename))
+
+################################################################################
+
+_GetEnvironmentVariable = _fun_fact(
+    _k32.GetEnvironmentVariableW,
+    (DWORD, PWSTR, PWSTR, DWORD)
+    )
+
+def GetEnvironmentVariable(name):
+    size = 512
+    while True:
+        var = _ct.create_unicode_buffer(size)
+        req = _GetEnvironmentVariable(name, var, size)
+        _raise_if(req == 0)
+        if req <= size:
+            break
+        else:
+            size = req
+    return var.value
+
+################################################################################
+
+_SetEnvironmentVariable = _fun_fact(
+    _k32.SetEnvironmentVariableW,
+    (BOOL, PWSTR, PWSTR)
+    )
+
+def SetEnvironmentVariable(name, value):
+    _raise_if(not _SetEnvironmentVariable(name, value))
+
+################################################################################
+
+# using void pointers instead of PWSTR so we can do pointer arithmatic.
+
+_FreeEnvironmentStrings = _fun_fact(
+    _k32.FreeEnvironmentStringsW,
+    (BOOL, PVOID)
+    )
+
+_GetEnvironmentStrings = _fun_fact(_k32.GetEnvironmentStringsW, (PVOID,))
+
+def GetEnvironmentStrings():
+    ptr = _GetEnvironmentStrings()
+    _raise_if(not ptr)
+    try:
+        return multi_str_from_addr(ptr)
+    finally:
+        _raise_if(not _FreeEnvironmentStrings(ptr))
+
+def env_str_to_dict(estr):
+    return dict(s.rsplit("=", 1) for s in estr.strip("\0").split("\0"))
+
+def get_env_as_dict():
+    return env_str_to_dict(GetEnvironmentStrings())
+
+################################################################################
+
+_SetEnvironmentStrings = _fun_fact(
+    _k32.SetEnvironmentStringsW,
+    (BOOL, PWSTR)
+    )
+
+def SetEnvironmentStrings(strings):
+    _raise_if(not _SetEnvironmentStrings(strings))
+
+################################################################################
+
+_ExpandEnvironmentStrings = _fun_fact(
+    _k32.ExpandEnvironmentStringsW,
+    (DWORD, PWSTR, PWSTR, DWORD)
+    )
+
+def ExpandEnvironmentStrings(template):
+    size = len(template)
+    while True:
+        var = _ct.create_unicode_buffer(size)
+        req = _ExpandEnvironmentStrings(template, var, size)
+        _raise_if(req == 0)
+        if req <= size:
+            break
+        else:
+            size = req
+    return var.value
 
 ################################################################################

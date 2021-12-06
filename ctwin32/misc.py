@@ -23,32 +23,41 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 from types import SimpleNamespace as _namespace
 
-from . import _fun_fact, _raise_if, SystemExecutionState
+from .wtypes import *
 from .ntdll import _raise_failed_status
+from . import (
+    _fun_fact,
+    _raise_if,
+    multi_str_from_addr,
+    SystemExecutionState,
+    TOKEN_READ,
+    kernel,
+    advapi,
+    )
 
 _ref = _ct.byref
-_popro = _ct.windll.powrprof
 
 ################################################################################
 
+_popro = _ct.windll.powrprof
+
 _CallNtPowerInformation = _fun_fact(
     _popro.CallNtPowerInformation,
-    (_wt.LONG, _wt.LONG, _wt.LPVOID, _wt.ULONG, _wt.LPVOID, _wt.ULONG),
+    (LONG, LONG, PVOID, ULONG, PVOID, ULONG),
     )
 
 def CallNtPowerInformation(level, outsize=0, input=None):
-    src, slen = (None, 0) if not input else (_ref(input), _wt.ULONG(len(input)))
-    dst, dlen = _ct.create_string_buffer(outsize), _wt.ULONG(outsize)
+    src, slen = (None, 0) if not input else (_ref(input), ULONG(len(input)))
+    dst, dlen = _ct.create_string_buffer(outsize), ULONG(outsize)
     _raise_failed_status(_CallNtPowerInformation(level, src, slen, dst, dlen))
     return dst.value
 
 ################################################################################
 
 def get_system_execution_state():
-    bts = CallNtPowerInformation(SystemExecutionState, _ct.sizeof(_wt.ULONG))
+    bts = CallNtPowerInformation(SystemExecutionState, _ct.sizeof(ULONG))
     # result is a combination of ES_SYSTEM_REQUIRED, ES_DISPLAY_REQUIRED,
     # ES_USER_PRESENT, ES_AWAYMODE_REQUIRED and ES_CONTINUOUS
     return int.from_bytes(bts, byteorder='little', signed=False)
@@ -57,7 +66,7 @@ def get_system_execution_state():
 
 _SetSuspendState = _fun_fact(
     _popro.SetSuspendState,
-    (_wt.BOOLEAN, _wt.BOOLEAN, _wt.BOOLEAN, _wt.BOOLEAN)
+    (BOOLEAN, BOOLEAN, BOOLEAN, BOOLEAN)
     )
 
 def SetSuspendState(hibernate, force, wakeup_events_disabled):
@@ -69,27 +78,27 @@ _wts = _ct.windll.wtsapi32
 
 class WTS_SESSION_INFO(_ct.Structure):
     _fields_ = (
-        ("SessionId", _wt.DWORD),
-        ("WinStationName", _wt.LPCWSTR),
-        ("State", _wt.LONG),
+        ("SessionId", DWORD),
+        ("WinStationName", PWSTR),
+        ("State", LONG),
         )
 _P_SESSION_INFO = _ct.POINTER(WTS_SESSION_INFO)
 _PP_SESSION_INFO = _ct.POINTER(_P_SESSION_INFO)
 
 ################################################################################
 
-_WTSFreeMemory = _fun_fact(_wts.WTSFreeMemory, (None, _wt.LPVOID))
+_WTSFreeMemory = _fun_fact(_wts.WTSFreeMemory, (None, PVOID))
 
 ################################################################################
 
 _WTSEnumerateSessions = _fun_fact(
     _wts.WTSEnumerateSessionsW,
-    (_wt.BOOL, _wt.HANDLE, _wt.DWORD, _wt.DWORD, _PP_SESSION_INFO, _wt.PDWORD)
+    (BOOL, HANDLE, DWORD, DWORD, _PP_SESSION_INFO, PDWORD)
     )
 
 def WTSEnumerateSessions(server=None):
     info = _P_SESSION_INFO()
-    count = _wt.DWORD()
+    count = DWORD()
     _raise_if(not _WTSEnumerateSessions(server, 0, 1, _ref(info), _ref(count)))
     try:
         res = tuple(
@@ -107,10 +116,39 @@ def WTSEnumerateSessions(server=None):
 ################################################################################
 
 _WTSDisconnectSession = _fun_fact(
-    _wts.WTSDisconnectSession, (_wt.BOOL, _wt.HANDLE, _wt.DWORD, _wt.BOOL)
+    _wts.WTSDisconnectSession, (BOOL, HANDLE, DWORD, BOOL)
     )
 
 def WTSDisconnectSession(session_id, server=None, wait=True):
     _raise_if(not _WTSDisconnectSession(server, session_id, wait))
+
+################################################################################
+
+_ue = _ct.windll.userenv
+
+_DestroyEnvironmentBlock = _fun_fact(
+    _ue.DestroyEnvironmentBlock, (BOOL, PVOID)
+    )
+
+_CreateEnvironmentBlock = _fun_fact(
+    _ue.CreateEnvironmentBlock, (BOOL, PPVOID, HANDLE, BOOL)
+    )
+
+def CreateEnvironmentBlock(token=None):
+    close_token = False
+    if token is None:
+        token = advapi.OpenProcessToken(kernel.GetCurrentProcess(), TOKEN_READ)
+        close_token = True
+    ptr = PVOID()
+    _raise_if(not _CreateEnvironmentBlock(_ref(ptr), token, False))
+    try:
+        return multi_str_from_addr(ptr.value)
+    finally:
+        if close_token:
+            kernel.CloseHandle(token)
+        _raise_if(not _DestroyEnvironmentBlock(ptr))
+
+def create_env_block_as_dict(token=None):
+    return kernel.env_str_to_dict(CreateEnvironmentBlock(token))
 
 ################################################################################

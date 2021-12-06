@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- module wtypes as replacement for ctypes.wintypes
+- class wtypes.ScdToBeClosed that eases creating context managers for handles
+- user.SendMessageTimeout
+- kernel.GetEnvironmentVariable
+- kernel.SetEnvironmentVariable
+- kernel.GetEnvironmentStrings
+- kernel.get_env_as_dict
+- kernel.SetEnvironmentStrings
+- kernel.ExpandEnvironmentStrings
+- advapi.RegDeleteValue
+- advapi.RegSetKeyValue
+- advapi.reg_enum_keys
+- advapi.reg_enum_values
+- advapi.reg_set_str
+- advapi.reg_set_dword
+- misc.CreateEnvironmentBlock
+- misc.create_env_block_as_dict
+
+### Changed
+
+- advapi: Let predefined keys (e.g. HKCU) be instances of HKEY (i.e they
+  can be used in `with` statements like ordinary keys).
+
 ## [1.2.0]
 
 ### Added

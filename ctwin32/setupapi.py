@@ -23,17 +23,13 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
-import uuid
 import re
 
+from .wtypes import *
 from . import (
     _raise_if,
     _fun_fact,
-    ULONG_PTR,
     INVALID_HANDLE_VALUE,
-    GUID,
-    PGUID,
     DIGCF_PRESENT,
     DIGCF_ALLCLASSES,
     DIGCF_DEVICEINTERFACE,
@@ -56,9 +52,9 @@ _ref = _ct.byref
 
 class SP_DEVINFO_DATA(_ct.Structure):
     _fields_ = (
-        ("cbSize", _wt.DWORD),
+        ("cbSize", DWORD),
         ("ClassGuid", GUID),
-        ("DevInst", _wt.DWORD),
+        ("DevInst", DWORD),
         ("Reserved", ULONG_PTR),
         )
     def __init__(self):
@@ -70,8 +66,8 @@ PSP_DEVINFO_DATA = _ct.POINTER(SP_DEVINFO_DATA)
 
 class SP_CLASSINSTALL_HEADER(_ct.Structure):
     _fields_ = (
-        ("cbSize", _wt.DWORD),
-        ("InstallFunction", _wt.DWORD),
+        ("cbSize", DWORD),
+        ("InstallFunction", DWORD),
         )
 
 ################################################################################
@@ -79,9 +75,9 @@ class SP_CLASSINSTALL_HEADER(_ct.Structure):
 class SP_PROPCHANGE_PARAMS(_ct.Structure):
     _fields_ = (
         ("ClassInstallHeader", SP_CLASSINSTALL_HEADER),
-        ("StateChange", _wt.DWORD),
-        ("Scope", _wt.DWORD),
-        ("HwProfile", _wt.DWORD),
+        ("StateChange", DWORD),
+        ("Scope", DWORD),
+        ("HwProfile", DWORD),
         )
     def __init__(self, func, change, scope=DICS_FLAG_CONFIGSPECIFIC, prof=0):
         self.ClassInstallHeader.cbSize = _ct.sizeof(self.ClassInstallHeader)
@@ -96,9 +92,9 @@ PSP_PROPCHANGE_PARAMS = _ct.POINTER(SP_PROPCHANGE_PARAMS)
 
 class SP_DEVICE_INTERFACE_DATA(_ct.Structure):
     _fields_ = [
-        ("cbSize", _wt.DWORD),
+        ("cbSize", DWORD),
         ("InterfaceClassGuid", GUID),
-        ("Flags", _wt.DWORD),
+        ("Flags", DWORD),
         ("Reserved", ULONG_PTR),
         ]
     def __init__(self):
@@ -108,15 +104,15 @@ PSP_DEVICE_INTERFACE_DATA = _ct.POINTER(SP_DEVICE_INTERFACE_DATA)
 
 class SP_DEVICE_INTERFACE_DETAIL_DATA(_ct.Structure):
     _fields_ = [
-        ("cbSize", _wt.DWORD),
-        ("DevicePath", _wt.WCHAR * 1),
+        ("cbSize", DWORD),
+        ("DevicePath", WCHAR * 1),
         ]
 
 ################################################################################
 
 _SetupDiGetClassDevs = _fun_fact(
     _sua.SetupDiGetClassDevsW,
-    (_wt.HANDLE, PGUID, _wt.LPCWSTR, _wt.HWND, _wt.DWORD)
+    (HANDLE, PGUID, PWSTR, HWND, DWORD)
     )
 
 def SetupDiGetClassDevs(
@@ -126,10 +122,7 @@ def SetupDiGetClassDevs(
     hwnd=None
     ):
     if guid is not None:
-        if not isinstance(guid, uuid.UUID):
-            raise TypeError(f"guid '{guid}' is not a UUID")
-        g = GUID(guid)
-        guid = _ref(g)
+        guid = _ref(guid)
         flags &= ~ DIGCF_ALLCLASSES
     res = _SetupDiGetClassDevs(guid, enumerator, hwnd, flags)
     _raise_if(res == INVALID_HANDLE_VALUE)
@@ -138,7 +131,7 @@ def SetupDiGetClassDevs(
 ################################################################################
 
 _SetupDiDestroyDeviceInfoList = _fun_fact(
-    _sua.SetupDiDestroyDeviceInfoList, (_wt.BOOL, _wt.HANDLE)
+    _sua.SetupDiDestroyDeviceInfoList, (BOOL, HANDLE)
     )
 
 def SetupDiDestroyDeviceInfoList(info_set):
@@ -148,7 +141,7 @@ def SetupDiDestroyDeviceInfoList(info_set):
 
 _SetupDiEnumDeviceInfo = _fun_fact(
     _sua.SetupDiEnumDeviceInfo,
-    (_wt.BOOL, _wt.HANDLE, _wt.DWORD, PSP_DEVINFO_DATA)
+    (BOOL, HANDLE, DWORD, PSP_DEVINFO_DATA)
     )
 
 def SetupDiEnumDeviceInfo(info_set, idx, deinda):
@@ -158,7 +151,7 @@ def SetupDiEnumDeviceInfo(info_set, idx, deinda):
 
 _CM_Get_Device_ID = _fun_fact(
     _sua.CM_Get_Device_IDW,
-    (_wt.DWORD, _wt.DWORD, _wt.LPWSTR, _wt.ULONG, _wt.ULONG)
+    (DWORD, DWORD, PWSTR, ULONG, ULONG)
     )
 
 def CM_Get_Device_ID(devinst):
@@ -170,12 +163,12 @@ def CM_Get_Device_ID(devinst):
 
 _CM_Get_DevNode_Status = _fun_fact(
     _sua.CM_Get_DevNode_Status,
-    (_wt.DWORD, _wt.PULONG, _wt.PULONG, _wt.DWORD, _wt.ULONG)
+    (DWORD, PULONG, PULONG, DWORD, ULONG)
     )
 
 def CM_Get_DevNode_Status(dev_inst):
-    status = _wt.ULONG()
-    problem = _wt.ULONG()
+    status = ULONG()
+    problem = ULONG()
     _raise_if(_CM_Get_DevNode_Status(_ref(status), _ref(problem), dev_inst, 0))
     return status.value, problem.value
 
@@ -183,23 +176,23 @@ def CM_Get_DevNode_Status(dev_inst):
 
 _CM_Enumerate_Enumerators = _fun_fact(
     _sua.CM_Enumerate_EnumeratorsW,
-    (_wt.DWORD, _wt.ULONG, _wt.LPWSTR, _wt.PULONG, _wt.ULONG)
+    (DWORD, ULONG, PWSTR, PULONG, ULONG)
     )
 
 def CM_Enumerate_Enumerators(idx):
     enum_str = _ct.create_unicode_buffer(MAX_DEVICE_ID_LEN)
-    size = _wt.ULONG(MAX_DEVICE_ID_LEN)
+    size = ULONG(MAX_DEVICE_ID_LEN)
     _raise_if(_CM_Enumerate_Enumerators(idx, enum_str, _ref(size), 0))
     return enum_str.value
 
 ################################################################################
 
 _CM_Get_Parent = _fun_fact(
-    _sua.CM_Get_Parent, (_wt.DWORD, _wt.PDWORD, _wt.DWORD, _wt.ULONG)
+    _sua.CM_Get_Parent, (DWORD, PDWORD, DWORD, ULONG)
     )
 
 def CM_Get_Parent(devinst):
-    parent = _wt.DWORD()
+    parent = DWORD()
     _raise_if(_CM_Get_Parent(_ref(parent), devinst, 0))
     return parent.value
 
@@ -207,17 +200,17 @@ def CM_Get_Parent(devinst):
 
 _CM_Request_Device_Eject = _fun_fact(
     _sua.CM_Request_Device_EjectW, (
-        _wt.DWORD,
-        _wt.DWORD,
-        _wt.PINT,
-        _wt.LPWSTR,
-        _wt.ULONG,
-        _wt.ULONG
+        DWORD,
+        DWORD,
+        PINT,
+        PWSTR,
+        ULONG,
+        ULONG
         )
     )
 
 def CM_Request_Device_Eject(devinst):
-    veto_type = _wt.INT()
+    veto_type = INT()
     veto_name = _ct.create_unicode_buffer(MAX_PATH)
     err = _CM_Request_Device_Eject(
         devinst,
@@ -247,13 +240,13 @@ def get_device_enumerators():
 ################################################################################
 
 _CM_Enumerate_Classes = _fun_fact(
-    _sua.CM_Enumerate_Classes, (_wt.DWORD, _wt.ULONG, PGUID, _wt.ULONG)
+    _sua.CM_Enumerate_Classes, (DWORD, ULONG, PGUID, ULONG)
     )
 
 def CM_Enumerate_Classes(idx, flags=0):
     guid = GUID()
     _raise_if(_CM_Enumerate_Classes(idx, _ref(guid), flags))
-    return guid.uuid()
+    return guid
 
 ################################################################################
 
@@ -272,12 +265,12 @@ def get_device_classes(flags=0):
 
 _SetupDiClassNameFromGuid = _fun_fact(
     _sua.SetupDiClassNameFromGuidW,
-    (_wt.BOOL, PGUID, _wt.LPWSTR, _wt.DWORD, _wt.PDWORD)
+    (BOOL, PGUID, PWSTR, DWORD, PDWORD)
     )
 
 def SetupDiClassNameFromGuid(guid):
     guid = GUID(guid)
-    req_size = _wt.DWORD(0)
+    req_size = DWORD(0)
     _SetupDiClassNameFromGuid(_ref(guid), None, 0, _ref(req_size))
     name = _ct.create_unicode_buffer(req_size.value)
     _raise_if(
@@ -293,7 +286,7 @@ def SetupDiClassNameFromGuid(guid):
 ################################################################################
 
 _SetupDiRemoveDevice = _fun_fact(
-    _sua.SetupDiRemoveDevice, (_wt.BOOL, _wt.HANDLE, PSP_DEVINFO_DATA)
+    _sua.SetupDiRemoveDevice, (BOOL, HANDLE, PSP_DEVINFO_DATA)
     )
 
 def SetupDiRemoveDevice(info_set, deinda):
@@ -302,7 +295,7 @@ def SetupDiRemoveDevice(info_set, deinda):
 ################################################################################
 
 _SetupDiCreateDeviceInfoList = _fun_fact(
-    _sua.SetupDiCreateDeviceInfoList, (_wt.HANDLE, PGUID, _wt.HWND)
+    _sua.SetupDiCreateDeviceInfoList, (HANDLE, PGUID, HWND)
     )
 
 def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
@@ -317,11 +310,11 @@ def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
 
 _SetupDiGetDeviceInstanceId = _fun_fact(
     _sua.SetupDiGetDeviceInstanceIdW,
-    (_wt.BOOL, _wt.HANDLE, PSP_DEVINFO_DATA, _wt.LPWSTR, _wt.DWORD, _wt.PDWORD)
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, PWSTR, DWORD, PDWORD)
     )
 
 def SetupDiGetDeviceInstanceId(info_set, deinda):
-    req_size = _wt.DWORD()
+    req_size = DWORD()
     _SetupDiGetDeviceInstanceId(info_set, deinda, None, 0, _ref(req_size))
     idstr = _ct.create_unicode_buffer(req_size.value)
     _raise_if(
@@ -339,7 +332,7 @@ def SetupDiGetDeviceInstanceId(info_set, deinda):
 
 _SetupDiOpenDeviceInfo = _fun_fact(
     _sua.SetupDiOpenDeviceInfoW,
-    (_wt.BOOL, _wt.HANDLE, _wt.LPWSTR, _wt.HWND, _wt.DWORD, PSP_DEVINFO_DATA)
+    (BOOL, HANDLE, PWSTR, HWND, DWORD, PSP_DEVINFO_DATA)
     )
 
 def SetupDiOpenDeviceInfo(info_set, inst_id, hwnd=None, flags=0, p_info=None):
@@ -350,12 +343,19 @@ def SetupDiOpenDeviceInfo(info_set, inst_id, hwnd=None, flags=0, p_info=None):
 ################################################################################
 
 _SetupDiClassGuidsFromNameEx = _fun_fact(
-    _sua.SetupDiClassGuidsFromNameExW,
-    (_wt.BOOL, _wt.LPWSTR, PGUID, _wt.DWORD, _wt.PDWORD, _wt.LPWSTR, _wt.LPVOID)
+    _sua.SetupDiClassGuidsFromNameExW, (
+        BOOL,
+        PWSTR,
+        PGUID,
+        DWORD,
+        PDWORD,
+        PWSTR,
+        PVOID
+        )
     )
 
 def SetupDiClassGuidsFromNameEx(cls_name, machine_name=None):
-    req_size = _wt.DWORD()
+    req_size = DWORD()
     _SetupDiClassGuidsFromNameEx(
         cls_name,
         None,
@@ -462,7 +462,7 @@ def remove_non_present_devices():
 
 _SetupDiSetClassInstallParams = _fun_fact(
     _sua.SetupDiSetClassInstallParamsW,
-    (_wt.BOOL, _wt.HANDLE, PSP_DEVINFO_DATA, PSP_PROPCHANGE_PARAMS, _wt.DWORD)
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, PSP_PROPCHANGE_PARAMS, DWORD)
     )
 
 def SetupDiSetClassInstallParams(info_set, deinda, pparams):
@@ -479,7 +479,7 @@ def SetupDiSetClassInstallParams(info_set, deinda, pparams):
 
 _SetupDiCallClassInstaller = _fun_fact(
     _sua.SetupDiCallClassInstaller,
-    (_wt.BOOL, _wt.DWORD, _wt.HANDLE, PSP_DEVINFO_DATA)
+    (BOOL, DWORD, HANDLE, PSP_DEVINFO_DATA)
     )
 
 def SetupDiCallClassInstaller(func, info_set, deinda):
@@ -523,20 +523,20 @@ def disable_devices(guid=None, enumerator=None, rx=None):
 
 _SetupDiGetDeviceRegistryProperty = _fun_fact(
     _sua.SetupDiGetDeviceRegistryPropertyW, (
-        _wt.BOOL,
-        _wt.HANDLE,
+        BOOL,
+        HANDLE,
         PSP_DEVINFO_DATA,
-        _wt.DWORD,
-        _wt.PDWORD,
-        _wt.PBYTE,
-        _wt.DWORD,
-        _wt.PDWORD
+        DWORD,
+        PDWORD,
+        PBYTE,
+        DWORD,
+        PDWORD
         )
     )
 
 def SetupDiGetDeviceRegistryProperty(info_set, deinda, prop):
-    reg_type = _wt.DWORD()
-    req_size = _wt.DWORD()
+    reg_type = DWORD()
+    req_size = DWORD()
     _SetupDiGetDeviceRegistryProperty(
         info_set,
         deinda,
@@ -553,7 +553,7 @@ def SetupDiGetDeviceRegistryProperty(info_set, deinda, prop):
             deinda,
             prop,
             _ref(reg_type),
-            _ct.cast(buf, _wt.PBYTE),
+            _ct.cast(buf, PBYTE),
             req_size,
             _ref(req_size)
             )
@@ -573,11 +573,11 @@ def desc_from_info_set(info_set, deinda):
 
 _SetupDiEnumDeviceInterfaces = _fun_fact(
     _sua.SetupDiEnumDeviceInterfaces, (
-        _wt.BOOL,
-        _wt.HANDLE,
+        BOOL,
+        HANDLE,
         PSP_DEVINFO_DATA,
         PGUID,
-        _wt.DWORD,
+        DWORD,
         PSP_DEVICE_INTERFACE_DATA
         )
     )
@@ -620,18 +620,18 @@ def enum_dev_interfaces(guid):
 
 _SetupDiGetDeviceInterfaceDetail = _fun_fact(
     _sua.SetupDiGetDeviceInterfaceDetailW, (
-        _wt.BOOL,
-        _wt.HANDLE,
+        BOOL,
+        HANDLE,
         PSP_DEVICE_INTERFACE_DATA,
-        _wt.LPVOID,
-        _wt.DWORD,
-        _wt.PDWORD,
+        PVOID,
+        DWORD,
+        PDWORD,
         PSP_DEVINFO_DATA
         )
     )
 
 def SetupDiGetDeviceInterfaceDetail(info_set, did):
-    req_size = _wt.DWORD(0)
+    req_size = DWORD(0)
     _SetupDiGetDeviceInterfaceDetail(
         info_set,
         _ref(did),
@@ -641,11 +641,11 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
         None
         )
 
-    diff = req_size.value - _ct.sizeof(_wt.DWORD)
+    diff = req_size.value - _ct.sizeof(DWORD)
     class LOCAL_SPDIDD(_ct.Structure):
         _fields_ = [
-            ("cbSize", _wt.DWORD),
-            ("DevicePath", _wt.BYTE * diff),
+            ("cbSize", DWORD),
+            ("DevicePath", BYTE * diff),
             ]
     ifdetail = LOCAL_SPDIDD()
     ifdetail.cbSize = _ct.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)

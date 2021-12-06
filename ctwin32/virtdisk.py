@@ -23,9 +23,9 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 
-from . import _fun_fact, _raise_on_err, GUID
+from .wtypes import *
+from . import _fun_fact, _raise_on_err
 
 # import CloseHandle so you can close a vdisk handle just by importing this mod
 from .kernel import CloseHandle
@@ -37,7 +37,7 @@ _vdisk = _ct.windll.virtdisk
 
 class VIRTUAL_STORAGE_TYPE(_ct.Structure):
     _fields_ = (
-        ("DeviceId", _wt.ULONG),
+        ("DeviceId", ULONG),
         ("VendorId", GUID),
         )
 PVIRTUAL_STORAGE_TYPE = _ct.POINTER(VIRTUAL_STORAGE_TYPE)
@@ -46,18 +46,18 @@ PVIRTUAL_STORAGE_TYPE = _ct.POINTER(VIRTUAL_STORAGE_TYPE)
 
 class _OVDP_VERSION1(_ct.Structure):
     _fields_ = (
-        ("RWDepth", _wt.ULONG),
+        ("RWDepth", ULONG),
         )
 class _OVDP_VERSION2(_ct.Structure):
     _fields_ = (
-        ("GetInfoOnly", _wt.BOOL),
-        ("ReadOnly", _wt.BOOL),
+        ("GetInfoOnly", BOOL),
+        ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         )
 class _OVDP_VERSION3(_ct.Structure):
     _fields_ = (
-        ("GetInfoOnly", _wt.BOOL),
-        ("ReadOnly", _wt.BOOL),
+        ("GetInfoOnly", BOOL),
+        ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         ("SnapshotId", GUID),
         )
@@ -69,7 +69,7 @@ class _OVDP_UNION(_ct.Union):
         )
 
 class OPEN_VIRTUAL_DISK_PARAMETERS(_ct.Structure):
-    _fields_ = (("Version", _wt.LONG), ("u", _OVDP_UNION))
+    _fields_ = (("Version", LONG), ("u", _OVDP_UNION))
     _anonymous_ = ("u",)
 POPEN_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
 
@@ -77,12 +77,12 @@ POPEN_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
 
 class _AVDP_VERSION1(_ct.Structure):
     _fields_ = (
-        ("Reserved", _wt.ULONG),
+        ("Reserved", ULONG),
         )
 class _AVDP_VERSION2(_ct.Structure):
     _fields_ = (
-        ("RestrictedOffset", _wt.ULARGE_INTEGER),
-        ("RestrictedLength", _wt.ULARGE_INTEGER),
+        ("RestrictedOffset", ULARGE_INTEGER),
+        ("RestrictedLength", ULARGE_INTEGER),
         )
 class _AVDP_UNION(_ct.Union):
     _fields_ = (
@@ -91,7 +91,7 @@ class _AVDP_UNION(_ct.Union):
         )
 
 class ATTACH_VIRTUAL_DISK_PARAMETERS(_ct.Structure):
-    _fields_ = (("Version", _wt.LONG), ("u", _AVDP_UNION))
+    _fields_ = (("Version", LONG), ("u", _AVDP_UNION))
     _anonymous_ = ("u",)
 PATTACH_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
 
@@ -99,18 +99,18 @@ PATTACH_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
 
 _OpenVirtualDisk = _fun_fact(
     _vdisk.OpenVirtualDisk, (
-        _wt.DWORD,
+        DWORD,
         PVIRTUAL_STORAGE_TYPE,
-        _wt.LPWSTR,
-        _wt.LONG,
-        _wt.LONG,
+        PWSTR,
+        LONG,
+        LONG,
         POPEN_VIRTUAL_DISK_PARAMETERS,
-        _wt.PHANDLE
+        PHANDLE
         )
     )
 
 def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
-    hdl = _wt.HANDLE()
+    hdl = HANDLE()
     _raise_on_err(
         _OpenVirtualDisk(
             _ref(storage_type),
@@ -127,13 +127,13 @@ def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
 
 _AttachVirtualDisk = _fun_fact(
     _vdisk.AttachVirtualDisk, (
-        _wt.DWORD,
-        _wt.HANDLE,
-        _wt.LPVOID, # no interest in supplying a security descriptor
-        _wt.LONG,
-        _wt.ULONG,
+        DWORD,
+        HANDLE,
+        PVOID, # no interest in supplying a security descriptor
+        LONG,
+        ULONG,
         PATTACH_VIRTUAL_DISK_PARAMETERS,
-        _wt.LPVOID, # no interest in supplying an overlapped
+        PVOID, # no interest in supplying an overlapped
         )
     )
 
@@ -153,10 +153,10 @@ def AttachVirtualDisk(hdl, flags, prov_flags=0, parameters=None):
 
 _DetachVirtualDisk = _fun_fact(
     _vdisk.DetachVirtualDisk, (
-        _wt.DWORD,
-        _wt.HANDLE,
-        _wt.LONG,
-        _wt.ULONG,
+        DWORD,
+        HANDLE,
+        LONG,
+        ULONG,
         )
     )
 

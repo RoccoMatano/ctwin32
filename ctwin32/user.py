@@ -23,15 +23,13 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 from types import SimpleNamespace as _namespace
 
+from .wtypes import *
 from . import (
     kernel,
     _raise_if,
     _fun_fact,
-    UINT_PTR,
-    LONG_PTR,
     WAIT_FAILED,
     GWL_STYLE,
     GWL_EXSTYLE,
@@ -46,18 +44,18 @@ _ref = _ct.byref
 ################################################################################
 
 _GetWindowThreadProcessId = _fun_fact(
-    _u32.GetWindowThreadProcessId, (_wt.DWORD, _wt.HANDLE, _wt.LPDWORD)
+    _u32.GetWindowThreadProcessId, (DWORD, HANDLE, PDWORD)
     )
 
 def GetWindowThreadProcessId(hwnd):
-    pid = _wt.DWORD()
+    pid = DWORD()
     tid = _GetWindowThreadProcessId(hwnd, _ref(pid))
     return tid, pid.value
 
 ################################################################################
 
 _GetWindowTextLength = _fun_fact(
-    _u32.GetWindowTextLengthW, (_wt.INT, _wt.HANDLE)
+    _u32.GetWindowTextLengthW, (INT, HANDLE)
     )
 
 def GetWindowTextLength(hwnd):
@@ -66,7 +64,7 @@ def GetWindowTextLength(hwnd):
 ################################################################################
 
 _GetWindowText = _fun_fact(
-    _u32.GetWindowTextW, (_wt.INT, _wt.HANDLE, _wt.LPWSTR, _wt.INT)
+    _u32.GetWindowTextW, (INT, HANDLE, PWSTR, INT)
     )
 
 def GetWindowText(hwnd):
@@ -79,7 +77,7 @@ def GetWindowText(hwnd):
 ################################################################################
 
 _GetClassName = _fun_fact(
-    _u32.GetClassNameW, (_wt.INT, _wt.HANDLE, _wt.LPWSTR, _wt.INT)
+    _u32.GetClassNameW, (INT, HANDLE, PWSTR, INT)
     )
 
 def GetClassName(hwnd):
@@ -94,7 +92,7 @@ def GetClassName(hwnd):
 
 ################################################################################
 
-_GetWindowLong = _fun_fact(_u32.GetWindowLongW, (_wt.LONG, _wt.HANDLE, _wt.INT))
+_GetWindowLong = _fun_fact(_u32.GetWindowLongW, (LONG, HANDLE, INT))
 
 def GetWindowLong(hwnd, idx):
     return _GetWindowLong(hwnd, idx)
@@ -102,7 +100,7 @@ def GetWindowLong(hwnd, idx):
 ################################################################################
 
 _GetWindowLongPtr = _fun_fact(
-    _u32.GetWindowLongPtrW, (LONG_PTR, _wt.HANDLE, _wt.INT)
+    _u32.GetWindowLongPtrW, (LONG_PTR, HANDLE, INT)
     )
 
 def GetWindowLongPtr(hwnd, idx):
@@ -118,8 +116,8 @@ class _EnumWindowsContext(_ct.Structure):
 _EnumWindowsContextPtr = _ct.POINTER(_EnumWindowsContext)
 
 _EnumWindowsCallback = _ct.WINFUNCTYPE(
-    _wt.BOOL,
-    _wt.HANDLE,
+    BOOL,
+    HANDLE,
     _EnumWindowsContextPtr
     )
 
@@ -131,7 +129,7 @@ def _EnumWndCb(hwnd, ctxt):
 ################################################################################
 
 _EnumWindows = _fun_fact(
-    _u32.EnumWindows, (_wt.BOOL, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    _u32.EnumWindows, (BOOL, _EnumWindowsCallback, _EnumWindowsContextPtr)
     )
 
 def EnumWindows(callback, context):
@@ -142,7 +140,7 @@ def EnumWindows(callback, context):
 
 _EnumChildWindows = _fun_fact(
     _u32.EnumChildWindows,
-    (_wt.BOOL, _wt.HANDLE, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    (BOOL, HANDLE, _EnumWindowsCallback, _EnumWindowsContextPtr)
     )
 
 def EnumChildWindows(hwnd, callback, context):
@@ -178,7 +176,7 @@ def get_child_window_list(hwnd):
 ################################################################################
 
 _WaitForInputIdle = _fun_fact(
-    _u32.WaitForInputIdle, (_wt.DWORD, _wt.HANDLE, _wt.DWORD)
+    _u32.WaitForInputIdle, (DWORD, HANDLE, DWORD)
     )
 
 def WaitForInputIdle(proc, timeout):
@@ -190,7 +188,7 @@ def WaitForInputIdle(proc, timeout):
 
 _PostMessage = _fun_fact(
     _u32.PostMessageW,
-    (_wt.BOOL, _wt.HANDLE, _wt.UINT, UINT_PTR, LONG_PTR)
+    (BOOL, HANDLE, UINT, UINT_PTR, LONG_PTR)
     )
 
 def PostMessage(hwnd, msg, wp, lp):
@@ -200,7 +198,7 @@ def PostMessage(hwnd, msg, wp, lp):
 
 _SendMessage = _fun_fact(
     _u32.SendMessageW,
-    (LONG_PTR, _wt.HANDLE, _wt.UINT, UINT_PTR, LONG_PTR)
+    (LONG_PTR, HANDLE, UINT, UINT_PTR, LONG_PTR)
     )
 
 def SendMessage(hwnd, msg, wp, lp):
@@ -208,28 +206,72 @@ def SendMessage(hwnd, msg, wp, lp):
 
 ################################################################################
 
-_GetWindow = _fun_fact(_u32.GetWindow, (_wt.HANDLE, _wt.HANDLE, _wt.UINT))
+_SendMessageTimeout = _fun_fact(
+    _u32.SendMessageTimeoutW, (
+        LONG_PTR,
+        HANDLE,
+        UINT,
+        UINT_PTR,
+        LONG_PTR,
+        UINT,
+        UINT,
+        PDWORD
+        )
+    )
+
+def SendMessageTimeout(hwnd, msg, wp, lp, flags, timeout):
+    result = DWORD()
+    _raise_if(
+        0 == _SendMessageTimeout(
+            hwnd,
+            msg,
+            wp,
+            lp,
+            flags,
+            timeout,
+            _ref(result)
+            )
+        )
+    return result.value
+
+################################################################################
+
+_GetWindow = _fun_fact(_u32.GetWindow, (HANDLE, HANDLE, UINT))
 
 def GetWindow(hwnd, cmd):
     return _GetWindow(hwnd, cmd)
 
 ################################################################################
 
-_GetAsyncKeyState = _fun_fact(_u32.GetAsyncKeyState, (_wt.SHORT, _wt.INT))
+_GetAsyncKeyState = _fun_fact(_u32.GetAsyncKeyState, (SHORT, INT))
 
 def GetAsyncKeyState(vkey):
     return _GetAsyncKeyState(vkey)
 
 ################################################################################
 
+class RECT(_ct.Structure):
+    _fields_ = (
+        ("left", LONG),
+        ("top", LONG),
+        ("right", LONG),
+        ("bottom", LONG)
+        )
+
+class POINT(_ct.Structure):
+    _fields_ = (
+        ("x", LONG),
+        ("y", LONG)
+        )
+
 class WINDOWPLACEMENT(_ct.Structure):
     _fields_ = (
-        ("length", _wt.UINT),
-        ("flags", _wt.UINT),
-        ("showCmd", _wt.UINT),
-        ("MinPosition", _wt.POINT),
-        ("MaxPosition", _wt.POINT),
-        ("NormalPosition", _wt.RECT),
+        ("length", UINT),
+        ("flags", UINT),
+        ("showCmd", UINT),
+        ("MinPosition", POINT),
+        ("MaxPosition", POINT),
+        ("NormalPosition", RECT),
         )
 
     def __init__(self, f=0, s=1, mi=(0, 0), ma=(0, 0), no=(0, 0, 0, 0)):
@@ -258,7 +300,7 @@ PWINDOWPLACEMENT = _ct.POINTER(WINDOWPLACEMENT)
 ################################################################################
 
 _GetWindowPlacement = _fun_fact(
-    _u32.GetWindowPlacement, (_wt.BOOL, _wt.HANDLE, PWINDOWPLACEMENT)
+    _u32.GetWindowPlacement, (BOOL, HANDLE, PWINDOWPLACEMENT)
     )
 
 def GetWindowPlacement(hwnd):
@@ -269,7 +311,7 @@ def GetWindowPlacement(hwnd):
 ################################################################################
 
 _SetWindowPlacement = _fun_fact(
-    _u32.SetWindowPlacement, (_wt.BOOL, _wt.HANDLE, PWINDOWPLACEMENT)
+    _u32.SetWindowPlacement, (BOOL, HANDLE, PWINDOWPLACEMENT)
     )
 
 def SetWindowPlacement(hwnd, wpt):
@@ -278,7 +320,7 @@ def SetWindowPlacement(hwnd, wpt):
 ################################################################################
 
 _AttachThreadInput = _fun_fact(
-    _u32.AttachThreadInput, (_wt.BOOL, _wt.DWORD, _wt.DWORD, _wt.BOOL)
+    _u32.AttachThreadInput, (BOOL, DWORD, DWORD, BOOL)
     )
 
 def AttachThreadInput(id_attach, id_attach_to, do_attach):
@@ -286,7 +328,7 @@ def AttachThreadInput(id_attach, id_attach_to, do_attach):
 
 ################################################################################
 
-_BringWindowToTop = _fun_fact(_u32.BringWindowToTop, (_wt.BOOL, _wt.HANDLE))
+_BringWindowToTop = _fun_fact(_u32.BringWindowToTop, (BOOL, HANDLE))
 
 def BringWindowToTop(hwnd):
     _raise_if(not _BringWindowToTop(hwnd))
@@ -302,7 +344,7 @@ def to_top_maybe_attach(hwnd):
 
 ################################################################################
 
-_SetActiveWindow = _fun_fact(_u32.SetActiveWindow, (_wt.HANDLE, _wt.HANDLE))
+_SetActiveWindow = _fun_fact(_u32.SetActiveWindow, (HANDLE, HANDLE))
 
 def SetActiveWindow(hwnd):
     return _SetActiveWindow(hwnd)
@@ -310,7 +352,7 @@ def SetActiveWindow(hwnd):
 ################################################################################
 
 _MessageBox = _fun_fact(
-    _u32.MessageBoxW, (_wt.INT, _wt.HANDLE, _wt.LPCWSTR, _wt.LPCWSTR, _wt.UINT)
+    _u32.MessageBoxW, (INT, HANDLE, PWSTR, PWSTR, UINT)
     )
 
 def MessageBox(hwnd, text, caption, flags):
@@ -322,28 +364,28 @@ def MessageBox(hwnd, text, caption, flags):
 
 class MOUSEINPUT(_ct.Structure):
     _fields_ = (
-        ("dx", _wt.LONG),
-        ("dy", _wt.LONG),
-        ("mouseData", _wt.DWORD),
-        ("dwFlags", _wt.DWORD),
-        ("time", _wt.DWORD),
+        ("dx", LONG),
+        ("dy", LONG),
+        ("mouseData", DWORD),
+        ("dwFlags", DWORD),
+        ("time", DWORD),
         ("dwExtraInfo", UINT_PTR),
         )
 
 class KEYBDINPUT(_ct.Structure):
     _fields_ = (
-        ("wVk", _wt.WORD),
-        ("wScan", _wt.WORD),
-        ("dwFlags", _wt.DWORD),
-        ("time", _wt.DWORD),
+        ("wVk", WORD),
+        ("wScan", WORD),
+        ("dwFlags", DWORD),
+        ("time", DWORD),
         ("dwExtraInfo", UINT_PTR),
         )
 
 class HARDWAREINPUT(_ct.Structure):
     _fields_ = (
-        ("uMsg", _wt.DWORD),
-        ("wParamL", _wt.WORD),
-        ("wParamH", _wt.WORD),
+        ("uMsg", DWORD),
+        ("wParamL", WORD),
+        ("wParamH", WORD),
         )
 
 class _DUMMY_INPUT_UNION(_ct.Union):
@@ -356,7 +398,7 @@ class _DUMMY_INPUT_UNION(_ct.Union):
 class INPUT(_ct.Structure):
     _anonymous_ = ("anon",)
     _fields_ = (
-        ("type", _wt.DWORD),
+        ("type", DWORD),
         ("anon", _DUMMY_INPUT_UNION),
         )
 
@@ -386,7 +428,7 @@ def kb_input(vk, scan, flags=0):
 
 ################################################################################
 
-_SendInput = _fun_fact(_u32.SendInput, (_wt.UINT, _wt.UINT, PINPUT, _ct.c_int))
+_SendInput = _fun_fact(_u32.SendInput, (UINT, UINT, PINPUT, _ct.c_int))
 
 def SendInput(inputs):
     if isinstance(inputs, INPUT):
@@ -404,14 +446,14 @@ def SendInput(inputs):
 
 ################################################################################
 
-_ExitWindowsEx = _fun_fact(_u32.ExitWindowsEx, (_wt.BOOL, _wt.UINT, _wt.DWORD))
+_ExitWindowsEx = _fun_fact(_u32.ExitWindowsEx, (BOOL, UINT, DWORD))
 
 def ExitWindowsEx(flags, reason):
     _raise_if(0 == _ExitWindowsEx(flags, reason))
 
 ################################################################################
 
-_LockWorkStation = _fun_fact(_u32.LockWorkStation, (_wt.BOOL,))
+_LockWorkStation = _fun_fact(_u32.LockWorkStation, (BOOL,))
 
 def LockWorkStation():
     _raise_if(0 == _LockWorkStation())

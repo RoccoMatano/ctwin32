@@ -23,8 +23,8 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 
+from .wtypes import *
 from . import INFINITE, SW_SHOW, SEE_MASK_NOCLOSEPROCESS, _raise_if, _fun_fact
 from .kernel import WaitForSingleObject, CloseHandle
 
@@ -32,21 +32,21 @@ from .kernel import WaitForSingleObject, CloseHandle
 
 class SHELLEXECUTEINFOW(_ct.Structure):
     _fields_ = (
-        ("cbSize", _wt.DWORD),
-        ("fMask", _wt.DWORD),
-        ("hwnd", _wt.HWND),
-        ("lpVerb", _wt.LPCWSTR),
-        ("lpFile", _wt.LPCWSTR),
-        ("lpParameters", _wt.LPCWSTR),
-        ("lpDirectory", _wt.LPCWSTR),
-        ("nShow", _wt.INT),
-        ("hInstApp", _wt.HINSTANCE),
-        ("lpIDList", _wt.LPVOID),
-        ("lpClass", _wt.LPCWSTR),
-        ("hkeyClass", _wt.HKEY),
-        ("dwHotKey", _wt.DWORD),
-        ("hMonitor", _wt.HANDLE),
-        ("hProcess", _wt.HANDLE),
+        ("cbSize", DWORD),
+        ("fMask", DWORD),
+        ("hwnd", HWND),
+        ("lpVerb", PWSTR),
+        ("lpFile", PWSTR),
+        ("lpParameters", PWSTR),
+        ("lpDirectory", PWSTR),
+        ("nShow", INT),
+        ("hInstApp", HINSTANCE),
+        ("lpIDList", PVOID),
+        ("lpClass", PWSTR),
+        ("hkeyClass", HANDLE),
+        ("dwHotKey", DWORD),
+        ("hMonitor", HANDLE),
+        ("hProcess", HANDLE),
         )
     def __init__(self, file, verb, param, direc, wait, show):
         self.cbSize = _ct.sizeof(self)
@@ -61,7 +61,7 @@ class SHELLEXECUTEINFOW(_ct.Structure):
 
 _ShellExecuteExW = _fun_fact(
     _ct.windll.shell32.ShellExecuteExW,
-    (_wt.BOOL, _ct.POINTER(SHELLEXECUTEINFOW))
+    (BOOL, _ct.POINTER(SHELLEXECUTEINFOW))
     )
 
 ################################################################################

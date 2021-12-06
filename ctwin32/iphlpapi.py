@@ -23,10 +23,10 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 import ipaddress as _iaddr
 from collections import defaultdict as _defdict
 
+from .wtypes import *
 from . import (
     _fun_fact,
     ERROR_BUFFER_OVERFLOW,
@@ -45,23 +45,23 @@ _iph = _ct.windll.iphlpapi
 ################################################################################
 
 class _STRUCTURE(_ct.Structure):
-    _fields_ = (("Length", _wt.ULONG), ("Flags", _wt.ULONG))
+    _fields_ = (("Length", ULONG), ("Flags", ULONG))
 
 class _UNION(_ct.Union):
     _fields_ = (("Alignment", _ct.c_ulonglong), ("s", _STRUCTURE))
     _anonymous_ = ("s",)
 
 class SOCKADDR(_ct.Structure):
-    _fields_ = (("sa_family", _wt.WORD), ("sa_data", _wt.BYTE * 14))
+    _fields_ = (("sa_family", WORD), ("sa_data", BYTE * 14))
 
-LPSOCKADDR = PSOCKADDR = _ct.POINTER(SOCKADDR)
+PSOCKADDR = _ct.POINTER(SOCKADDR)
 
 ################################################################################
 
 class SOCKET_ADDRESS(_ct.Structure):
     _fields_ = (
         ("lpSockaddr", PSOCKADDR),
-        ("iSockaddrLength", _wt.INT)
+        ("iSockaddrLength", INT)
         )
 PSOCKET_ADDRESS = _ct.POINTER(SOCKET_ADDRESS)
 
@@ -87,7 +87,7 @@ IP_ADAPTER_PREFIX._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_PREFIX),
     ("Address", SOCKET_ADDRESS),
-    ("PrefixLength", _wt.ULONG)
+    ("PrefixLength", ULONG)
     )
 
 ################################################################################
@@ -98,22 +98,22 @@ PIP_ADAPTER_ADDRESSES = _ct.POINTER(IP_ADAPTER_ADDRESSES)
 IP_ADAPTER_ADDRESSES._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_ADDRESSES),
-    ("AdapterName", _wt.PCHAR),
+    ("AdapterName", PCHAR),
     ("FirstUnicastAddress", PIP_ADAPTER_UNICAST_ADDRESS),
-    ("FirstAnycastAddress", _wt.LPVOID),
-    ("FirstMulticastAddress", _wt.LPVOID),
-    ("FirstDnsServerAddress", _wt.LPVOID),
-    ("DnsSuffix", _wt.LPWSTR),
-    ("Description", _wt.LPWSTR),
-    ("FriendlyName", _wt.LPWSTR),
-    ("PhysicalAddress", _wt.BYTE * 8),
-    ("PhysicalAddressLength", _wt.ULONG),
-    ("Flags", _wt.ULONG),
-    ("Mtu", _wt.ULONG),
-    ("IfType", _wt.ULONG),
-    ("OperStatus", _wt.INT),
-    ("Ipv6IfIndex", _wt.ULONG),
-    ("ZoneIndices", _wt.ULONG * 16),
+    ("FirstAnycastAddress", PVOID),
+    ("FirstMulticastAddress", PVOID),
+    ("FirstDnsServerAddress", PVOID),
+    ("DnsSuffix", PWSTR),
+    ("Description", PWSTR),
+    ("FriendlyName", PWSTR),
+    ("PhysicalAddress", BYTE * 8),
+    ("PhysicalAddressLength", ULONG),
+    ("Flags", ULONG),
+    ("Mtu", ULONG),
+    ("IfType", ULONG),
+    ("OperStatus", INT),
+    ("Ipv6IfIndex", ULONG),
+    ("ZoneIndices", ULONG * 16),
     ("FirstPrefix", PIP_ADAPTER_PREFIX)
     # we do not need any field after 'FirstPrefix',
     # so we do not define them
@@ -123,18 +123,18 @@ IP_ADAPTER_ADDRESSES._fields_ = (
 
 class S_UN_B(_ct.Structure):
     _fields_ = (
-        ("s_b1", _wt.BYTE),
-        ("s_b2", _wt.BYTE),
-        ("s_b3", _wt.BYTE),
-        ("s_b4", _wt.BYTE)
+        ("s_b1", BYTE),
+        ("s_b2", BYTE),
+        ("s_b3", BYTE),
+        ("s_b4", BYTE)
         )
 class S_UN_W(_ct.Structure):
-    _fields_ = (("s_w1", _wt.WORD), ("s_w2", _wt.WORD))
+    _fields_ = (("s_w1", WORD), ("s_w2", WORD))
 class S_UN(_ct.Union):
     _fields_ = (
         ("S_un_b", S_UN_B),
         ("S_un_w", S_UN_W),
-        ("S_addr", _wt.ULONG.__ctype_be__)
+        ("S_addr", ULONG.__ctype_be__)
         )
 class IN_ADDR(_ct.Structure):
     _fields_ = (("S_un", S_UN),)
@@ -144,28 +144,28 @@ PIN_ADDR = _ct.POINTER(IN_ADDR)
 
 class SOCKADDR_IN(_ct.Structure):
     _fields_ = (
-        ("sin_family", _wt.WORD),
-        ("sin_port", _wt.WORD),
+        ("sin_family", WORD),
+        ("sin_port", WORD),
         ("sin_addr", IN_ADDR),
-        ("sin_zero", _wt.BYTE * 8)
+        ("sin_zero", BYTE * 8)
         )
 PSOCKADDR_IN = _ct.POINTER(SOCKADDR_IN)
 
 ################################################################################
 
 class IN6_ADDR(_ct.Union):
-    _fields_ = (("Byte", _wt.BYTE * 16), ("Word", _wt.WORD * 8))
+    _fields_ = (("Byte", BYTE * 16), ("Word", WORD * 8))
 PIN6_ADDR = _ct.POINTER(IN6_ADDR)
 
 ################################################################################
 
 class SOCKADDR_IN6(_ct.Structure):
     _fields_ = (
-        ("sin6_family", _wt.WORD),
-        ("sin6_port", _wt.WORD),
-        ("sin6_flowinfo", _wt.ULONG),
+        ("sin6_family", WORD),
+        ("sin6_port", WORD),
+        ("sin6_flowinfo", ULONG),
         ("sin6_addr", IN6_ADDR),
-        ("sin6_scope_id", _wt.ULONG),
+        ("sin6_scope_id", ULONG),
         )
 PSOCKADDR_IN6 = _ct.POINTER(SOCKADDR_IN6)
 
@@ -189,12 +189,12 @@ def _sock_addr_to_ip_addr(p_sock_addr):
 
 _GetAdaptersAddresses = _fun_fact(
     _iph.GetAdaptersAddresses, (
-        _wt.ULONG,
-        _wt.ULONG,
-        _wt.ULONG,
-        _wt.LPVOID,
+        ULONG,
+        ULONG,
+        ULONG,
+        PVOID,
         PIP_ADAPTER_ADDRESSES,
-        _wt.PULONG
+        PULONG
         )
     )
 
@@ -259,7 +259,7 @@ def get_host_interfaces(version=4, include_loopback=False):
         GAA_FLAG_SKIP_ANYCAST |
         GAA_FLAG_SKIP_MULTICAST
         )
-    blen = _wt.ULONG(16 * 1024)
+    blen = ULONG(16 * 1024)
     error = ERROR_BUFFER_OVERFLOW
     while error == ERROR_BUFFER_OVERFLOW:
         buffer = _ct.create_string_buffer(blen.value)

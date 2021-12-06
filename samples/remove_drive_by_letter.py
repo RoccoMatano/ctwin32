@@ -35,7 +35,6 @@
 ################################################################################
 
 import sys
-import uuid
 import time
 import ctypes
 
@@ -49,6 +48,9 @@ from ctwin32 import (
     FILE_DEVICE_DVD,
     FILE_DEVICE_DISK,
     SPDRP_REMOVAL_POLICY,
+    INT,
+    ULONG,
+    GUID
     )
 
 ################################################################################
@@ -57,13 +59,13 @@ from ctwin32 import (
 
 class STORAGE_DEVICE_NUMBER(ctypes.Structure):
     _fields_ = (
-    ("DeviceType", ctypes.c_int),
-    ("DeviceNumber", ctypes.c_ulong),
-    ("PartitionNumber", ctypes.c_ulong),
+    ("DeviceType", INT),
+    ("DeviceNumber", ULONG),
+    ("PartitionNumber", ULONG),
     )
 IOCTL_STORAGE_GET_DEVICE_NUMBER = 0x002d1080
-GUID_IFACE_DISK = uuid.UUID("{53f56307-b6bf-11d0-94f2-00a0c91efb8b}")
-GUID_IFACE_CDROM = uuid.UUID("{53f56308-b6bf-11d0-94f2-00a0c91efb8b}")
+GUID_IFACE_DISK = GUID("53f56307-b6bf-11d0-94f2-00a0c91efb8b")
+GUID_IFACE_CDROM = GUID("53f56308-b6bf-11d0-94f2-00a0c91efb8b")
 
 ################################################################################
 

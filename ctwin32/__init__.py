@@ -25,7 +25,7 @@
 version = "1.2.0"
 
 import ctypes as _ct
-from uuid import UUID
+from .wtypes import *
 
 ################################################################################
 
@@ -48,33 +48,21 @@ def _fun_fact(function, signature):
 
 ################################################################################
 
-if _ct.sizeof(_ct.c_long) == _ct.sizeof(_ct.c_void_p):
-    UINT_PTR = ULONG_PTR =_ct.c_ulong
-    INT_PTR = LONG_PTR = _ct.c_long
-elif _ct.sizeof(_ct.c_longlong) == _ct.sizeof(_ct.c_void_p):
-    UINT_PTR = ULONG_PTR = _ct.c_ulonglong
-    INT_PTR = LONG_PTR = _ct.c_longlong
-else:
-    raise AssertionError(
-        f"unexpected size of pointer: {_ct.sizeof(_ct.c_void_p)}"
-        )
+def multi_str_from_addr(addr):
+    WCHAR_SIZE = _ct.sizeof(WCHAR)
+    end = addr
+    while True:
+        slen = len(_ct.cast(end, PWSTR).value)
+        if slen:
+            end += (slen + 1) * WCHAR_SIZE
+        else:
+            # +WCHAR_SIZE for final null
+            size = (end + WCHAR_SIZE - addr) // WCHAR_SIZE
+            return _ct.wstring_at(addr, size)
 
 ################################################################################
 
-class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
-    def __init__(self, u=UUID(int=0)):
-        # u is either GUID or uuid.UUID
-        src = u if isinstance(u, GUID) else u.bytes_le
-        _ct.memmove(self, src, _ct.sizeof(self))
-
-    def uuid(self):
-        return UUID(bytes_le=bytes(self))
-
-PGUID = _ct.POINTER(GUID)
-
-################################################################################
-
-INVALID_HANDLE_VALUE = _ct.c_void_p(-1).value
+INVALID_HANDLE_VALUE = HANDLE(-1).value
 
 DBT_CONFIGCHANGECANCELED = 25
 DBT_CONFIGCHANGED = 24

@@ -23,16 +23,14 @@
 ################################################################################
 
 import ctypes as _ct
-import ctypes.wintypes as _wt
 from enum import IntFlag as _int_flag
 from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
 
+from .wtypes import *
 from . import (
     kernel,
     _fun_fact,
-    UINT_PTR,
-    LONG_PTR,
     ERROR_FILE_NOT_FOUND,
     ERROR_NO_MORE_FILES,
     SystemProcessInformation,
@@ -41,13 +39,12 @@ from . import (
     ProcessImageFileName,
     ProcessBasicInformation,
     )
-from .kernel import QueryDosDevice
 
 _nt = _ct.windll.ntdll
 _ref = _ct.byref
 
 def _ntstatus(status):
-    return _wt.LONG(status).value
+    return LONG(status).value
 
 STATUS_INFO_LENGTH_MISMATCH = _ntstatus(0xC0000004)
 STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
@@ -56,7 +53,7 @@ STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 ################################################################################
 
 _RtlNtStatusToDosError = _fun_fact(
-    _nt.RtlNtStatusToDosError, (_wt.ULONG, _wt.LONG)
+    _nt.RtlNtStatusToDosError, (ULONG, LONG)
     )
 
 def RtlNtStatusToDosError(status):
@@ -73,9 +70,9 @@ def _raise_failed_status(status):
 
 class UNICODE_STRING(_ct.Structure):
     _fields_ = (
-        ("Length", _wt.WORD),
-        ("MaximumLength", _wt.WORD),
-        ("Buffer", _wt.LPWSTR),
+        ("Length", WORD),
+        ("MaximumLength", WORD),
+        ("Buffer", PWSTR),
         )
 
 PUNICODE_STRING = _ct.POINTER(UNICODE_STRING)
@@ -84,7 +81,7 @@ PUNICODE_STRING = _ct.POINTER(UNICODE_STRING)
 
 class SYSTEM_PROCESS_ID_INFORMATION(_ct.Structure):
     _fields_ = (
-        ("ProcessId", _wt.HANDLE),
+        ("ProcessId", HANDLE),
         ("ImageName", UNICODE_STRING),
         )
 
@@ -93,21 +90,21 @@ class SYSTEM_PROCESS_ID_INFORMATION(_ct.Structure):
 class SYSTEM_PROCESS_INFORMATION(_ct.Structure):
     "this is just a partial definition"
     _fields_ = (
-    ("NextEntryOffset", _wt.ULONG),
-    ("NumberOfThreads", _wt.ULONG),
-    ("WorkingSetPrivateSize", _wt.LARGE_INTEGER),
-    ("HardFaultCount", _wt.ULONG),
-    ("NumberOfThreadsHighWatermark", _wt.ULONG),
-    ("CycleTime", _wt.ULARGE_INTEGER),
-    ("CreateTime", _wt.LARGE_INTEGER),
-    ("UserTime", _wt.LARGE_INTEGER),
-    ("KernelTime", _wt.LARGE_INTEGER),
+    ("NextEntryOffset", ULONG),
+    ("NumberOfThreads", ULONG),
+    ("WorkingSetPrivateSize", LARGE_INTEGER),
+    ("HardFaultCount", ULONG),
+    ("NumberOfThreadsHighWatermark", ULONG),
+    ("CycleTime", ULARGE_INTEGER),
+    ("CreateTime", LARGE_INTEGER),
+    ("UserTime", LARGE_INTEGER),
+    ("KernelTime", LARGE_INTEGER),
     ("ImageName", UNICODE_STRING), # file name only, no path
-    ("BasePriority", _wt.LONG),
-    ("UniqueProcessId", _wt.HANDLE),
-    ("InheritedFromUniqueProcessId", _wt.HANDLE),
-    ("HandleCount", _wt.ULONG),
-    ("SessionId", _wt.ULONG),
+    ("BasePriority", LONG),
+    ("UniqueProcessId", HANDLE),
+    ("InheritedFromUniqueProcessId", HANDLE),
+    ("HandleCount", ULONG),
+    ("SessionId", ULONG),
     ("UniqueProcessKey", UINT_PTR),
     )
 
@@ -123,24 +120,24 @@ class CLIENT_ID(_ct.Structure):
 
 class SYSTEM_HANDLE_TABLE_ENTRY_INFO(_ct.Structure):
     _fields_ = (
-        ("Object", _wt.LPVOID),
+        ("Object", PVOID),
         ("UniqueProcessId", UINT_PTR),
         ("HandleValue", UINT_PTR),
-        ("GrantedAccess", _wt.ULONG),
-        ("CreatorBackTraceIndex", _wt.WORD),
-        ("ObjectTypeIndex", _wt.WORD),
-        ("HandleAttributes", _wt.ULONG),
-        ("Reserved", _wt.ULONG),
+        ("GrantedAccess", ULONG),
+        ("CreatorBackTraceIndex", WORD),
+        ("ObjectTypeIndex", WORD),
+        ("HandleAttributes", ULONG),
+        ("Reserved", ULONG),
         )
 
 ################################################################################
 
 class PROCESS_BASIC_INFORMATION(_ct.Structure):
     _fields_ = (
-        ("ExitStatus", _wt.INT),
+        ("ExitStatus", INT),
         ("PebBaseAddress", LONG_PTR),
         ("AffinityMask", LONG_PTR),
-        ("BasePriority", _wt.INT),
+        ("BasePriority", INT),
         ("UniqueProcessId", LONG_PTR),
         ("InheritedFromUniqueProcessId", LONG_PTR)
         )
@@ -151,7 +148,7 @@ class PROCESS_EXTENDED_BASIC_INFORMATION(_ct.Structure):
     _fields_ = (
         ("Size", LONG_PTR),
         ("BasicInfo", PROCESS_BASIC_INFORMATION),
-        ("Flags", _wt.INT)
+        ("Flags", INT)
         )
     def __init__(self):
         self.Size = _ct.sizeof(self)
@@ -171,12 +168,12 @@ class PROCESS_EXTENDED_BASIC_FLAGS(_int_flag):
 
 class OBJECT_ATTRIBUTES(_ct.Structure):
     _fields_ = (
-        ("Length", _wt.ULONG),
-        ("RootDirectory", _wt.HANDLE),
-        ("ObjectName", _ct.POINTER(UNICODE_STRING)),
-        ("Attributes", _wt.ULONG),
-        ("SecurityDescriptor", _wt.LPVOID),
-        ("SecurityQualityOfService", _wt.LPVOID)
+        ("Length", ULONG),
+        ("RootDirectory", HANDLE),
+        ("ObjectName", PUNICODE_STRING),
+        ("Attributes", ULONG),
+        ("SecurityDescriptor", PVOID),
+        ("SecurityQualityOfService", PVOID)
         )
 
     def __init__(self):
@@ -195,8 +192,8 @@ def _make_handle_info(num_entries):
 
 ################################################################################
 
-_NtClose = _fun_fact(_nt.NtClose, (_wt.ULONG, _wt.LPVOID))
-_NtClose.restype = _wt.ULONG
+_NtClose = _fun_fact(_nt.NtClose, (ULONG, PVOID))
+_NtClose.restype = ULONG
 
 def NtClose(handle):
     _raise_failed_status(_NtClose(handle))
@@ -205,13 +202,13 @@ def NtClose(handle):
 
 _NtOpenProcess = _fun_fact(
     _nt.NtOpenProcess,
-    (_wt.ULONG, _wt.LPVOID, _wt.ULONG, _wt.LPVOID, _wt.LPVOID)
+    (ULONG, PVOID, ULONG, PVOID, PVOID)
     )
 
 def NtOpenProcess(pid, desired_access):
     cid = CLIENT_ID()
     cid.UniqueProcess = pid
-    h = _wt.HANDLE(0)
+    h = HANDLE()
     oa = OBJECT_ATTRIBUTES()
     s = _NtOpenProcess(_ref(h), desired_access, _ref(oa), _ref(cid))
     _raise_failed_status(s)
@@ -221,11 +218,11 @@ def NtOpenProcess(pid, desired_access):
 
 _RtlAdjustPrivilege = _fun_fact(
     _nt.RtlAdjustPrivilege,
-    (_wt.LONG, _wt.ULONG, _wt.BOOLEAN, _wt.BOOLEAN, _ct.POINTER(_wt.BOOLEAN))
+    (LONG, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
     )
 
 def RtlAdjustPrivilege(priv, enable, thread_priv=False):
-    prev = _wt.BOOLEAN()
+    prev = BOOLEAN()
     status = _RtlAdjustPrivilege(priv, enable, thread_priv, _ref(prev))
     _raise_failed_status(status)
     return bool(prev)
@@ -234,7 +231,7 @@ def RtlAdjustPrivilege(priv, enable, thread_priv=False):
 
 _NtQuerySystemInformation = _fun_fact(
     _nt.NtQuerySystemInformation,
-    (_wt.LONG, _wt.LONG, _wt.LPVOID, _wt.ULONG, _wt.PULONG)
+    (LONG, LONG, PVOID, ULONG, PULONG)
     )
 
 def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
@@ -244,7 +241,7 @@ def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
 
 _NtQueryInformationProcess = _fun_fact(
     _nt.NtQueryInformationProcess,
-    (_wt.ULONG, _wt.LPVOID, _wt.LONG, _wt.LPVOID, _wt.ULONG, _wt.LPVOID)
+    (ULONG, PVOID, LONG, PVOID, ULONG, PVOID)
     )
 
 def NtQueryInformationProcess(phandle, pinfo, buf, buf_size, p_ret_len):
@@ -253,14 +250,14 @@ def NtQueryInformationProcess(phandle, pinfo, buf, buf_size, p_ret_len):
 ################################################################################
 
 def required_sys_info_size(sys_info):
-    size = _wt.ULONG(0)
+    size = ULONG(0)
     NtQuerySystemInformation(sys_info, 0, size, _ref(size))
     return size
 
 ################################################################################
 
 def required_proc_info_size(handle, proc_info):
-    size = _wt.ULONG(0)
+    size = ULONG(0)
     NtQueryInformationProcess(handle, proc_info, 0, size, _ref(size))
     return size
 
@@ -307,7 +304,7 @@ def _resolve_device_prefix(fname):
     for dc in "abcdefghijklmnopqrstuvwxyz":
         dn = dc + ":"
         try:
-            dos_devices[QueryDosDevice(dn)] = dn
+            dos_devices[kernel.QueryDosDevice(dn)] = dn
         except OSError as e:
             if e.winerror != ERROR_FILE_NOT_FOUND:
                 raise e
@@ -330,7 +327,7 @@ def proc_path_from_pid(pid):
     buf = _ct.create_unicode_buffer(512)
     size = _ct.sizeof(SYSTEM_PROCESS_ID_INFORMATION)
     spii = SYSTEM_PROCESS_ID_INFORMATION()
-    spii.ProcessId = _ct.cast(pid, _wt.HANDLE)
+    spii.ProcessId = _ct.cast(pid, HANDLE)
     spii.ImageName.Length = 0
     spii.ImageName.MaximumLength = buf._length_
     spii.ImageName.Buffer = _ct.addressof(buf)
@@ -370,7 +367,7 @@ def proc_path_from_handle(handle):
 def get_handles(pid=-1):
     info = SystemExtendedHandleInformation
     hi = _make_handle_info(1)
-    rlen = _wt.ULONG(0)
+    rlen = ULONG(0)
     _NtQuerySystemInformation(info, _ref(hi), _ct.sizeof(hi), _ref(rlen))
     hi = _make_handle_info(hi.NumberOfHandles)
     _raise_failed_status(
@@ -393,11 +390,11 @@ def get_grouped_handles(pid=-1):
 
 _NtGetNextProcess = _fun_fact(
     _nt.NtGetNextProcess,
-    (_wt.ULONG, _wt.LPVOID, _wt.UINT, _wt.UINT, _wt.INT, _wt.LPVOID)
+    (ULONG, PVOID, UINT, UINT, INT, PVOID)
     )
 
 def NtGetNextProcess(current, access, attribs=0, flags=0):
-    nxt = _wt.HANDLE(0)
+    nxt = HANDLE()
     _raise_failed_status(
         _NtGetNextProcess(current, access, attribs, flags, _ref(nxt))
         )
@@ -407,7 +404,7 @@ def NtGetNextProcess(current, access, attribs=0, flags=0):
 
 def get_proc_ext_basic_info(proc_handle):
     pebi = PROCESS_EXTENDED_BASIC_INFORMATION()
-    rlen = _wt.ULONG(0)
+    rlen = ULONG(0)
     _raise_failed_status(
         NtQueryInformationProcess(
             proc_handle,
@@ -428,8 +425,8 @@ def pid_from_handle(handle):
 
 class _DUMMY_STATUS_UNION(_ct.Union):
     _fields_ = (
-        ("Status", _wt.LONG),
-        ("Pointer", _wt.LPVOID),
+        ("Status", LONG),
+        ("Pointer", PVOID),
         )
 
 class IO_STATUS_BLOCK(_ct.Structure):
@@ -444,17 +441,17 @@ PIO_STATUS_BLOCK = _ct.POINTER(IO_STATUS_BLOCK)
 
 class FILE_DIRECTORY_INFORMATION(_ct.Structure):
     _fields_ = (
-    ("NextEntryOffset", _wt.ULONG),
-    ("FileIndex", _wt.ULONG),
-    ("CreationTime", _wt.LARGE_INTEGER),
-    ("LastAccessTime", _wt.LARGE_INTEGER),
-    ("LastWriteTime", _wt.LARGE_INTEGER),
-    ("ChangeTime", _wt.LARGE_INTEGER),
-    ("EndOfFile", _wt.LARGE_INTEGER),
-    ("AllocationSize", _wt.LARGE_INTEGER),
-    ("FileAttributes", _wt.ULONG),
-    ("FileNameLength", _wt.ULONG),
-    ("FileName", _wt.WCHAR * 1),
+    ("NextEntryOffset", ULONG),
+    ("FileIndex", ULONG),
+    ("CreationTime", LARGE_INTEGER),
+    ("LastAccessTime", LARGE_INTEGER),
+    ("LastWriteTime", LARGE_INTEGER),
+    ("ChangeTime", LARGE_INTEGER),
+    ("EndOfFile", LARGE_INTEGER),
+    ("AllocationSize", LARGE_INTEGER),
+    ("FileAttributes", ULONG),
+    ("FileNameLength", ULONG),
+    ("FileName", WCHAR * 1),
     )
 PFILE_DIRECTORY_INFORMATION = _ct.POINTER(FILE_DIRECTORY_INFORMATION)
 
@@ -462,18 +459,18 @@ PFILE_DIRECTORY_INFORMATION = _ct.POINTER(FILE_DIRECTORY_INFORMATION)
 
 _NtQueryDirectoryFile = _fun_fact(
     _nt.NtQueryDirectoryFile, (
-        _wt.LONG,
-        _wt.HANDLE,
-        _wt.HANDLE,
-        _wt.LPVOID, # PIO_APC_ROUTINE
-        _wt.LPVOID,
+        LONG,
+        HANDLE,
+        HANDLE,
+        PVOID, # PIO_APC_ROUTINE
+        PVOID,
         PIO_STATUS_BLOCK,
-        _wt.LPVOID,
-        _wt.ULONG,
-        _wt.INT,
-        _wt.BOOLEAN,
+        PVOID,
+        ULONG,
+        INT,
+        BOOLEAN,
         PUNICODE_STRING,
-        _wt.BOOLEAN,
+        BOOLEAN,
         )
     )
 
@@ -507,14 +504,14 @@ def get_directory_info(hdir, restart_scan):
             break
     _raise_failed_status(stat)
 
-    pv = _ct.cast(_ct.addressof(buf), _wt.LPVOID)
+    pv = _ct.cast(_ct.addressof(buf), PVOID)
     dinfo = _ct.cast(_ct.addressof(buf), PFILE_DIRECTORY_INFORMATION).contents
     name_addr = pv.value + FILE_DIRECTORY_INFORMATION.FileName.offset
     name = _ct.wstring_at(name_addr, dinfo.FileNameLength // 2)
 
     def la2dt(la):
         return kernel.FileTimeToLocalSystemTime(
-            kernel.FILETIME(la)
+            FILETIME(la)
             ).to_datetime()
 
     return _namespace(
