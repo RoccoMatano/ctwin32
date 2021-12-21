@@ -33,6 +33,7 @@ from . import (
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
     multi_str_from_addr,
+    cmdline_from_args,
     )
 
 _k32 = _ct.windll.kernel32
@@ -503,5 +504,207 @@ def ExpandEnvironmentStrings(template):
         else:
             size = req
     return var.value
+
+################################################################################
+
+class PROCESS_INFORMATION(_ct.Structure):
+    _fields_ = (
+        ("hProcess", KHANDLE),
+        ("hThread", KHANDLE),
+        ("dwProcessId", DWORD),
+        ("dwThreadId", DWORD),
+        )
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.hThread.close()
+        self.hProcess.close()
+
+PPROCESS_INFORMATION = _ct.POINTER(PROCESS_INFORMATION)
+
+################################################################################
+
+class STARTUPINFO(_ct.Structure):
+    _fields_ = (
+        ("cb", DWORD),
+        ("lpReserved", PWSTR),
+        ("lpDesktop", PWSTR),
+        ("lpTitle", PWSTR),
+        ("dwX", DWORD),
+        ("dwY", DWORD),
+        ("dwXSize", DWORD),
+        ("dwYSize", DWORD),
+        ("dwXCountChars", DWORD),
+        ("dwYCountChars", DWORD),
+        ("dwFillAttribute", DWORD),
+        ("dwFlags", DWORD),
+        ("wShowWindow", WORD),
+        ("cbReserved2", WORD),
+        ("lpReserved2", PBYTE),
+        ("hStdInput", HANDLE),
+        ("hStdOutput", HANDLE),
+        ("hStdError", HANDLE),
+        )
+    def __init__(self):
+        self.cb = _ct.sizeof(STARTUPINFO)
+
+PSTARTUPINFO = _ct.POINTER(STARTUPINFO)
+
+class STARTUPINFOEX(_ct.Structure):
+    _fields_ = (
+        ("StartupInfo", STARTUPINFO),
+        ("lpAttributeList", PVOID),
+        )
+    def __init__(self, attr_lst=None):
+        self.StartupInfo.cb = _ct.sizeof(STARTUPINFOEX)
+        self.lpAttributeList = attr_lst
+
+################################################################################
+
+_InitializeProcThreadAttributeList = _fun_fact(
+    _k32.InitializeProcThreadAttributeList,
+    (BOOL, PVOID, DWORD, DWORD, PSIZE_T)
+    )
+
+def InitializeProcThreadAttributeList(alst, acnt, flags, size=0):
+    size = SIZE_T(size)
+    ok = _InitializeProcThreadAttributeList(alst, acnt, flags, _ref(size))
+    _raise_if(not ok and alst)
+    return size.value
+
+################################################################################
+
+_UpdateProcThreadAttribute = _fun_fact(
+    _k32.UpdateProcThreadAttribute,
+    (BOOL, PVOID, DWORD, UINT_PTR, PVOID, SIZE_T, PVOID, PSIZE_T)
+    )
+
+def UpdateProcThreadAttribute(alst, flags, id, attr):
+    size = SIZE_T(_ct.sizeof(attr))
+    _raise_if(
+        not _UpdateProcThreadAttribute(
+            alst,
+            flags,
+            id,
+            _ref(attr),
+            SIZE_T(_ct.sizeof(attr)),
+            None,
+            None
+            )
+        )
+
+################################################################################
+
+_DeleteProcThreadAttributeList = _fun_fact(
+    _k32.DeleteProcThreadAttributeList, (None, PVOID)
+    )
+
+def DeleteProcThreadAttributeList(alst):
+    _DeleteProcThreadAttributeList(alst)
+
+################################################################################
+
+class ProcThreadAttributeList:
+    def __init__(self, attr_pairs):
+        self.buf = None
+        size = InitializeProcThreadAttributeList(None, len(attr_pairs), 0)
+        buf = _ct.create_string_buffer(size)
+        InitializeProcThreadAttributeList(buf, 1, 0, size)
+        try:
+            for id, value in attr_pairs:
+                UpdateProcThreadAttribute(buf, 0, id, value)
+        except OSError:
+            DeleteProcThreadAttributeList(buf)
+            raise
+        self.buf = buf
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.buf:
+            DeleteProcThreadAttributeList(self.buf)
+            self.buf = None
+
+    def address(self):
+        return _ct.addressof(self.buf) if self.buf else None
+
+################################################################################
+
+_CreateProcess = _fun_fact(
+    _k32.CreateProcessW, (
+        BOOL,
+        PWSTR,
+        PWSTR,
+        PSECURITY_ATTRIBUTES,
+        PSECURITY_ATTRIBUTES,
+        BOOL,
+        DWORD,
+        PVOID,
+        PWSTR,
+        PSTARTUPINFO,
+        PPROCESS_INFORMATION
+        )
+    )
+
+def CreateProcess(
+    app_name,
+    cmd_line,
+    proc_attr,
+    thread_attr,
+    inherit,
+    cflags,
+    env,
+    curdir,
+    startup_info,
+    ):
+    proc_info = PROCESS_INFORMATION()
+    if isinstance(startup_info, STARTUPINFOEX):
+        psi = _ref(startup_info.StartupInfo)
+    else:
+        psi = _ref(startup_info)
+    _raise_if(
+        not _CreateProcess(
+            app_name,
+            cmd_line,
+            _ref(proc_attr) if proc_attr is not None else None,
+            _ref(thread_attr) if thread_attr is not None else None,
+            inherit,
+            cflags,
+            env,
+            curdir,
+            psi,
+            _ref(proc_info)
+            )
+        )
+    return proc_info
+
+################################################################################
+
+def create_process(
+    arglist,
+    cflags=0,
+    startup_info=None,
+    inherit=False,
+    env=None,
+    curdir=None,
+    proc_attr=None,
+    thread_attr=None,
+    ):
+    if startup_info is None:
+        startup_info = STARTUPINFO()
+    return CreateProcess(
+        None,
+        cmdline_from_args(arglist),
+        proc_attr,
+        thread_attr,
+        inherit,
+        cflags,
+        env,
+        curdir,
+        startup_info
+        )
 
 ################################################################################

@@ -25,8 +25,21 @@
 import ctypes as _ct
 
 from .wtypes import *
-from . import INFINITE, SW_SHOW, SEE_MASK_NOCLOSEPROCESS, _raise_if, _fun_fact
-from .kernel import WaitForSingleObject, CloseHandle
+from . import (
+    INFINITE,
+    SW_SHOW,
+    SEE_MASK_NOCLOSEPROCESS,
+    PROCESS_CREATE_PROCESS,
+    PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
+    CREATE_NEW_CONSOLE,
+    EXTENDED_STARTUPINFO_PRESENT,
+    _raise_if,
+    _fun_fact,
+    kernel,
+    user
+    )
+
+from .kernel import WaitForSingleObject, CloseHandle, LocalFree
 
 ################################################################################
 
@@ -79,12 +92,46 @@ def ShellExecuteEx(
     _raise_if(not _ShellExecuteExW(_ct.byref(sei)))
 
     if sei.hProcess is not None:
-        WaitForSingleObject(sei.hProcess, INFINITE);
-        CloseHandle(sei.hProcess);
+        kernel.WaitForSingleObject(sei.hProcess, INFINITE);
+        kernel.CloseHandle(sei.hProcess);
 
 ################################################################################
 
 def elevate(*args, direc=None, wait=False, show=SW_SHOW):
     ShellExecuteEx(args[0], "runas", " ".join(args[1:]), direc, wait, show)
+
+################################################################################
+
+def relegate(*args, wait=False):
+    tid, pid, = user.GetWindowThreadProcessId(user.GetShellWindow())
+    with kernel.OpenProcess(PROCESS_CREATE_PROCESS, False, pid) as shell_proc:
+        attr = ((PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, shell_proc),)
+        with kernel.ProcThreadAttributeList(attr) as ptal:
+            si = kernel.STARTUPINFOEX(ptal.address())
+            cflags = CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT
+            with kernel.create_process(args, cflags, si) as pi:
+                if wait:
+                    kernel.WaitForSingleObject(pi.hProcess, INFINITE);
+
+################################################################################
+
+_CommandLineToArgv = _fun_fact(
+    _ct.windll.shell32.CommandLineToArgvW,
+    (PPWSTR, PWSTR, PINT),
+    )
+
+def CommandLineToArgv(cmdline):
+    # CommandLineToArgv gets leading white space wrong
+    cmdline = cmdline.lstrip(" \t")
+    if not cmdline:
+        return []
+
+    argc = INT()
+    pargs = _CommandLineToArgv(cmdline, _ct.byref(argc))
+    _raise_if(not pargs)
+    try:
+        return [pargs[i] for i in range(argc.value)]
+    finally:
+        LocalFree(pargs)
 
 ################################################################################

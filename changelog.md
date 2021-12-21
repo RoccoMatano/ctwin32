@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- kernel.PROCESS_INFORMATION, kernel.STARTUPINFO and kernel.STARTUPINFOEX
+- kernel.InitializeProcThreadAttributeList, kernel.UpdateProcThreadAttribute,
+  kernel.DeleteProcThreadAttributeList and kernel.ProcThreadAttributeList
+- kernel.CreateProcess and kernel.create_process
+- user.EnumThreadWindows and user.get_thread_window_list
+- properties width, height and center of user.RECT
+- user.GetWindowRect
+- user.SetWindowPos
+- user.GetShellWindow
+- user.MonitorFromWindow
+- user.MONITORINFO and user.GetMonitorInfo
+- user.start_centered
+- shell.relegate
+- shell.CommandLineToArgv
+- cmdline_from_args
+
 ## [1.3.0]
 
 ### Added

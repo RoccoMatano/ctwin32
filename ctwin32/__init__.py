@@ -62,6 +62,123 @@ def multi_str_from_addr(addr):
 
 ################################################################################
 
+def cmdline_from_args(args):
+    BS = "\\"
+    parts = []
+    for arg in args:
+        bs_accu = []
+        if parts:
+            parts.append(" ")
+        need_qmark = (" " in arg) or ("\t" in arg) or not arg
+        if need_qmark:
+            parts.append('"')
+        for c in arg:
+            if c == BS:
+                bs_accu.append(c)
+            elif c == '"':
+                parts.append(BS * len(bs_accu) * 2)
+                bs_accu = []
+                parts.append(r'\"')
+            else:
+                if bs_accu:
+                    parts.extend(bs_accu)
+                    bs_accu = []
+                parts.append(c)
+        if bs_accu:
+            parts.extend(bs_accu)
+        if need_qmark:
+            parts.extend(bs_accu)
+            parts.append('"')
+    return "".join(parts)
+
+################################################################################
+
+PROC_THREAD_ATTRIBUTE_NUMBER   = 0x0000FFFF
+PROC_THREAD_ATTRIBUTE_THREAD   = 0x00010000
+PROC_THREAD_ATTRIBUTE_INPUT    = 0x00020000
+PROC_THREAD_ATTRIBUTE_ADDITIVE = 0x00040000
+
+ProcThreadAttributeParentProcess                = 0
+ProcThreadAttributeExtendedFlags                = 1
+ProcThreadAttributeHandleList                   = 2
+ProcThreadAttributeGroupAffinity                = 3
+ProcThreadAttributePreferredNode                = 4
+ProcThreadAttributeIdealProcessor               = 5
+ProcThreadAttributeUmsThread                    = 6
+ProcThreadAttributeMitigationPolicy             = 7
+ProcThreadAttributeSecurityCapabilities         = 9
+ProcThreadAttributeProtectionLevel              = 11
+ProcThreadAttributeJobList                      = 13
+ProcThreadAttributeChildProcessPolicy           = 14
+ProcThreadAttributeAllApplicationPackagesPolicy = 15
+ProcThreadAttributeWin32kFilter                 = 16
+ProcThreadAttributeSafeOpenPromptOriginClaim    = 17
+ProcThreadAttributeDesktopAppPolicy             = 18
+ProcThreadAttributePseudoConsole                = 22
+ProcThreadAttributeMitigationAuditPolicy        = 24
+
+def _pta_value(num, thr, inp, add):
+    return (
+        (num & PROC_THREAD_ATTRIBUTE_NUMBER) |
+        (PROC_THREAD_ATTRIBUTE_THREAD if thr else 0) |
+        (PROC_THREAD_ATTRIBUTE_INPUT if inp else 0) |
+        (PROC_THREAD_ATTRIBUTE_ADDITIVE if add else 0)
+        )
+
+PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = _pta_value(
+    ProcThreadAttributeParentProcess, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_EXTENDED_FLAGS = _pta_value(
+    ProcThreadAttributeExtendedFlags, False, True, True
+    )
+PROC_THREAD_ATTRIBUTE_HANDLE_LIST = _pta_value(
+    ProcThreadAttributeHandleList, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_GROUP_AFFINITY = _pta_value(
+    ProcThreadAttributeGroupAffinity, True, True, False
+    )
+PROC_THREAD_ATTRIBUTE_PREFERRED_NODE = _pta_value(
+    ProcThreadAttributePreferredNode, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR = _pta_value(
+    ProcThreadAttributeIdealProcessor, True, True, False
+    )
+PROC_THREAD_ATTRIBUTE_UMS_THREAD = _pta_value(
+    ProcThreadAttributeUmsThread, True, True, False
+    )
+PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY = _pta_value(
+    ProcThreadAttributeMitigationPolicy, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES  = _pta_value(
+    ProcThreadAttributeSecurityCapabilities, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_PROTECTION_LEVEL = _pta_value(
+    ProcThreadAttributeProtectionLevel, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = _pta_value(
+    ProcThreadAttributePseudoConsole, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_JOB_LIST = _pta_value(
+    ProcThreadAttributeJobList, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY = _pta_value(
+    ProcThreadAttributeChildProcessPolicy, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY = _pta_value(
+    ProcThreadAttributeAllApplicationPackagesPolicy, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_WIN32K_FILTER = _pta_value(
+    ProcThreadAttributeWin32kFilter, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_DESKTOP_APP_POLICY = _pta_value(
+    ProcThreadAttributeDesktopAppPolicy, False, True, False
+    )
+PROC_THREAD_ATTRIBUTE_MITIGATION_AUDIT_POLICY = _pta_value(
+    ProcThreadAttributeMitigationAuditPolicy, False, True, False
+    )
+
+################################################################################
+
 INVALID_HANDLE_VALUE = HANDLE(-1).value
 
 DBT_CONFIGCHANGECANCELED = 25
@@ -5782,24 +5899,39 @@ PIPE_TYPE_BYTE = 0
 PIPE_TYPE_MESSAGE = 4
 PIPE_UNLIMITED_INSTANCES = 255
 
-DEBUG_PROCESS = 1
-DEBUG_ONLY_THIS_PROCESS = 2
-CREATE_SUSPENDED = 4
-DETACHED_PROCESS = 8
-CREATE_NEW_CONSOLE = 16
-NORMAL_PRIORITY_CLASS = 32
-IDLE_PRIORITY_CLASS = 64
-HIGH_PRIORITY_CLASS = 128
-REALTIME_PRIORITY_CLASS = 256
-CREATE_NEW_PROCESS_GROUP = 512
-CREATE_UNICODE_ENVIRONMENT = 1024
-CREATE_SEPARATE_WOW_VDM = 2048
-CREATE_SHARED_WOW_VDM = 4096
-CREATE_DEFAULT_ERROR_MODE = 67108864
-CREATE_NO_WINDOW = 134217728
-PROFILE_USER = 268435456
-PROFILE_KERNEL = 536870912
-PROFILE_SERVER = 1073741824
+DEBUG_PROCESS                    = 0x00000001
+DEBUG_ONLY_THIS_PROCESS          = 0x00000002
+CREATE_SUSPENDED                 = 0x00000004
+DETACHED_PROCESS                 = 0x00000008
+CREATE_NEW_CONSOLE               = 0x00000010
+NORMAL_PRIORITY_CLASS            = 0x00000020
+IDLE_PRIORITY_CLASS              = 0x00000040
+HIGH_PRIORITY_CLASS              = 0x00000080
+REALTIME_PRIORITY_CLASS          = 0x00000100
+CREATE_NEW_PROCESS_GROUP         = 0x00000200
+CREATE_UNICODE_ENVIRONMENT       = 0x00000400
+CREATE_SEPARATE_WOW_VDM          = 0x00000800
+CREATE_SHARED_WOW_VDM            = 0x00001000
+CREATE_FORCEDOS                  = 0x00002000
+BELOW_NORMAL_PRIORITY_CLASS      = 0x00004000
+ABOVE_NORMAL_PRIORITY_CLASS      = 0x00008000
+INHERIT_PARENT_AFFINITY          = 0x00010000
+INHERIT_CALLER_PRIORITY          = 0x00020000
+CREATE_PROTECTED_PROCESS         = 0x00040000
+EXTENDED_STARTUPINFO_PRESENT     = 0x00080000
+PROCESS_MODE_BACKGROUND_BEGIN    = 0x00100000
+PROCESS_MODE_BACKGROUND_END      = 0x00200000
+CREATE_SECURE_PROCESS            = 0x00400000
+
+CREATE_BREAKAWAY_FROM_JOB        = 0x01000000
+CREATE_PRESERVE_CODE_AUTHZ_LEVEL = 0x02000000
+CREATE_DEFAULT_ERROR_MODE        = 0x04000000
+CREATE_NO_WINDOW                 = 0x08000000
+PROFILE_USER                     = 0x10000000
+PROFILE_KERNEL                   = 0x20000000
+PROFILE_SERVER                   = 0x40000000
+CREATE_IGNORE_SYSTEM_DEFAULT     = 0x80000000
+
 THREAD_BASE_PRIORITY_LOWRT  = 15
 THREAD_BASE_PRIORITY_MAX =   2
 THREAD_BASE_PRIORITY_MIN =  -2
@@ -7245,3 +7377,7 @@ FILE_DEVICE_NVDIMM              = 0x0000005a
 FILE_DEVICE_HOLOGRAPHIC         = 0x0000005b
 FILE_DEVICE_SDFXHCI             = 0x0000005c
 FILE_DEVICE_UCMUCSI             = 0x0000005d
+
+MONITOR_DEFAULTTONULL    = 0x00000000
+MONITOR_DEFAULTTOPRIMARY = 0x00000001
+MONITOR_DEFAULTTONEAREST = 0x00000002

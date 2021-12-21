@@ -82,24 +82,29 @@ HINSTANCE = HWND = HANDLE
 # some structure definitions
 
 class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
-    def __init__(self, u=UUID(int=0)):
-        # u is either str or GUID or UUID
-        if isinstance(u, str):
-            src = UUID(u).bytes_le
-        elif isinstance(u, GUID):
-            src = u
-        else:
-            src = u.bytes_le
-        _ct.memmove(self, src, _ct.sizeof(self))
+    def __init__(self, init=None):
+        # init is None or str or GUID or UUID or something that can be
+        # converted to bytes (like comtypes.GUID). If init is None we simply
+        # keep the initial state of 'all bytes are zero'.
+        if init is not None:
+            if isinstance(init, str):
+                src = UUID(init).bytes_le
+            elif isinstance(init, GUID):
+                src = init
+            elif isinstance(init, UUID):
+                src = init.bytes_le
+            else:
+                src = bytes(init)
+            _ct.memmove(self, src, _ct.sizeof(self))
 
     def uuid(self):
         return UUID(bytes_le=bytes(self))
 
     def __str__(self):
-        return str(self.uuid())
+        return f"{{{self.uuid()!s}}}"
 
     def __repr__(self):
-        return '%s(%r)' % (self.__class__.__name__, str(self.uuid()))
+        return f"{self.__class__.__name__}('{self.uuid()!s}')"
 
 ################################################################################
 
@@ -211,6 +216,7 @@ PINT = _ct.POINTER(INT)
 PUINT = _ct.POINTER(UINT)
 PLONG = PBOOL = _ct.POINTER(LONG)
 PULONG = PDWORD = _ct.POINTER(ULONG)
+PUINT_PTR = PWPARAM = PSIZE_T = PULONG_PTR = _ct.POINTER(UINT_PTR)
 PLARGE_INTEGER = _ct.POINTER(LARGE_INTEGER)
 PULARGE_INTEGER = _ct.POINTER(ULARGE_INTEGER)
 PHANDLE = _ct.POINTER(HANDLE)
@@ -233,7 +239,7 @@ PSYSTEMTIME = _ct.POINTER(SYSTEMTIME)
 #   ScdToBeClosed,
 #   HANDLE,
 #   close_func=CloseHandle,
-#   invalid_value=0
+#   invalid=0
 #   ):
 
 class ScdToBeClosed():

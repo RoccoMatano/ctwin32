@@ -35,6 +35,9 @@ from . import (
     GWL_EXSTYLE,
     INPUT_KEYBOARD,
     KEYEVENTF_KEYUP,
+    MONITOR_DEFAULTTOPRIMARY,
+    SWP_NOSIZE,
+    SWP_NOZORDER,
     )
 from .ntdll import proc_path_from_pid
 
@@ -55,7 +58,7 @@ def GetWindowThreadProcessId(hwnd):
 ################################################################################
 
 _GetWindowTextLength = _fun_fact(
-    _u32.GetWindowTextLengthW, (INT, HANDLE)
+    _u32.GetWindowTextLengthW, (INT, HWND)
     )
 
 def GetWindowTextLength(hwnd):
@@ -64,7 +67,7 @@ def GetWindowTextLength(hwnd):
 ################################################################################
 
 _GetWindowText = _fun_fact(
-    _u32.GetWindowTextW, (INT, HANDLE, PWSTR, INT)
+    _u32.GetWindowTextW, (INT, HWND, PWSTR, INT)
     )
 
 def GetWindowText(hwnd):
@@ -77,7 +80,7 @@ def GetWindowText(hwnd):
 ################################################################################
 
 _GetClassName = _fun_fact(
-    _u32.GetClassNameW, (INT, HANDLE, PWSTR, INT)
+    _u32.GetClassNameW, (INT, HWND, PWSTR, INT)
     )
 
 def GetClassName(hwnd):
@@ -92,7 +95,7 @@ def GetClassName(hwnd):
 
 ################################################################################
 
-_GetWindowLong = _fun_fact(_u32.GetWindowLongW, (LONG, HANDLE, INT))
+_GetWindowLong = _fun_fact(_u32.GetWindowLongW, (LONG, HWND, INT))
 
 def GetWindowLong(hwnd, idx):
     return _GetWindowLong(hwnd, idx)
@@ -100,7 +103,7 @@ def GetWindowLong(hwnd, idx):
 ################################################################################
 
 _GetWindowLongPtr = _fun_fact(
-    _u32.GetWindowLongPtrW, (LONG_PTR, HANDLE, INT)
+    _u32.GetWindowLongPtrW, (LONG_PTR, HWND, INT)
     )
 
 def GetWindowLongPtr(hwnd, idx):
@@ -117,7 +120,7 @@ _EnumWindowsContextPtr = _ct.POINTER(_EnumWindowsContext)
 
 _EnumWindowsCallback = _ct.WINFUNCTYPE(
     BOOL,
-    HANDLE,
+    HWND,
     _EnumWindowsContextPtr
     )
 
@@ -140,12 +143,23 @@ def EnumWindows(callback, context):
 
 _EnumChildWindows = _fun_fact(
     _u32.EnumChildWindows,
-    (BOOL, HANDLE, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    (BOOL, HWND, _EnumWindowsCallback, _EnumWindowsContextPtr)
     )
 
 def EnumChildWindows(hwnd, callback, context):
     ewc = _EnumWindowsContext(callback, context)
     _EnumChildWindows(hwnd, _EnumWndCb, _ref(ewc))
+
+################################################################################
+
+_EnumThreadWindows = _fun_fact(
+    _u32.EnumThreadWindows,
+    (BOOL, DWORD, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    )
+
+def EnumThreadWindows(tid, callback, context):
+    ewc = _EnumWindowsContext(callback, context)
+    _EnumThreadWindows(tid, _EnumWndCb, _ref(ewc))
 
 ################################################################################
 
@@ -173,6 +187,11 @@ def get_child_window_list(hwnd):
     EnumChildWindows(hwnd, _get_wnd_lst_cb, wnd_lst)
     return wnd_lst
 
+def get_thread_window_list(tid):
+    wnd_lst = []
+    EnumThreadWindows(tid, _get_wnd_lst_cb, wnd_lst)
+    return wnd_lst
+
 ################################################################################
 
 _WaitForInputIdle = _fun_fact(
@@ -188,7 +207,7 @@ def WaitForInputIdle(proc, timeout):
 
 _PostMessage = _fun_fact(
     _u32.PostMessageW,
-    (BOOL, HANDLE, UINT, UINT_PTR, LONG_PTR)
+    (BOOL, HWND, UINT, UINT_PTR, LONG_PTR)
     )
 
 def PostMessage(hwnd, msg, wp, lp):
@@ -198,7 +217,7 @@ def PostMessage(hwnd, msg, wp, lp):
 
 _SendMessage = _fun_fact(
     _u32.SendMessageW,
-    (LONG_PTR, HANDLE, UINT, UINT_PTR, LONG_PTR)
+    (LONG_PTR, HWND, UINT, UINT_PTR, LONG_PTR)
     )
 
 def SendMessage(hwnd, msg, wp, lp):
@@ -209,7 +228,7 @@ def SendMessage(hwnd, msg, wp, lp):
 _SendMessageTimeout = _fun_fact(
     _u32.SendMessageTimeoutW, (
         LONG_PTR,
-        HANDLE,
+        HWND,
         UINT,
         UINT_PTR,
         LONG_PTR,
@@ -236,7 +255,7 @@ def SendMessageTimeout(hwnd, msg, wp, lp, flags, timeout):
 
 ################################################################################
 
-_GetWindow = _fun_fact(_u32.GetWindow, (HANDLE, HANDLE, UINT))
+_GetWindow = _fun_fact(_u32.GetWindow, (HWND, HWND, UINT))
 
 def GetWindow(hwnd, cmd):
     return _GetWindow(hwnd, cmd)
@@ -257,6 +276,31 @@ class RECT(_ct.Structure):
         ("right", LONG),
         ("bottom", LONG)
         )
+
+    @property
+    def width(self):
+        return self.right - self.left
+
+    @property
+    def height(self):
+        return self.bottom - self.top
+
+    @property
+    def center(self):
+        return (self.left + self.right) // 2, (self.top + self.bottom) // 2
+
+PRECT = _ct.POINTER(RECT)
+
+################################################################################
+
+_GetWindowRect = _fun_fact(_u32.GetWindowRect, (BOOL, HWND, PRECT))
+
+def GetWindowRect(hwnd):
+   rc = RECT()
+   _raise_if(not _GetWindowRect(hwnd, _ref(rc)))
+   return rc
+
+################################################################################
 
 class POINT(_ct.Structure):
     _fields_ = (
@@ -300,7 +344,7 @@ PWINDOWPLACEMENT = _ct.POINTER(WINDOWPLACEMENT)
 ################################################################################
 
 _GetWindowPlacement = _fun_fact(
-    _u32.GetWindowPlacement, (BOOL, HANDLE, PWINDOWPLACEMENT)
+    _u32.GetWindowPlacement, (BOOL, HWND, PWINDOWPLACEMENT)
     )
 
 def GetWindowPlacement(hwnd):
@@ -311,11 +355,20 @@ def GetWindowPlacement(hwnd):
 ################################################################################
 
 _SetWindowPlacement = _fun_fact(
-    _u32.SetWindowPlacement, (BOOL, HANDLE, PWINDOWPLACEMENT)
+    _u32.SetWindowPlacement, (BOOL, HWND, PWINDOWPLACEMENT)
     )
 
 def SetWindowPlacement(hwnd, wpt):
     _raise_if(not _SetWindowPlacement(hwnd, _ct.byref(wpt)))
+
+################################################################################
+
+_SetWindowPos = _fun_fact(
+    _u32.SetWindowPos, (BOOL, HWND, HWND, INT, INT, INT, INT, UINT)
+    )
+
+def SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags):
+    _raise_if(not _SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags))
 
 ################################################################################
 
@@ -328,7 +381,7 @@ def AttachThreadInput(id_attach, id_attach_to, do_attach):
 
 ################################################################################
 
-_BringWindowToTop = _fun_fact(_u32.BringWindowToTop, (BOOL, HANDLE))
+_BringWindowToTop = _fun_fact(_u32.BringWindowToTop, (BOOL, HWND))
 
 def BringWindowToTop(hwnd):
     _raise_if(not _BringWindowToTop(hwnd))
@@ -344,7 +397,7 @@ def to_top_maybe_attach(hwnd):
 
 ################################################################################
 
-_SetActiveWindow = _fun_fact(_u32.SetActiveWindow, (HANDLE, HANDLE))
+_SetActiveWindow = _fun_fact(_u32.SetActiveWindow, (HWND, HWND))
 
 def SetActiveWindow(hwnd):
     return _SetActiveWindow(hwnd)
@@ -352,7 +405,7 @@ def SetActiveWindow(hwnd):
 ################################################################################
 
 _MessageBox = _fun_fact(
-    _u32.MessageBoxW, (INT, HANDLE, PWSTR, PWSTR, UINT)
+    _u32.MessageBoxW, (INT, HWND, PWSTR, PWSTR, UINT)
     )
 
 def MessageBox(hwnd, text, caption, flags):
@@ -459,3 +512,62 @@ def LockWorkStation():
     _raise_if(0 == _LockWorkStation())
 
 ################################################################################
+
+_GetShellWindow = _fun_fact(_u32.GetShellWindow, (HWND,))
+
+def GetShellWindow():
+    return _GetShellWindow()
+
+################################################################################
+
+_MonitorFromWindow = _fun_fact(_u32.MonitorFromWindow, (HANDLE, HWND, DWORD))
+
+def MonitorFromWindow(hwnd, flags=MONITOR_DEFAULTTOPRIMARY):
+    return _MonitorFromWindow(hwnd, flags)
+
+################################################################################
+
+class MONITORINFO(_ct.Structure):
+    _fields_ = (
+        ("cbSize", DWORD),
+        ("rcMonitor", RECT),
+        ("rcWork", RECT),
+        ("dwFlags", DWORD),
+        )
+    def __init__(self):
+        self.cbSize = _ct.sizeof(MONITORINFO)
+
+PMONITORINFO = _ct.POINTER(MONITORINFO)
+
+################################################################################
+
+_GetMonitorInfo = _fun_fact(_u32.GetMonitorInfoW, (BOOL, HANDLE, PMONITORINFO))
+
+def GetMonitorInfo(hmon):
+    mi = MONITORINFO()
+    _raise_if(not _GetMonitorInfo(hmon, _ref(mi)))
+    return mi
+
+################################################################################
+
+def start_centered(arglist):
+    def center_wnd_cb(hwnd, _):
+        wa = GetMonitorInfo(MonitorFromWindow(hwnd)).rcWork
+        rc = GetWindowRect(hwnd)
+        SetWindowPos(
+            hwnd,
+            None,
+            (wa.width - rc.width) // 2,
+            (wa.height - rc.height) // 2,
+            0,
+            0,
+            SWP_NOSIZE | SWP_NOZORDER
+            )
+        return True
+
+    with kernel.create_process(arglist) as pi:
+        WaitForInputIdle(pi.hProcess, 10000)
+        EnumThreadWindows(pi.dwThreadId, center_wnd_cb, None)
+
+################################################################################
+
