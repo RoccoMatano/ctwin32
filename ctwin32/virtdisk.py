@@ -27,8 +27,7 @@ import ctypes as _ct
 from .wtypes import *
 from . import _fun_fact, _raise_on_err
 
-# import CloseHandle so you can close a vdisk handle just by importing this mod
-from .kernel import CloseHandle
+from .kernel import KHANDLE, PKHANDLE
 
 _ref = _ct.byref
 _vdisk = _ct.windll.virtdisk
@@ -105,12 +104,12 @@ _OpenVirtualDisk = _fun_fact(
         LONG,
         LONG,
         POPEN_VIRTUAL_DISK_PARAMETERS,
-        PHANDLE
+        PKHANDLE
         )
     )
 
 def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
-    hdl = HANDLE()
+    hdl = KHANDLE()
     _raise_on_err(
         _OpenVirtualDisk(
             _ref(storage_type),
@@ -128,7 +127,7 @@ def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
 _AttachVirtualDisk = _fun_fact(
     _vdisk.AttachVirtualDisk, (
         DWORD,
-        HANDLE,
+        KHANDLE,
         PVOID, # no interest in supplying a security descriptor
         LONG,
         ULONG,
@@ -154,7 +153,7 @@ def AttachVirtualDisk(hdl, flags, prov_flags=0, parameters=None):
 _DetachVirtualDisk = _fun_fact(
     _vdisk.DetachVirtualDisk, (
         DWORD,
-        HANDLE,
+        KHANDLE,
         LONG,
         ULONG,
         )

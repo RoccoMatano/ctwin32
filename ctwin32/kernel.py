@@ -62,6 +62,8 @@ def CloseHandle(handle):
 class KHANDLE(ScdToBeClosed, HANDLE, close_func=CloseHandle, invalid=0):
     pass
 
+PKHANDLE = _ct.POINTER(KHANDLE)
+
 ################################################################################
 
 class FHANDLE(
@@ -71,6 +73,8 @@ class FHANDLE(
     invalid=INVALID_HANDLE_VALUE
     ):
     pass
+
+PFHANDLE = _ct.POINTER(FHANDLE)
 
 ################################################################################
 

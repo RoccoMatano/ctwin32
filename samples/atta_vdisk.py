@@ -27,7 +27,6 @@
 
 import sys
 from ctwin32 import (
-    virtdisk,
     ATTACH_VIRTUAL_DISK_FLAG_PERMANENT_LIFETIME,
     ATTACH_VIRTUAL_DISK_FLAG_READ_ONLY,
     OPEN_VIRTUAL_DISK_VERSION_1,
@@ -36,17 +35,24 @@ from ctwin32 import (
     VIRTUAL_DISK_ACCESS_READ,
     VIRTUAL_DISK_ACCESS_NONE,
     )
+from ctwin32.virtdisk import (
+    OPEN_VIRTUAL_DISK_PARAMETERS,
+    VIRTUAL_STORAGE_TYPE,
+    OpenVirtualDisk,
+    AttachVirtualDisk,
+    DetachVirtualDisk
+    )
 
 path = sys.argv[1]
 do_detach = len(sys.argv) > 2
 
-oparams = virtdisk.OPEN_VIRTUAL_DISK_PARAMETERS()
+oparams = OPEN_VIRTUAL_DISK_PARAMETERS()
 oflags = OPEN_VIRTUAL_DISK_FLAG_NONE
 
 # Specify UNKNOWN for both device and vendor so the system will use
 # the file extension to determine the correct VHD format. The default values
 # do exactly that.
-storage_type = virtdisk.VIRTUAL_STORAGE_TYPE()
+storage_type = VIRTUAL_STORAGE_TYPE()
 
 
 ext = path.rsplit(".", 1)[1].lower()
@@ -66,8 +72,8 @@ else:
     acc_mask = VIRTUAL_DISK_ACCESS_NONE
 
 
-hdl = virtdisk.OpenVirtualDisk(storage_type, path, acc_mask, oflags, oparams)
-if do_detach:
-    virtdisk.DetachVirtualDisk(hdl)
-else:
-    virtdisk.AttachVirtualDisk(hdl, aflags)
+with OpenVirtualDisk(storage_type, path, acc_mask, oflags, oparams) as vd:
+    if do_detach:
+        DetachVirtualDisk(vd)
+    else:
+        AttachVirtualDisk(vd, aflags)
