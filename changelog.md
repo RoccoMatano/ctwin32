@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- sample netifaces.py
+
 ## [1.4.0]
 
 ### Added
+
 - kernel.PROCESS_INFORMATION, kernel.STARTUPINFO and kernel.STARTUPINFOEX
 - kernel.InitializeProcThreadAttributeList, kernel.UpdateProcThreadAttribute,
   kernel.DeleteProcThreadAttributeList and kernel.ProcThreadAttributeList
