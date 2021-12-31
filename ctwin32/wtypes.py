@@ -199,6 +199,43 @@ class SYSTEMTIME(_ct.Structure):
 
 ################################################################################
 
+class POINT(_ct.Structure):
+    _fields_ = (
+        ("x", LONG),
+        ("y", LONG)
+        )
+
+    @classmethod
+    def from_lparam(cls, lp):
+        return cls(lp & 0xffff, (lp >> 16) & 0xffff)
+
+    def as_lparam(self):
+        return (pt.x & 0xffff) | ((pt.y & 0xffff) << 16)
+
+################################################################################
+
+class RECT(_ct.Structure):
+    _fields_ = (
+        ("left", LONG),
+        ("top", LONG),
+        ("right", LONG),
+        ("bottom", LONG)
+        )
+
+    @property
+    def width(self):
+        return self.right - self.left
+
+    @property
+    def height(self):
+        return self.bottom - self.top
+
+    @property
+    def center(self):
+        return (self.left + self.right) // 2, (self.top + self.bottom) // 2
+
+################################################################################
+
 # pointer types
 
 PWSTR = _ct.c_wchar_p
@@ -223,6 +260,8 @@ PHANDLE = _ct.POINTER(HANDLE)
 PGUID = _ct.POINTER(GUID)
 PFILETIME = _ct.POINTER(FILETIME)
 PSYSTEMTIME = _ct.POINTER(SYSTEMTIME)
+PPOINT = _ct.POINTER(POINT)
+PRECT = _ct.POINTER(RECT)
 
 ################################################################################
 

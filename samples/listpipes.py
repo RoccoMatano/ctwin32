@@ -24,17 +24,23 @@
 
 # inspired by https://docs.microsoft.com/en-us/sysinternals/downloads/pipelist
 
-from ctwin32 import ntdll
-import msvcrt
+from ctwin32 import ntdll, kernel, GENERIC_READ, OPEN_EXISTING
 
 ################################################################################
 
 def list_pipes():
-    with open("\\\\.\\Pipe\\", "rb") as pipes:
-        handle = msvcrt.get_osfhandle(pipes.fileno())
+    with kernel.CreateFile(
+        "\\\\.\\Pipe\\",
+        GENERIC_READ,
+        0,
+        None,
+        OPEN_EXISTING,
+        0,
+        None
+        ) as pipes:
         print("Inst  Max  Pipe Name")
         print("----  ---  ---------")
-        for info in ntdll.enum_directory_info(handle):
+        for info in ntdll.enum_directory_info(pipes):
             instances = info.EndOfFile
             max_inst = info.AllocationSize
             if max_inst == 2 ** 32 - 1:

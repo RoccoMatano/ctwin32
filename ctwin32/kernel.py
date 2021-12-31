@@ -41,7 +41,12 @@ _ref = _ct.byref
 
 ################################################################################
 
-GetLastError = _ct.GetLastError
+ExitProcess = _fun_fact(_k32.ExitProcess, (None, UINT))
+
+################################################################################
+
+GetLastError = _fun_fact(_k32.GetLastError, (DWORD,))
+SetLastError = _fun_fact(_k32.SetLastError, (None, DWORD))
 
 ################################################################################
 
@@ -49,6 +54,35 @@ _LocalFree = _fun_fact(_k32.LocalFree, (HANDLE, HANDLE))
 
 def LocalFree(hmem):
     _raise_if(_LocalFree(hmem))
+
+################################################################################
+
+_GlobalFree = _fun_fact(_k32.GlobalFree, (HANDLE, HANDLE))
+
+def GlobalFree(hmem):
+    _raise_if(_GlobalFree(hmem))
+
+################################################################################
+
+_GlobalAlloc = _fun_fact(_k32.GlobalAlloc, (HANDLE, UINT, SIZE_T))
+
+def GlobalAlloc(flags, size):
+    res = _GlobalAlloc(flags, size)
+    _raise_if(not res)
+    return res
+
+################################################################################
+
+_GlobalLock = _fun_fact(_k32.GlobalLock, (PVOID, HANDLE))
+
+def GlobalLock(hmem):
+    res = _GlobalLock(hmem)
+    _raise_if(not res)
+    return res
+
+################################################################################
+
+GlobalUnlock = _fun_fact(_k32.GlobalUnlock, (PVOID, HANDLE))
 
 ################################################################################
 
@@ -199,6 +233,15 @@ _GetCurrentProcessId = _fun_fact(_k32.GetCurrentProcessId, (DWORD,))
 
 def GetCurrentProcessId():
     return _GetCurrentProcessId()
+
+################################################################################
+
+_GetModuleHandle = _fun_fact(_k32.GetModuleHandleW, (HANDLE, PWSTR))
+
+def GetModuleHandle(mod_name):
+    res = _GetModuleHandle(mod_name)
+    _raise_if(not res)
+    return res
 
 ################################################################################
 

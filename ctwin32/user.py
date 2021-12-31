@@ -66,9 +66,7 @@ def GetWindowTextLength(hwnd):
 
 ################################################################################
 
-_GetWindowText = _fun_fact(
-    _u32.GetWindowTextW, (INT, HWND, PWSTR, INT)
-    )
+_GetWindowText = _fun_fact(_u32.GetWindowTextW, (INT, HWND, PWSTR, INT))
 
 def GetWindowText(hwnd):
     slen = GetWindowTextLength(hwnd)
@@ -76,6 +74,13 @@ def GetWindowText(hwnd):
     res = _GetWindowText(hwnd, buf, slen + 1)
     _raise_if(res != slen)
     return buf.value
+
+################################################################################
+
+_SetWindowText = _fun_fact(_u32.SetWindowTextW, (BOOL, HWND, PWSTR))
+
+def SetWindowText(hwnd, txt):
+    _raise_if(not _SetWindowText(hwnd, txt))
 
 ################################################################################
 
@@ -111,54 +116,74 @@ def GetWindowLongPtr(hwnd, idx):
 
 ################################################################################
 
-class _EnumWindowsContext(_ct.Structure):
+_SetWindowLong = _fun_fact(
+    _u32.SetWindowLongW, (LONG, HWND, INT, LONG)
+    )
+
+def SetWindowLong(hwnd, idx, value):
+    return _SetWindowLong(hwnd, idx, value)
+
+################################################################################
+
+_SetWindowLongPtr = _fun_fact(
+    _u32.SetWindowLongPtrW, (LONG_PTR, HWND, INT, LONG_PTR)
+    )
+
+def SetWindowLongPtr(hwnd, idx, value):
+    return _SetWindowLongPtr(hwnd, idx, value)
+
+################################################################################
+
+class _EnumContext(_ct.Structure):
     _fields_ = (
         ("callback", _ct.py_object),
         ("context", _ct.py_object)
         )
-_EnumWindowsContextPtr = _ct.POINTER(_EnumWindowsContext)
+_EnumContextPtr = _ct.POINTER(_EnumContext)
 
 _EnumWindowsCallback = _ct.WINFUNCTYPE(
     BOOL,
     HWND,
-    _EnumWindowsContextPtr
+    _EnumContextPtr
     )
 
 @_EnumWindowsCallback
 def _EnumWndCb(hwnd, ctxt):
     ewc = ctxt.contents
-    return ewc.callback(hwnd, ewc.context)
+    res = ewc.callback(hwnd, ewc.context)
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
 
 ################################################################################
 
 _EnumWindows = _fun_fact(
-    _u32.EnumWindows, (BOOL, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    _u32.EnumWindows, (BOOL, _EnumWindowsCallback, _EnumContextPtr)
     )
 
 def EnumWindows(callback, context):
-    ewc = _EnumWindowsContext(callback, context)
+    ewc = _EnumContext(callback, context)
     _EnumWindows(_EnumWndCb, _ref(ewc))
 
 ################################################################################
 
 _EnumChildWindows = _fun_fact(
     _u32.EnumChildWindows,
-    (BOOL, HWND, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    (BOOL, HWND, _EnumWindowsCallback, _EnumContextPtr)
     )
 
 def EnumChildWindows(hwnd, callback, context):
-    ewc = _EnumWindowsContext(callback, context)
+    ewc = _EnumContext(callback, context)
     _EnumChildWindows(hwnd, _EnumWndCb, _ref(ewc))
 
 ################################################################################
 
 _EnumThreadWindows = _fun_fact(
     _u32.EnumThreadWindows,
-    (BOOL, DWORD, _EnumWindowsCallback, _EnumWindowsContextPtr)
+    (BOOL, DWORD, _EnumWindowsCallback, _EnumContextPtr)
     )
 
 def EnumThreadWindows(tid, callback, context):
-    ewc = _EnumWindowsContext(callback, context)
+    ewc = _EnumContext(callback, context)
     _EnumThreadWindows(tid, _EnumWndCb, _ref(ewc))
 
 ################################################################################
@@ -212,6 +237,10 @@ _PostMessage = _fun_fact(
 
 def PostMessage(hwnd, msg, wp, lp):
     _raise_if(not _PostMessage(hwnd, msg, wp, lp))
+
+################################################################################
+
+PostQuitMessage = _fun_fact(_u32.PostQuitMessage, (None, INT))
 
 ################################################################################
 
@@ -269,44 +298,23 @@ def GetAsyncKeyState(vkey):
 
 ################################################################################
 
-class RECT(_ct.Structure):
-    _fields_ = (
-        ("left", LONG),
-        ("top", LONG),
-        ("right", LONG),
-        ("bottom", LONG)
-        )
-
-    @property
-    def width(self):
-        return self.right - self.left
-
-    @property
-    def height(self):
-        return self.bottom - self.top
-
-    @property
-    def center(self):
-        return (self.left + self.right) // 2, (self.top + self.bottom) // 2
-
-PRECT = _ct.POINTER(RECT)
-
-################################################################################
-
 _GetWindowRect = _fun_fact(_u32.GetWindowRect, (BOOL, HWND, PRECT))
 
 def GetWindowRect(hwnd):
-   rc = RECT()
-   _raise_if(not _GetWindowRect(hwnd, _ref(rc)))
-   return rc
+    rc = RECT()
+    _raise_if(not _GetWindowRect(hwnd, _ref(rc)))
+    return rc
 
 ################################################################################
 
-class POINT(_ct.Structure):
-    _fields_ = (
-        ("x", LONG),
-        ("y", LONG)
-        )
+_GetClientRect = _fun_fact(_u32.GetClientRect, (BOOL, HWND, PRECT))
+
+def GetClientRect(hwnd):
+    rc = RECT()
+    _raise_if(not _GetClientRect(hwnd, _ref(rc)))
+    return rc
+
+################################################################################
 
 class WINDOWPLACEMENT(_ct.Structure):
     _fields_ = (
