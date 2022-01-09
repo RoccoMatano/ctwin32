@@ -23,6 +23,59 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.SetWindowText
 - user.GetClientRect
 - methods from_lparam and as_lparam for POINT
+- user.LoadCursor
+- user.LoadIcon
+- user.DefWindowProc
+- user.GetClassInfo
+- user.RegisterClass
+- user.CreateWindowEx
+- user.GetMessage
+- user.TranslateMessage
+- user.DispatchMessage
+- user.ShowWindow
+- user.UpdateWindow
+- user.DestroyWindow
+- user.IsWindow
+- user.GetDlgItem
+- user.SendDlgItemMessage
+- user.SetDlgItemText
+- user.EnableWindow
+- user.SetForegroundWindow
+- user.GetParent
+- user.InvalidateRect
+- user.WindowFromPoint
+- user.MoveWindow
+- user.MapWindowPoints
+- user.GetCursorPos
+- user.GetDC
+- user.GetWindowDC
+- user.ReleaseDC
+- user.SetTimer
+- user.KillTimer
+- user.CheckDlgButton
+- user.IsDlgButtonChecked
+- user.BeginPaint
+- user.EndPaint
+- user.DrawText
+- user.SetProp
+- user.GetProp
+- user.RemoveProp
+- user.EnumPropsEx
+- user.OpenClipboard
+- user.EmptyClipboard
+- user.SetClipboardData
+- user.GetClipboardData
+- user.IsClipboardFormatAvailable
+- user.CloseClipboard
+- user.txt_to_clip
+- user.txt_from_clip
+- module gdi
+- gdi.GetDeviceCaps
+- gdi.CreateFontIndirect
+- gdi.SelectObject
+- gdi.DeleteObject
+- classes BaseWnd, WND_CREATE and SimpleWnd in wndcls.py
+- sample hello_wnd.pyw
 
 ### Changed
 

@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Copyright 2021 Rocco Matano
+# Copyright 2021-2022 Rocco Matano
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -180,6 +180,7 @@ PROC_THREAD_ATTRIBUTE_MITIGATION_AUDIT_POLICY = _pta_value(
 ################################################################################
 
 INVALID_HANDLE_VALUE = HANDLE(-1).value
+HGDI_ERROR = INVALID_HANDLE_VALUE
 
 DBT_CONFIGCHANGECANCELED = 25
 DBT_CONFIGCHANGED = 24
