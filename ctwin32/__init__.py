@@ -93,92 +93,6 @@ def cmdline_from_args(args):
 
 ################################################################################
 
-PROC_THREAD_ATTRIBUTE_NUMBER   = 0x0000FFFF
-PROC_THREAD_ATTRIBUTE_THREAD   = 0x00010000
-PROC_THREAD_ATTRIBUTE_INPUT    = 0x00020000
-PROC_THREAD_ATTRIBUTE_ADDITIVE = 0x00040000
-
-ProcThreadAttributeParentProcess                = 0
-ProcThreadAttributeExtendedFlags                = 1
-ProcThreadAttributeHandleList                   = 2
-ProcThreadAttributeGroupAffinity                = 3
-ProcThreadAttributePreferredNode                = 4
-ProcThreadAttributeIdealProcessor               = 5
-ProcThreadAttributeUmsThread                    = 6
-ProcThreadAttributeMitigationPolicy             = 7
-ProcThreadAttributeSecurityCapabilities         = 9
-ProcThreadAttributeProtectionLevel              = 11
-ProcThreadAttributeJobList                      = 13
-ProcThreadAttributeChildProcessPolicy           = 14
-ProcThreadAttributeAllApplicationPackagesPolicy = 15
-ProcThreadAttributeWin32kFilter                 = 16
-ProcThreadAttributeSafeOpenPromptOriginClaim    = 17
-ProcThreadAttributeDesktopAppPolicy             = 18
-ProcThreadAttributePseudoConsole                = 22
-ProcThreadAttributeMitigationAuditPolicy        = 24
-
-def _pta_value(num, thr, inp, add):
-    return (
-        (num & PROC_THREAD_ATTRIBUTE_NUMBER) |
-        (PROC_THREAD_ATTRIBUTE_THREAD if thr else 0) |
-        (PROC_THREAD_ATTRIBUTE_INPUT if inp else 0) |
-        (PROC_THREAD_ATTRIBUTE_ADDITIVE if add else 0)
-        )
-
-PROC_THREAD_ATTRIBUTE_PARENT_PROCESS = _pta_value(
-    ProcThreadAttributeParentProcess, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_EXTENDED_FLAGS = _pta_value(
-    ProcThreadAttributeExtendedFlags, False, True, True
-    )
-PROC_THREAD_ATTRIBUTE_HANDLE_LIST = _pta_value(
-    ProcThreadAttributeHandleList, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_GROUP_AFFINITY = _pta_value(
-    ProcThreadAttributeGroupAffinity, True, True, False
-    )
-PROC_THREAD_ATTRIBUTE_PREFERRED_NODE = _pta_value(
-    ProcThreadAttributePreferredNode, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR = _pta_value(
-    ProcThreadAttributeIdealProcessor, True, True, False
-    )
-PROC_THREAD_ATTRIBUTE_UMS_THREAD = _pta_value(
-    ProcThreadAttributeUmsThread, True, True, False
-    )
-PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY = _pta_value(
-    ProcThreadAttributeMitigationPolicy, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES  = _pta_value(
-    ProcThreadAttributeSecurityCapabilities, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_PROTECTION_LEVEL = _pta_value(
-    ProcThreadAttributeProtectionLevel, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = _pta_value(
-    ProcThreadAttributePseudoConsole, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_JOB_LIST = _pta_value(
-    ProcThreadAttributeJobList, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY = _pta_value(
-    ProcThreadAttributeChildProcessPolicy, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY = _pta_value(
-    ProcThreadAttributeAllApplicationPackagesPolicy, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_WIN32K_FILTER = _pta_value(
-    ProcThreadAttributeWin32kFilter, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_DESKTOP_APP_POLICY = _pta_value(
-    ProcThreadAttributeDesktopAppPolicy, False, True, False
-    )
-PROC_THREAD_ATTRIBUTE_MITIGATION_AUDIT_POLICY = _pta_value(
-    ProcThreadAttributeMitigationAuditPolicy, False, True, False
-    )
-
-################################################################################
-
 INVALID_HANDLE_VALUE = HANDLE(-1).value
 HGDI_ERROR = INVALID_HANDLE_VALUE
 
@@ -7512,3 +7426,26 @@ GMEM_VALID_FLAGS    = 0x7F72
 GMEM_INVALID_HANDLE = 0x8000
 GHND                = (GMEM_MOVEABLE | GMEM_ZEROINIT)
 GPTR                = (GMEM_FIXED | GMEM_ZEROINIT)
+
+PROC_THREAD_ATTRIBUTE_NUMBER                            = 0x0000ffff
+PROC_THREAD_ATTRIBUTE_THREAD                            = 0x00010000
+PROC_THREAD_ATTRIBUTE_INPUT                             = 0x00020000
+PROC_THREAD_ATTRIBUTE_ADDITIVE                          = 0x00040000
+
+PROC_THREAD_ATTRIBUTE_ALL_APPLICATION_PACKAGES_POLICY   = 0x0002000f
+PROC_THREAD_ATTRIBUTE_CHILD_PROCESS_POLICY              = 0x0002000e
+PROC_THREAD_ATTRIBUTE_DESKTOP_APP_POLICY                = 0x00020012
+PROC_THREAD_ATTRIBUTE_EXTENDED_FLAGS                    = 0x00060001
+PROC_THREAD_ATTRIBUTE_GROUP_AFFINITY                    = 0x00030003
+PROC_THREAD_ATTRIBUTE_HANDLE_LIST                       = 0x00020002
+PROC_THREAD_ATTRIBUTE_IDEAL_PROCESSOR                   = 0x00030005
+PROC_THREAD_ATTRIBUTE_JOB_LIST                          = 0x0002000d
+PROC_THREAD_ATTRIBUTE_MITIGATION_AUDIT_POLICY           = 0x00020018
+PROC_THREAD_ATTRIBUTE_MITIGATION_POLICY                 = 0x00020007
+PROC_THREAD_ATTRIBUTE_PARENT_PROCESS                    = 0x00020000
+PROC_THREAD_ATTRIBUTE_PREFERRED_NODE                    = 0x00020004
+PROC_THREAD_ATTRIBUTE_PROTECTION_LEVEL                  = 0x0002000b
+PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE                     = 0x00020016
+PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES             = 0x00020009
+PROC_THREAD_ATTRIBUTE_UMS_THREAD                        = 0x00030006
+PROC_THREAD_ATTRIBUTE_WIN32K_FILTER                     = 0x00020010

@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample listpipes.py is using kernel.CreateFile instead of open and
   msvcrt.get_osfhandle.
 - moved definition of POINT and RECT from user to wtypes
+- simplified definition of PROC_THREAD_ATTRIBUTE constants
 
 ## [1.4.0]
 
