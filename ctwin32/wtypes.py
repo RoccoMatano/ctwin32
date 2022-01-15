@@ -51,6 +51,7 @@ LONG = _ct.c_long
 ULONG = _ct.c_ulong
 DWORD = _ct.c_ulong
 BOOL = _ct.c_long
+HRESULT = _ct.c_long
 
 # While the large integers are defined as a struct of low and high part, they
 # are also unions containing a long long part. That is why we can simply define
@@ -236,6 +237,14 @@ class RECT(_ct.Structure):
 
 ################################################################################
 
+class CallbackContext(_ct.Structure):
+    _fields_ = (
+        ("callback", _ct.py_object),
+        ("context", _ct.py_object)
+        )
+
+################################################################################
+
 # pointer types
 
 PWSTR = _ct.c_wchar_p
@@ -262,6 +271,7 @@ PFILETIME = _ct.POINTER(FILETIME)
 PSYSTEMTIME = _ct.POINTER(SYSTEMTIME)
 PPOINT = _ct.POINTER(POINT)
 PRECT = _ct.POINTER(RECT)
+CallbackContextPtr = _ct.POINTER(CallbackContext)
 
 ################################################################################
 

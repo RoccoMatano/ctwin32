@@ -136,57 +136,50 @@ def SetWindowLongPtr(hwnd, idx, value):
 
 ################################################################################
 
-class _EnumContext(_ct.Structure):
-    _fields_ = (
-        ("callback", _ct.py_object),
-        ("context", _ct.py_object)
-        )
-_EnumContextPtr = _ct.POINTER(_EnumContext)
-
 _EnumWindowsCallback = _ct.WINFUNCTYPE(
     BOOL,
     HWND,
-    _EnumContextPtr
+    CallbackContextPtr
     )
 
 @_EnumWindowsCallback
 def _EnumWndCb(hwnd, ctxt):
-    ewc = ctxt.contents
-    res = ewc.callback(hwnd, ewc.context)
+    cbc = ctxt.contents
+    res = cbc.callback(hwnd, cbc.context)
     # keep on enumerating if the callback fails to return a value
     return res if res is not None else True
 
 ################################################################################
 
 _EnumWindows = _fun_fact(
-    _u32.EnumWindows, (BOOL, _EnumWindowsCallback, _EnumContextPtr)
+    _u32.EnumWindows, (BOOL, _EnumWindowsCallback, CallbackContextPtr)
     )
 
 def EnumWindows(callback, context):
-    ewc = _EnumContext(callback, context)
-    _EnumWindows(_EnumWndCb, _ref(ewc))
+    cbc = CallbackContext(callback, context)
+    _EnumWindows(_EnumWndCb, _ref(cbc))
 
 ################################################################################
 
 _EnumChildWindows = _fun_fact(
     _u32.EnumChildWindows,
-    (BOOL, HWND, _EnumWindowsCallback, _EnumContextPtr)
+    (BOOL, HWND, _EnumWindowsCallback, CallbackContextPtr)
     )
 
 def EnumChildWindows(hwnd, callback, context):
-    ewc = _EnumContext(callback, context)
-    _EnumChildWindows(hwnd, _EnumWndCb, _ref(ewc))
+    cbc = CallbackContext(callback, context)
+    _EnumChildWindows(hwnd, _EnumWndCb, _ref(cbc))
 
 ################################################################################
 
 _EnumThreadWindows = _fun_fact(
     _u32.EnumThreadWindows,
-    (BOOL, DWORD, _EnumWindowsCallback, _EnumContextPtr)
+    (BOOL, DWORD, _EnumWindowsCallback, CallbackContextPtr)
     )
 
 def EnumThreadWindows(tid, callback, context):
-    ewc = _EnumContext(callback, context)
-    _EnumThreadWindows(tid, _EnumWndCb, _ref(ewc))
+    cbc = CallbackContext(callback, context)
+    _EnumThreadWindows(tid, _EnumWndCb, _ref(cbc))
 
 ################################################################################
 
@@ -996,25 +989,25 @@ _EnumPropsCallback = _ct.WINFUNCTYPE(
     HWND,
     PWSTR,
     HANDLE,
-    _EnumContextPtr
+    CallbackContextPtr
     )
 
 @_EnumPropsCallback
 def _EnumPropsCb(hwnd, name, data, ctxt):
-    epc = ctxt.contents
-    res = epc.callback(hwnd, name, data, epc.context)
+    cbc = ctxt.contents
+    res = cbc.callback(hwnd, name, data, cbc.context)
     # keep on enumerating if the callback fails to return a value
     return res if res is not None else True
 
 ################################################################################
 
 _EnumPropsEx = _fun_fact(
-    _u32.EnumPropsExW, (INT, HWND, _EnumPropsCallback, _EnumContextPtr)
+    _u32.EnumPropsExW, (INT, HWND, _EnumPropsCallback, CallbackContextPtr)
     )
 
 def EnumPropsEx(hwnd, callback, context):
-    epc = _EnumContext(callback, context)
-    _EnumPropsEx(hwnd, _EnumPropsCb, _ref(epc))
+    cbc = CallbackContext(callback, context)
+    _EnumPropsEx(hwnd, _EnumPropsCb, _ref(cbc))
 
 ################################################################################
 

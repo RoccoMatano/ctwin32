@@ -76,6 +76,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - gdi.DeleteObject
 - classes BaseWnd, WND_CREATE and SimpleWnd in wndcls.py
 - sample hello_wnd.pyw
+- module comctl
+- comctl.TaskDialog
+- comctl.TaskDialogIndirect
+- comctl.tsk_dlg_callback
 
 ### Changed
 
@@ -87,6 +91,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - revised sample uptime_evt.py
 - advapi.OpenSCManager, advapi.OpenService and advapi.CreateService return
   context manager SC_HANDLE
+- moved \_EnumContext and \_EnumContextPtr from user to wtypes and renamed them
+  to CallbackContext and CallbackContextPtr
+- sample hello_wnd.py now demonstrates comctl.tsk_dlg_callback on right-click
 
 ## [1.4.0]
 

@@ -41,6 +41,12 @@ def _raise_on_err(err):
 
 ################################################################################
 
+def _raise_on_hr(hr):
+    if hr < 0:
+        raise _ct.WinError(hr)
+
+################################################################################
+
 def _fun_fact(function, signature):
     function.restype = signature[0]
     function.argtypes = signature[1:]
@@ -7449,3 +7455,59 @@ PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE                     = 0x00020016
 PROC_THREAD_ATTRIBUTE_SECURITY_CAPABILITIES             = 0x00020009
 PROC_THREAD_ATTRIBUTE_UMS_THREAD                        = 0x00030006
 PROC_THREAD_ATTRIBUTE_WIN32K_FILTER                     = 0x00020010
+
+TDF_ENABLE_HYPERLINKS           = 0x0001
+TDF_USE_HICON_MAIN              = 0x0002
+TDF_USE_HICON_FOOTER            = 0x0004
+TDF_ALLOW_DIALOG_CANCELLATION   = 0x0008
+TDF_USE_COMMAND_LINKS           = 0x0010
+TDF_USE_COMMAND_LINKS_NO_ICON   = 0x0020
+TDF_EXPAND_FOOTER_AREA          = 0x0040
+TDF_EXPANDED_BY_DEFAULT         = 0x0080
+TDF_VERIFICATION_FLAG_CHECKED   = 0x0100
+TDF_SHOW_PROGRESS_BAR           = 0x0200
+TDF_SHOW_MARQUEE_PROGRESS_BAR   = 0x0400
+TDF_CALLBACK_TIMER              = 0x0800
+TDF_POSITION_RELATIVE_TO_WINDOW = 0x1000
+TDF_RTL_LAYOUT                  = 0x2000
+TDF_NO_DEFAULT_RADIO_BUTTON     = 0x4000
+TDF_CAN_BE_MINIMIZED            = 0x8000
+TDF_NO_SET_FOREGROUND           = 0x00010000
+TDF_SIZE_TO_CONTENT             = 0x01000000
+
+TDN_CREATED                = 0
+TDN_NAVIGATED              = 1
+TDN_BUTTON_CLICKED         = 2
+TDN_HYPERLINK_CLICKED      = 3
+TDN_TIMER                  = 4
+TDN_DESTROYED              = 5
+TDN_RADIO_BUTTON_CLICKED   = 6
+TDN_DIALOG_CONSTRUCTED     = 7
+TDN_VERIFICATION_CLICKED   = 8
+TDN_HELP                   = 9
+TDN_EXPANDO_BUTTON_CLICKED = 10
+
+TD_WARNING_ICON     = PWSTR(0xffff)
+TD_ERROR_ICON       = PWSTR(0xfffe)
+TD_INFORMATION_ICON = PWSTR(0xfffd)
+TD_SHIELD_ICON      = PWSTR(0xfffc)
+
+TDCBF_OK_BUTTON     = 0x0001
+TDCBF_YES_BUTTON    = 0x0002
+TDCBF_NO_BUTTON     = 0x0004
+TDCBF_CANCEL_BUTTON = 0x0008
+TDCBF_RETRY_BUTTON  = 0x0010
+TDCBF_CLOSE_BUTTON  = 0x0020
+
+IDOK       = 1
+IDCANCEL   = 2
+IDABORT    = 3
+IDRETRY    = 4
+IDIGNORE   = 5
+IDYES      = 6
+IDNO       = 7
+IDCLOSE    = 8
+IDHELP     = 9
+IDTRYAGAIN = 10
+IDCONTINUE = 11
+IDTIMEOUT  = 32000
