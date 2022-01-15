@@ -1043,21 +1043,26 @@ def CredWrite(Credential, Flags=0):
 
 ################################################################################
 
-_OpenEventLog = _fun_fact(
-    _a32.OpenEventLogW, (HANDLE, PWSTR, PWSTR,)
-    )
-
-def OpenEventLog(server, source):
-    hdl = _OpenEventLog(server, source)
-    _raise_if(not hdl)
-    return hdl
-
-################################################################################
-
 _CloseEventLog = _fun_fact(_a32.CloseEventLog, (BOOL, HANDLE))
 
 def CloseEventLog(hdl):
     _raise_if(not _CloseEventLog(hdl))
+
+################################################################################
+
+class EHANDLE(ScdToBeClosed, HANDLE, close_func=CloseEventLog, invalid=0):
+    pass
+
+################################################################################
+
+_OpenEventLog = _fun_fact(
+    _a32.OpenEventLogW, (HANDLE, PWSTR, PWSTR,)
+    )
+
+def OpenEventLog(source, server=None):
+    hdl = EHANDLE(_OpenEventLog(server, source))
+    _raise_if(not hdl.is_valid())
+    return hdl
 
 ################################################################################
 

@@ -28,23 +28,21 @@ import datetime
 BOOT_EVENT_ID = 6009
 
 def boot_time():
-    log = advapi.OpenEventLog(None, "System")
-    try:
+    with advapi.OpenEventLog("System") as log:
         some_events = advapi.ReadEventLog(log)
         while some_events:
             for e in some_events:
                 if (e.EventID & 0xffff) == BOOT_EVENT_ID:
                     return e.TimeGenerated
             some_events = advapi.ReadEventLog(log)
-    finally:
-        advapi.CloseEventLog(log)
+    raise EnvironmentError("no boot event found")
 
-def up_time():
-    result = boot_time()
-    if result:
-        result = datetime.datetime.now() - result
-    return result
+def up_time(time_boot=None):
+    if time_boot is None:
+        time_boot = boot_time()
+    return datetime.datetime.now() - time_boot
 
 if __name__ == "__main__":
-    print(f"This computer was booted on {boot_time()}.")
-    print(f"It has been running for {up_time()}.")
+    t_boot = boot_time()
+    print(f"This computer was booted on {t_boot}.")
+    print(f"It has been running for {up_time(t_boot)}.")

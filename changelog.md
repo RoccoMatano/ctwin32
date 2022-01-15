@@ -83,6 +83,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   msvcrt.get_osfhandle.
 - moved definition of POINT and RECT from user to wtypes
 - simplified definition of PROC_THREAD_ATTRIBUTE constants
+- advapi.OpenEventLog returns context manager EHANDLE
+- revised sample uptime_evt.py
 
 ## [1.4.0]
 
