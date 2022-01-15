@@ -656,13 +656,18 @@ def CloseServiceHandle(handle):
 
 ################################################################################
 
+class SC_HANDLE(ScdToBeClosed, HANDLE, close_func=CloseServiceHandle, invalid=0):
+    pass
+
+################################################################################
+
 _OpenSCManager = _fun_fact(
     _a32.OpenSCManagerW, (HANDLE, PWSTR, PWSTR, DWORD)
     )
 
 def OpenSCManager(machine_name, database_name, desired_acc):
-    res = _OpenSCManager(machine_name, database_name, desired_acc)
-    _raise_if(not res)
+    res = SC_HANDLE(_OpenSCManager(machine_name, database_name, desired_acc))
+    _raise_if(not res.is_valid())
     return res
 
 ################################################################################
@@ -672,8 +677,8 @@ _OpenService = _fun_fact(
     )
 
 def OpenService(scm, name, desired_acc):
-    res = _OpenService(scm, name, desired_acc)
-    _raise_if(not res)
+    res = SC_HANDLE(_OpenService(scm, name, desired_acc))
+    _raise_if(not res.is_valid())
     return res
 
 ################################################################################
@@ -711,22 +716,24 @@ def CreateService(
     service_start_name,
     password
     ):
-    res = _CreateService(
-        scm,
-        service_name,
-        display_name,
-        desired_acc,
-        service_type,
-        start_type,
-        error_control,
-        binary_path_name,
-        load_order_group,
-        None,
-        _ct.create_unicode_buffer("\x00".join(dependencies)),
-        service_start_name,
-        password
+    res = SC_HANDLE(
+        _CreateService(
+            scm,
+            service_name,
+            display_name,
+            desired_acc,
+            service_type,
+            start_type,
+            error_control,
+            binary_path_name,
+            load_order_group,
+            None,
+            _ct.create_unicode_buffer("\x00".join(dependencies)),
+            service_start_name,
+            password
+            )
         )
-    _raise_if(not res)
+    _raise_if(not res.is_valid())
     return res
 
 ################################################################################

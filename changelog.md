@@ -85,6 +85,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - simplified definition of PROC_THREAD_ATTRIBUTE constants
 - advapi.OpenEventLog returns context manager EHANDLE
 - revised sample uptime_evt.py
+- advapi.OpenSCManager, advapi.OpenService and advapi.CreateService return
+  context manager SC_HANDLE
 
 ## [1.4.0]
 
