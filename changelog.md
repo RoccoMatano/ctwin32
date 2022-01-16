@@ -80,6 +80,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - comctl.TaskDialog
 - comctl.TaskDialogIndirect
 - comctl.tsk_dlg_callback
+- kernel.GetSystemDirectory
+- CreateActCtx, ActivateActCtx, DeactivateActCtx amd ReleaseActCtx in kernel
 
 ### Changed
 
@@ -94,6 +96,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - moved \_EnumContext and \_EnumContextPtr from user to wtypes and renamed them
   to CallbackContext and CallbackContextPtr
 - sample hello_wnd.py now demonstrates comctl.tsk_dlg_callback on right-click
+- setup activation context in comctl before loading comctl32.dll
 
 ## [1.4.0]
 

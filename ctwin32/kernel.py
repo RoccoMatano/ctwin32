@@ -755,3 +755,67 @@ def create_process(
         )
 
 ################################################################################
+
+_GetSystemDirectory = _fun_fact(_k32.GetSystemDirectoryW, (UINT, PWSTR, UINT))
+
+def GetSystemDirectory():
+    buf_size = 256
+    buf = _ct.create_unicode_buffer(buf_size)
+    req_size = _GetSystemDirectory(buf, buf_size)
+    if req_size <= buf_size:
+        return buf.value
+    buf = _ct.create_unicode_buffer(req_size)
+    req_size = _GetSystemDirectory(buf, buf_size)
+    _raise_if(req_size > buf_size)
+    return buf.value
+
+################################################################################
+
+class ACTCTX(_ct.Structure):
+    _fields_ = (
+        ("cbSize", ULONG),
+        ("dwFlags", DWORD),
+        ("lpSource", PWSTR),
+        ("wProcessorArchitecture", USHORT),
+        ("wLangId", USHORT),
+        ("lpAssemblyDirectory", PWSTR),
+        ("lpResourceName", PWSTR),
+        ("lpApplicationName", PWSTR),
+        ("hModule", HANDLE),
+        )
+
+    def __init__(self):
+        self.cbSize = _ct.sizeof(self)
+
+PACTCTX = _ct.POINTER(ACTCTX)
+
+################################################################################
+
+_CreateActCtx = _fun_fact(_k32.CreateActCtxW, (HANDLE, PACTCTX))
+
+def CreateActCtx(actctx):
+    res = _CreateActCtx(_ref(actctx))
+    _raise_if(res == INVALID_HANDLE_VALUE)
+    return res
+
+################################################################################
+
+_ActivateActCtx = _fun_fact(_k32.ActivateActCtx, (BOOL, HANDLE, PULONG_PTR))
+
+def ActivateActCtx(ctx):
+    cookie = ULONG_PTR()
+    _raise_if(not _ActivateActCtx(ctx, _ref(cookie)))
+    return cookie.value
+
+################################################################################
+
+_DeactivateActCtx = _fun_fact(_k32.DeactivateActCtx, (BOOL, DWORD, ULONG_PTR))
+
+def DeactivateActCtx(flags, cookie):
+    _raise_if(not _DeactivateActCtx(flags, cookie))
+
+################################################################################
+
+ReleaseActCtx = _fun_fact(_k32.ReleaseActCtx, (None, HANDLE))
+
+################################################################################

@@ -26,13 +26,79 @@ import ctypes as _ct
 
 from .wtypes import *
 from . import (
+    kernel,
+    _raise_if,
     _raise_on_hr,
     _fun_fact,
     S_OK,
+    ACTCTX_FLAG_RESOURCE_NAME_VALID,
+    ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID,
     )
 
-_ctl = _ct.windll.comctl32
 _ref = _ct.byref
+
+################################################################################
+
+def _load_comctl():
+
+    # The version of comctl32 that is loaded by LoadLibrary is determined by
+    # the activation context that is currently active. Since we need at least
+    # version 6, we have to ensure that the current activation context is set
+    # up for this version. Currenly the executables 'python.exe' and
+    # 'pythonw.exe' contain a manifest resource that ensures that such a context
+    # context is active (py 3.10). To be on the safe side, we are going to
+    # activate a matching context anyway.
+
+    # A somewhat hacky way to create such a context, is to create it from the
+    # manifest resource of shell32.dll (which might not be present or might
+    # have a different ID than 124). But this way has the advantage, that it
+    # can do without a dedicated manifest file (between WinXP and Win10
+    # ID 124 has consistently been the manifest resource in shell32.dll).
+    actx = kernel.ACTCTX()
+    actx.dwFlags = (
+        ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID
+        )
+    actx.lpSource = "shell32.dll"
+    actx.lpAssemblyDirectory = kernel.GetSystemDirectory()
+    actx.lpResourceName = PWSTR(124)
+    ctx = kernel.CreateActCtx(actx)
+
+    # Activating and releasing the context is decent (compared to creation).
+    cookie = kernel.ActivateActCtx(ctx)
+    comctl = _ct.windll.comctl32            # <- this calls LoadLibrary
+    kernel.DeactivateActCtx(0, cookie)
+    kernel.ReleaseActCtx(ctx)
+
+    # verify DLL version
+    class DLLVERSIONINFO(_ct.Structure):
+        _fields_ = (
+            ("cbSize", DWORD),
+            ("dwMajorVersion", DWORD),
+            ("dwMinorVersion", DWORD),
+            ("dwBuildNumber", DWORD),
+            ("dwPlatformID", DWORD),
+            )
+    dvi = DLLVERSIONINFO()
+    dvi.cbSize = _ct.sizeof(dvi)
+    _raise_on_hr(comctl.DllGetVersion(_ref(dvi)))
+    if dvi.dwMajorVersion < 6:
+        raise OSError("need at least version 6 of comctl32")
+
+    # register window classes
+    class INITCOMMONCONTROLSEX(_ct.Structure):
+        _fields_ = (
+            ("dwSize", DWORD),
+            ("dwICC", DWORD),
+            )
+    icc = INITCOMMONCONTROLSEX()
+    icc.dwSize = _ct.sizeof(icc)
+    icc.dwICC = 0xffff
+    _raise_if(not comctl.InitCommonControlsEx(_ref(icc)))
+
+    return comctl
+
+_ctl = _load_comctl()
+del _load_comctl
 
 ################################################################################
 
