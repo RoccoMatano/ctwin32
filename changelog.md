@@ -82,6 +82,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - comctl.tsk_dlg_callback
 - kernel.GetSystemDirectory
 - CreateActCtx, ActivateActCtx, DeactivateActCtx amd ReleaseActCtx in kernel
+- comctl.tsk_dlg_centered
 
 ### Changed
 

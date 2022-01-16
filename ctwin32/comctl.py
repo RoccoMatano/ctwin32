@@ -22,6 +22,8 @@
 #
 ################################################################################
 
+import tempfile
+import pathlib
 import ctypes as _ct
 
 from .wtypes import *
@@ -49,21 +51,30 @@ def _load_comctl():
     # context is active (py 3.10). To be on the safe side, we are going to
     # activate a matching context anyway.
 
-    # A somewhat hacky way to create such a context, is to create it from the
-    # manifest resource of shell32.dll (which might not be present or might
-    # have a different ID than 124). But this way has the advantage, that it
-    # can do without a dedicated manifest file (between WinXP and Win10
-    # ID 124 has consistently been the manifest resource in shell32.dll).
-    actx = kernel.ACTCTX()
-    actx.dwFlags = (
-        ACTCTX_FLAG_RESOURCE_NAME_VALID | ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID
+    # create a temporary manifest file
+    manifest = (
+        "<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion=",
+        "'1.0'><dependency><dependentAssembly><assemblyIdentity type='win32'",
+        " name='Microsoft.Windows.Common-Controls' version='6.0.0.0' ",
+        "processorArchitecture='*' publicKeyToken='6595b64144ccf1df' ",
+        "language='*'/></dependentAssembly></dependency></assembly>"
         )
-    actx.lpSource = "shell32.dll"
-    actx.lpAssemblyDirectory = kernel.GetSystemDirectory()
-    actx.lpResourceName = PWSTR(124)
-    ctx = kernel.CreateActCtx(actx)
+    tmp_name = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False) as f:
+            tmp_name = f.name
+            f.write("".join(manifest).encode("ascii"))
 
-    # Activating and releasing the context is decent (compared to creation).
+        # create activation context from manifest file
+        actx = kernel.ACTCTX()
+        actx.lpSource = tmp_name
+        ctx = kernel.CreateActCtx(actx)
+    finally:
+        # delete temporary file
+        if tmp_name is not None:
+            pathlib.Path(tmp_name).unlink()
+
+    # activate context, load libray and and release the context
     cookie = kernel.ActivateActCtx(ctx)
     comctl = _ct.windll.comctl32            # <- this calls LoadLibrary
     kernel.DeactivateActCtx(0, cookie)
@@ -148,7 +159,7 @@ def _TskDlgCb(hwnd, msg, wp, lp, ctxt):
     cbc = ctxt.contents
     res = cbc.callback(hwnd, msg, wp, lp, cbc.context)
     # return S_OK if the callback fails to return a value
-    return res if res is not None else S_OK
+    return S_OK if res is None else res
 
 ################################################################################
 
@@ -239,5 +250,21 @@ def tsk_dlg_callback(tsk_dlg_cfg, callback, context=None):
     tsk_dlg_cfg.pfCallback  = _TskDlgCb
     tsk_dlg_cfg.lpCallbackData = _ct.pointer(ctxt)
     return TaskDialogIndirect(tsk_dlg_cfg)
+
+################################################################################
+
+def tsk_dlg_centered(owner, title, instr, content, buttons, icon, inst=None):
+    tdc = TASKDIALOGCONFIG()
+    tdc.hwndParent = owner
+    tdc.pszWindowTitle = title
+    tdc.pszMainInstruction = instr
+    tdc.pszContent = content
+    tdc.dwCommonButtons = buttons
+    tdc.pszMainIcon = icon
+    tdc.hInstance = inst
+    tdc.dwFlags = TDF_POSITION_RELATIVE_TO_WINDOW
+    button_idx = INT()
+    _raise_on_hr(_TaskDialogIndirect(_ref(tdc), _ref(button_idx), None, None))
+    return button_idx.value
 
 ################################################################################
