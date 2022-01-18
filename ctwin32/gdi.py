@@ -22,25 +22,24 @@
 #
 ################################################################################
 
-import ctypes as _ct
-
 from .wtypes import *
 from . import (
-    _raise_if,
-    _fun_fact,
+    ctypes,
+    ref,
+    raise_if,
+    fun_fact,
     HGDI_ERROR,
     )
 
-_g32 = _ct.windll.gdi32
-_ref = _ct.byref
+_gdi = ctypes.windll.gdi32
 
 ################################################################################
 
-GetDeviceCaps = _fun_fact(_g32.GetDeviceCaps, (INT, HANDLE, INT))
+GetDeviceCaps = fun_fact(_gdi.GetDeviceCaps, (INT, HANDLE, INT))
 
 ################################################################################
 
-class LOGFONT(_ct.Structure):
+class LOGFONT(ctypes.Structure):
     _fields_ = (
         ("lfHeight", LONG),
         ("lfWidth", LONG),
@@ -58,31 +57,31 @@ class LOGFONT(_ct.Structure):
         ("lfFaceName", WCHAR * 32),
         )
 
-PLOGFONT = _ct.POINTER(LOGFONT)
+PLOGFONT = ctypes.POINTER(LOGFONT)
 
 ################################################################################
 
-_CreateFontIndirect = _fun_fact(_g32.CreateFontIndirectW, (HANDLE, PLOGFONT))
+_CreateFontIndirect = fun_fact(_gdi.CreateFontIndirectW, (HANDLE, PLOGFONT))
 
 def CreateFontIndirect(lf):
-    res = _CreateFontIndirect(_ref(lf))
-    _raise_if(not res)
+    res = _CreateFontIndirect(ref(lf))
+    raise_if(not res)
     return res
 
 ################################################################################
 
-_SelectObject = _fun_fact(_g32.SelectObject, (HANDLE, HANDLE, HANDLE))
+_SelectObject = fun_fact(_gdi.SelectObject, (HANDLE, HANDLE, HANDLE))
 
 def SelectObject(hdc, hobj):
     hprev = _SelectObject(hdc, hobj)
-    _raise_if(not hprev or hprev == HGDI_ERROR)
+    raise_if(not hprev or hprev == HGDI_ERROR)
     return hprev
 
 ################################################################################
 
-_DeleteObject = _fun_fact(_g32.DeleteObject, (BOOL, HANDLE))
+_DeleteObject = fun_fact(_gdi.DeleteObject, (BOOL, HANDLE))
 
 def DeleteObject(hobj):
-    _raise_if(not _DeleteObject(hobj))
+    raise_if(not _DeleteObject(hobj))
 
 ################################################################################

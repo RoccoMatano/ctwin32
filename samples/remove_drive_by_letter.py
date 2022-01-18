@@ -36,11 +36,11 @@
 
 import sys
 import time
-import ctypes
 
 from ctwin32 import (
     kernel,
     setupapi,
+    ctypes,
     FILE_SHARE_READ,
     FILE_SHARE_WRITE,
     OPEN_EXISTING,
@@ -95,9 +95,9 @@ def get_drive_devinst(drv_type, drv_num):
     # have to iterate over all device interfaces that match the drive type. The
     # drive number is only unique within the group of devices that share the
     # same interface.
-    if drv_type == FILE_DEVICE_CD_ROM or FILE_DEVICE_DVD:
+    if drv_type == FILE_DEVICE_CD_ROM or drv_type == FILE_DEVICE_DVD:
         guid = GUID_IFACE_CDROM
-    if drv_type == FILE_DEVICE_DISK:
+    elif drv_type == FILE_DEVICE_DISK:
         # ignoring that floppies ever existed
         guid = GUID_IFACE_DISK
     else:

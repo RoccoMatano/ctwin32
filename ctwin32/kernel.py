@@ -22,13 +22,14 @@
 #
 ################################################################################
 
-import ctypes as _ct
 import collections as _collections
 
 from .wtypes import *
 from . import (
-    _raise_if,
-    _fun_fact,
+    ctypes,
+    ref,
+    raise_if,
+    fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
@@ -36,67 +37,66 @@ from . import (
     cmdline_from_args,
     )
 
-_k32 = _ct.windll.kernel32
-_ref = _ct.byref
+_k32 = ctypes.windll.kernel32
 
 ################################################################################
 
-ExitProcess = _fun_fact(_k32.ExitProcess, (None, UINT))
+ExitProcess = fun_fact(_k32.ExitProcess, (None, UINT))
 
 ################################################################################
 
-GetLastError = _fun_fact(_k32.GetLastError, (DWORD,))
-SetLastError = _fun_fact(_k32.SetLastError, (None, DWORD))
+GetLastError = fun_fact(_k32.GetLastError, (DWORD,))
+SetLastError = fun_fact(_k32.SetLastError, (None, DWORD))
 
 ################################################################################
 
-_LocalFree = _fun_fact(_k32.LocalFree, (HANDLE, HANDLE))
+_LocalFree = fun_fact(_k32.LocalFree, (HANDLE, HANDLE))
 
 def LocalFree(hmem):
-    _raise_if(_LocalFree(hmem))
+    raise_if(_LocalFree(hmem))
 
 ################################################################################
 
-_GlobalFree = _fun_fact(_k32.GlobalFree, (HANDLE, HANDLE))
+_GlobalFree = fun_fact(_k32.GlobalFree, (HANDLE, HANDLE))
 
 def GlobalFree(hmem):
-    _raise_if(_GlobalFree(hmem))
+    raise_if(_GlobalFree(hmem))
 
 ################################################################################
 
-_GlobalAlloc = _fun_fact(_k32.GlobalAlloc, (HANDLE, UINT, SIZE_T))
+_GlobalAlloc = fun_fact(_k32.GlobalAlloc, (HANDLE, UINT, SIZE_T))
 
 def GlobalAlloc(flags, size):
     res = _GlobalAlloc(flags, size)
-    _raise_if(not res)
+    raise_if(not res)
     return res
 
 ################################################################################
 
-_GlobalLock = _fun_fact(_k32.GlobalLock, (PVOID, HANDLE))
+_GlobalLock = fun_fact(_k32.GlobalLock, (PVOID, HANDLE))
 
 def GlobalLock(hmem):
     res = _GlobalLock(hmem)
-    _raise_if(not res)
+    raise_if(not res)
     return res
 
 ################################################################################
 
-GlobalUnlock = _fun_fact(_k32.GlobalUnlock, (PVOID, HANDLE))
+GlobalUnlock = fun_fact(_k32.GlobalUnlock, (PVOID, HANDLE))
 
 ################################################################################
 
-_CloseHandle = _fun_fact(_k32.CloseHandle, (BOOL, HANDLE))
+_CloseHandle = fun_fact(_k32.CloseHandle, (BOOL, HANDLE))
 
 def CloseHandle(handle):
-    _raise_if(not _CloseHandle(handle))
+    raise_if(not _CloseHandle(handle))
 
 ################################################################################
 
 class KHANDLE(ScdToBeClosed, HANDLE, close_func=CloseHandle, invalid=0):
     pass
 
-PKHANDLE = _ct.POINTER(KHANDLE)
+PKHANDLE = ctypes.POINTER(KHANDLE)
 
 ################################################################################
 
@@ -108,21 +108,21 @@ class FHANDLE(
     ):
     pass
 
-PFHANDLE = _ct.POINTER(FHANDLE)
+PFHANDLE = ctypes.POINTER(FHANDLE)
 
 ################################################################################
 
-class SECURITY_ATTRIBUTES(_ct.Structure):
+class SECURITY_ATTRIBUTES(ctypes.Structure):
     _fields_ = (
         ("lpSecurityDescriptor", PVOID),
         ("nLength", DWORD),
         ("bInheritHandle", BOOL),
     )
-PSECURITY_ATTRIBUTES = _ct.POINTER(SECURITY_ATTRIBUTES)
+PSECURITY_ATTRIBUTES = ctypes.POINTER(SECURITY_ATTRIBUTES)
 
 ################################################################################
 
-_CreateFile = _fun_fact(
+_CreateFile = fun_fact(
     _k32.CreateFileW, (
         HANDLE,
         PWSTR,
@@ -147,25 +147,25 @@ def CreateFile(file_name, access, share_mode, sec_attr, dispo, flags, template):
             template
             )
         )
-    _raise_if(not hdl.is_valid())
+    raise_if(not hdl.is_valid())
     return hdl
 
 ################################################################################
 
-class _DUMMY_OVRLPD_STRUCT(_ct.Structure):
+class _DUMMY_OVRLPD_STRUCT(ctypes.Structure):
     _fields_ = (
         ("Offset", DWORD),
         ("OffsetHigh", DWORD),
         )
 
-class _DUMMY_OVRLPD_UNION(_ct.Structure):
+class _DUMMY_OVRLPD_UNION(ctypes.Union):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", _DUMMY_OVRLPD_STRUCT),
         ("Pointer", PVOID),
         )
 
-class OVERLAPPED(_ct.Structure):
+class OVERLAPPED(ctypes.Structure):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("Internal", ULONG_PTR),
@@ -174,11 +174,11 @@ class OVERLAPPED(_ct.Structure):
         ("hEvent", HANDLE)
         )
 
-POVERLAPPED = _ct.POINTER(OVERLAPPED)
+POVERLAPPED = ctypes.POINTER(OVERLAPPED)
 
 ################################################################################
 
-_DeviceIoControl = _fun_fact(
+_DeviceIoControl = fun_fact(
     _k32.DeviceIoControl, (
         BOOL,
         HANDLE,
@@ -198,15 +198,15 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
     if in_bytes is None:
         iptr, ilen = None, 0
     else:
-        iptr, ilen = _ref(in_bytes), len(in_bytes)
+        iptr, ilen = ref(in_bytes), len(in_bytes)
 
     if out_len is None or out_len == 0:
         out, optr, olen = None, None, 0
     else:
-        out = _ct.create_string_buffer(out_len)
-        optr, olen = _ref(out), out_len
+        out = ctypes.create_string_buffer(out_len)
+        optr, olen = ref(out), out_len
 
-    _raise_if(
+    raise_if(
         not _DeviceIoControl(
             hdl,
             ioctl,
@@ -214,7 +214,7 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
             ilen,
             optr,
             olen,
-            _ref(bytes_returned),
+            ref(bytes_returned),
             None
             )
         )
@@ -222,133 +222,133 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
 
 ################################################################################
 
-_GetCurrentProcess = _fun_fact(_k32.GetCurrentProcess, (HANDLE,))
+_GetCurrentProcess = fun_fact(_k32.GetCurrentProcess, (HANDLE,))
 
 def GetCurrentProcess():
     return _GetCurrentProcess()
 
 ################################################################################
 
-_GetCurrentProcessId = _fun_fact(_k32.GetCurrentProcessId, (DWORD,))
+_GetCurrentProcessId = fun_fact(_k32.GetCurrentProcessId, (DWORD,))
 
 def GetCurrentProcessId():
     return _GetCurrentProcessId()
 
 ################################################################################
 
-_GetModuleHandle = _fun_fact(_k32.GetModuleHandleW, (HANDLE, PWSTR))
+_GetModuleHandle = fun_fact(_k32.GetModuleHandleW, (HANDLE, PWSTR))
 
 def GetModuleHandle(mod_name):
     res = _GetModuleHandle(mod_name)
-    _raise_if(not res)
+    raise_if(not res)
     return res
 
 ################################################################################
 
-_WaitForSingleObject = _fun_fact(
+_WaitForSingleObject = fun_fact(
     _k32.WaitForSingleObject, (DWORD, HANDLE, DWORD)
     )
 
 def WaitForSingleObject(handle, timeout):
     res = _WaitForSingleObject(handle, timeout)
-    _raise_if(res == WAIT_FAILED)
+    raise_if(res == WAIT_FAILED)
     return res
 
 ################################################################################
 
-_OpenProcess = _fun_fact(
+_OpenProcess = fun_fact(
     _k32.OpenProcess, (HANDLE, DWORD, BOOL, DWORD)
     )
 
 def OpenProcess(desired_acc, inherit, pid):
     res = KHANDLE(_OpenProcess(desired_acc, inherit, pid))
-    _raise_if(not res.is_valid())
+    raise_if(not res.is_valid())
     return res
 
 ################################################################################
 
-_TerminateProcess = _fun_fact(
+_TerminateProcess = fun_fact(
     _k32.TerminateProcess, (BOOL, HANDLE, UINT)
     )
 
 def TerminateProcess(handle, exit_code):
-    _raise_if(not _TerminateProcess(handle, exit_code))
+    raise_if(not _TerminateProcess(handle, exit_code))
 
 ################################################################################
 
-_QueryDosDevice = _fun_fact(
+_QueryDosDevice = fun_fact(
     _k32.QueryDosDeviceW, (DWORD, PWSTR, PWSTR, DWORD)
     )
 
 def QueryDosDevice(device_name):
     size = 512
-    buf = _ct.create_unicode_buffer(size)
+    buf = ctypes.create_unicode_buffer(size)
     while True:
         res = _QueryDosDevice(device_name, buf, size)
         if res:
             return buf.value[:res]
-        _raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2
-        buf = _ct.create_unicode_buffer(size)
+        buf = ctypes.create_unicode_buffer(size)
 
 ################################################################################
 
 def GetSystemTime():
     st = SYSTEMTIME()
-    _k32.GetSystemTime(_ref(st))
+    _k32.GetSystemTime(ref(st))
     return st
 
 ################################################################################
 
 def GetSystemTimeAsFileTime():
     ft = FILETIME()
-    _k32.GetSystemTimeAsFileTime(_ref(ft))
+    _k32.GetSystemTimeAsFileTime(ref(ft))
     return ft
 
 ################################################################################
 
 def SetSystemTime(st):
-    _raise_if(not _k32.SetSystemTime(_ref(st)))
+    raise_if(not _k32.SetSystemTime(ref(st)))
 
 ################################################################################
 
 def GetLocalTime():
     st = SYSTEMTIME()
-    _k32.GetLocalTime(_ref(st))
+    _k32.GetLocalTime(ref(st))
     return st
 
 ################################################################################
 
 def SetLocalTime(st):
-    _raise_if(not _k32.SetLocalTime(_ref(st)))
+    raise_if(not _k32.SetLocalTime(ref(st)))
 
 ################################################################################
 
 def FileTimeToSystemTime(ft):
     st = SYSTEMTIME()
-    _raise_if(not _k32.FileTimeToSystemTime(_ref(ft), _ref(st)))
+    raise_if(not _k32.FileTimeToSystemTime(ref(ft), ref(st)))
     return st
 
 ################################################################################
 
 def SystemTimeToFileTime(st):
     ft = FILETIME()
-    _raise_if(not _k32.SystemTimeToFileTime(_ref(st), _ref(ft)))
+    raise_if(not _k32.SystemTimeToFileTime(ref(st), ref(ft)))
     return ft
 
 ################################################################################
 
 def FileTimeToLocalFileTime(ft):
     lft = FILETIME()
-    _raise_if(not _k32.FileTimeToLocalFileTime(_ref(ft), _ref(lft)))
+    raise_if(not _k32.FileTimeToLocalFileTime(ref(ft), ref(lft)))
     return lft
 
 ################################################################################
 
 def FileTimeToLocalSystemTime(ft):
     st = FileTimeToSystemTime(ft)
-    _raise_if(
-        not _k32.SystemTimeToTzSpecificLocalTime(0, _ref(st), _ref(st))
+    raise_if(
+        not _k32.SystemTimeToTzSpecificLocalTime(0, ref(st), ref(st))
         )
     return st
 
@@ -358,7 +358,7 @@ def AdjustTime(SecondsToAdjust):
     ft = GetSystemTimeAsFileTime()
     ft += int(SecondsToAdjust * 1e7)
     st = FileTimeToSystemTime(ft)
-    _raise_if(not _k32.SetSystemTime(_ref(st)))
+    raise_if(not _k32.SetSystemTime(ref(st)))
 
 ################################################################################
 
@@ -369,12 +369,12 @@ def GetCurrentThreadId():
 
 def GetFileAttributes(fname):
     res = _k32.GetFileAttributesW(fname)
-    _raise_if(res == INVALID_FILE_ATTRIBUTES)
+    raise_if(res == INVALID_FILE_ATTRIBUTES)
     return res
 
 ################################################################################
 
-_SetFileAttributes = _fun_fact(
+_SetFileAttributes = fun_fact(
     _k32.SetFileAttributesW, (BOOL, PWSTR, DWORD)
     )
 
@@ -382,25 +382,25 @@ _SetFileAttributes = _fun_fact(
 
 def SetFileAttributes(fname, attribs):
     suc = _SetFileAttributes(fname, attribs)
-    _raise_if(not suc)
+    raise_if(not suc)
 
 ################################################################################
 
-_GetACP = _fun_fact(_k32.GetACP, (DWORD,))
+_GetACP = fun_fact(_k32.GetACP, (DWORD,))
 
 def GetACP():
     return _GetACP()
 
 ################################################################################
 
-_OutputDebugStringW = _fun_fact(_k32.OutputDebugStringW, (None, PWSTR))
+_OutputDebugStringW = fun_fact(_k32.OutputDebugStringW, (None, PWSTR))
 
 def OutputDebugString(dstr):
     _OutputDebugStringW(dstr)
 
 ################################################################################
 
-_SetThreadExecutionState = _fun_fact(
+_SetThreadExecutionState = fun_fact(
     _k32.SetThreadExecutionState, (DWORD, DWORD)
     )
 
@@ -409,35 +409,35 @@ def SetThreadExecutionState(es_flags):
 
 ################################################################################
 
-_GetPrivateProfileSectionNames = _fun_fact(
+_GetPrivateProfileSectionNames = fun_fact(
     _k32.GetPrivateProfileSectionNamesW,
     (DWORD, PWSTR, DWORD, PWSTR)
     )
 
 def GetPrivateProfileSectionNames(filename):
     size = 512
-    buf = _ct.create_unicode_buffer(size)
+    buf = ctypes.create_unicode_buffer(size)
     res = _GetPrivateProfileSectionNames(buf, size, filename)
     while res == size - 2:
         size *= 2
-        buf = _ct.create_unicode_buffer(size)
+        buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSectionNames(buf, size, filename)
     return buf[:res].split('\0')[:-1]
 
 ################################################################################
 
-_GetPrivateProfileSection = _fun_fact(
+_GetPrivateProfileSection = fun_fact(
     _k32.GetPrivateProfileSectionW,
     (DWORD, PWSTR, PWSTR, DWORD, PWSTR)
     )
 
 def GetPrivateProfileSection(secname, filename):
     size = 512
-    buf = _ct.create_unicode_buffer(size)
+    buf = ctypes.create_unicode_buffer(size)
     res = _GetPrivateProfileSection(secname, buf, size, filename)
     while res == size - 2:
         size *= 2
-        buf = _ct.create_unicode_buffer(size)
+        buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSection(secname, buf, size, filename)
     entries = buf[:res].split('\0')[:-1]
     d = _collections.OrderedDict()
@@ -448,7 +448,7 @@ def GetPrivateProfileSection(secname, filename):
 
 ################################################################################
 
-_WritePrivateProfileSection = _fun_fact(
+_WritePrivateProfileSection = fun_fact(
     _k32.WritePrivateProfileSectionW,
     (DWORD, PWSTR, PWSTR, PWSTR)
     )
@@ -466,12 +466,12 @@ def WritePrivateProfileSection(secname, secdata, filename):
     # PyUnicode_AsWideCharString was updated to raise ValueError for
     # embedded nulls if the 'size' output parameter is NULL.
     # That's why we need to detour 'secdata' through a unicode buffer.
-    buf = _ct.create_unicode_buffer(secdata, len(secdata))
-    _raise_if(not _WritePrivateProfileSection(secname, buf, filename))
+    buf = ctypes.create_unicode_buffer(secdata, len(secdata))
+    raise_if(not _WritePrivateProfileSection(secname, buf, filename))
 
 ################################################################################
 
-_GetEnvironmentVariable = _fun_fact(
+_GetEnvironmentVariable = fun_fact(
     _k32.GetEnvironmentVariableW,
     (DWORD, PWSTR, PWSTR, DWORD)
     )
@@ -479,9 +479,9 @@ _GetEnvironmentVariable = _fun_fact(
 def GetEnvironmentVariable(name):
     size = 512
     while True:
-        var = _ct.create_unicode_buffer(size)
+        var = ctypes.create_unicode_buffer(size)
         req = _GetEnvironmentVariable(name, var, size)
-        _raise_if(req == 0)
+        raise_if(req == 0)
         if req <= size:
             break
         else:
@@ -490,32 +490,32 @@ def GetEnvironmentVariable(name):
 
 ################################################################################
 
-_SetEnvironmentVariable = _fun_fact(
+_SetEnvironmentVariable = fun_fact(
     _k32.SetEnvironmentVariableW,
     (BOOL, PWSTR, PWSTR)
     )
 
 def SetEnvironmentVariable(name, value):
-    _raise_if(not _SetEnvironmentVariable(name, value))
+    raise_if(not _SetEnvironmentVariable(name, value))
 
 ################################################################################
 
 # using void pointers instead of PWSTR so we can do pointer arithmatic.
 
-_FreeEnvironmentStrings = _fun_fact(
+_FreeEnvironmentStrings = fun_fact(
     _k32.FreeEnvironmentStringsW,
     (BOOL, PVOID)
     )
 
-_GetEnvironmentStrings = _fun_fact(_k32.GetEnvironmentStringsW, (PVOID,))
+_GetEnvironmentStrings = fun_fact(_k32.GetEnvironmentStringsW, (PVOID,))
 
 def GetEnvironmentStrings():
     ptr = _GetEnvironmentStrings()
-    _raise_if(not ptr)
+    raise_if(not ptr)
     try:
         return multi_str_from_addr(ptr)
     finally:
-        _raise_if(not _FreeEnvironmentStrings(ptr))
+        raise_if(not _FreeEnvironmentStrings(ptr))
 
 def env_str_to_dict(estr):
     return dict(s.rsplit("=", 1) for s in estr.strip("\0").split("\0"))
@@ -525,17 +525,17 @@ def get_env_as_dict():
 
 ################################################################################
 
-_SetEnvironmentStrings = _fun_fact(
+_SetEnvironmentStrings = fun_fact(
     _k32.SetEnvironmentStringsW,
     (BOOL, PWSTR)
     )
 
 def SetEnvironmentStrings(strings):
-    _raise_if(not _SetEnvironmentStrings(strings))
+    raise_if(not _SetEnvironmentStrings(strings))
 
 ################################################################################
 
-_ExpandEnvironmentStrings = _fun_fact(
+_ExpandEnvironmentStrings = fun_fact(
     _k32.ExpandEnvironmentStringsW,
     (DWORD, PWSTR, PWSTR, DWORD)
     )
@@ -543,9 +543,9 @@ _ExpandEnvironmentStrings = _fun_fact(
 def ExpandEnvironmentStrings(template):
     size = len(template)
     while True:
-        var = _ct.create_unicode_buffer(size)
+        var = ctypes.create_unicode_buffer(size)
         req = _ExpandEnvironmentStrings(template, var, size)
-        _raise_if(req == 0)
+        raise_if(req == 0)
         if req <= size:
             break
         else:
@@ -554,7 +554,7 @@ def ExpandEnvironmentStrings(template):
 
 ################################################################################
 
-class PROCESS_INFORMATION(_ct.Structure):
+class PROCESS_INFORMATION(ctypes.Structure):
     _fields_ = (
         ("hProcess", KHANDLE),
         ("hThread", KHANDLE),
@@ -569,11 +569,11 @@ class PROCESS_INFORMATION(_ct.Structure):
         self.hThread.close()
         self.hProcess.close()
 
-PPROCESS_INFORMATION = _ct.POINTER(PROCESS_INFORMATION)
+PPROCESS_INFORMATION = ctypes.POINTER(PROCESS_INFORMATION)
 
 ################################################################################
 
-class STARTUPINFO(_ct.Structure):
+class STARTUPINFO(ctypes.Structure):
     _fields_ = (
         ("cb", DWORD),
         ("lpReserved", PWSTR),
@@ -595,48 +595,48 @@ class STARTUPINFO(_ct.Structure):
         ("hStdError", HANDLE),
         )
     def __init__(self):
-        self.cb = _ct.sizeof(STARTUPINFO)
+        self.cb = ctypes.sizeof(STARTUPINFO)
 
-PSTARTUPINFO = _ct.POINTER(STARTUPINFO)
+PSTARTUPINFO = ctypes.POINTER(STARTUPINFO)
 
-class STARTUPINFOEX(_ct.Structure):
+class STARTUPINFOEX(ctypes.Structure):
     _fields_ = (
         ("StartupInfo", STARTUPINFO),
         ("lpAttributeList", PVOID),
         )
     def __init__(self, attr_lst=None):
-        self.StartupInfo.cb = _ct.sizeof(STARTUPINFOEX)
+        self.StartupInfo.cb = ctypes.sizeof(STARTUPINFOEX)
         self.lpAttributeList = attr_lst
 
 ################################################################################
 
-_InitializeProcThreadAttributeList = _fun_fact(
+_InitializeProcThreadAttributeList = fun_fact(
     _k32.InitializeProcThreadAttributeList,
     (BOOL, PVOID, DWORD, DWORD, PSIZE_T)
     )
 
 def InitializeProcThreadAttributeList(alst, acnt, flags, size=0):
     size = SIZE_T(size)
-    ok = _InitializeProcThreadAttributeList(alst, acnt, flags, _ref(size))
-    _raise_if(not ok and alst)
+    ok = _InitializeProcThreadAttributeList(alst, acnt, flags, ref(size))
+    raise_if(not ok and alst)
     return size.value
 
 ################################################################################
 
-_UpdateProcThreadAttribute = _fun_fact(
+_UpdateProcThreadAttribute = fun_fact(
     _k32.UpdateProcThreadAttribute,
     (BOOL, PVOID, DWORD, UINT_PTR, PVOID, SIZE_T, PVOID, PSIZE_T)
     )
 
 def UpdateProcThreadAttribute(alst, flags, id, attr):
-    size = SIZE_T(_ct.sizeof(attr))
-    _raise_if(
+    size = SIZE_T(ctypes.sizeof(attr))
+    raise_if(
         not _UpdateProcThreadAttribute(
             alst,
             flags,
             id,
-            _ref(attr),
-            SIZE_T(_ct.sizeof(attr)),
+            ref(attr),
+            SIZE_T(ctypes.sizeof(attr)),
             None,
             None
             )
@@ -644,7 +644,7 @@ def UpdateProcThreadAttribute(alst, flags, id, attr):
 
 ################################################################################
 
-_DeleteProcThreadAttributeList = _fun_fact(
+_DeleteProcThreadAttributeList = fun_fact(
     _k32.DeleteProcThreadAttributeList, (None, PVOID)
     )
 
@@ -657,7 +657,7 @@ class ProcThreadAttributeList:
     def __init__(self, attr_pairs):
         self.buf = None
         size = InitializeProcThreadAttributeList(None, len(attr_pairs), 0)
-        buf = _ct.create_string_buffer(size)
+        buf = ctypes.create_string_buffer(size)
         InitializeProcThreadAttributeList(buf, 1, 0, size)
         try:
             for id, value in attr_pairs:
@@ -676,11 +676,11 @@ class ProcThreadAttributeList:
             self.buf = None
 
     def address(self):
-        return _ct.addressof(self.buf) if self.buf else None
+        return ctypes.addressof(self.buf) if self.buf else None
 
 ################################################################################
 
-_CreateProcess = _fun_fact(
+_CreateProcess = fun_fact(
     _k32.CreateProcessW, (
         BOOL,
         PWSTR,
@@ -709,21 +709,21 @@ def CreateProcess(
     ):
     proc_info = PROCESS_INFORMATION()
     if isinstance(startup_info, STARTUPINFOEX):
-        psi = _ref(startup_info.StartupInfo)
+        psi = ref(startup_info.StartupInfo)
     else:
-        psi = _ref(startup_info)
-    _raise_if(
+        psi = ref(startup_info)
+    raise_if(
         not _CreateProcess(
             app_name,
             cmd_line,
-            _ref(proc_attr) if proc_attr is not None else None,
-            _ref(thread_attr) if thread_attr is not None else None,
+            ref(proc_attr) if proc_attr is not None else None,
+            ref(thread_attr) if thread_attr is not None else None,
             inherit,
             cflags,
             env,
             curdir,
             psi,
-            _ref(proc_info)
+            ref(proc_info)
             )
         )
     return proc_info
@@ -756,22 +756,22 @@ def create_process(
 
 ################################################################################
 
-_GetSystemDirectory = _fun_fact(_k32.GetSystemDirectoryW, (UINT, PWSTR, UINT))
+_GetSystemDirectory = fun_fact(_k32.GetSystemDirectoryW, (UINT, PWSTR, UINT))
 
 def GetSystemDirectory():
     buf_size = 256
-    buf = _ct.create_unicode_buffer(buf_size)
+    buf = ctypes.create_unicode_buffer(buf_size)
     req_size = _GetSystemDirectory(buf, buf_size)
     if req_size <= buf_size:
         return buf.value
-    buf = _ct.create_unicode_buffer(req_size)
+    buf = ctypes.create_unicode_buffer(req_size)
     req_size = _GetSystemDirectory(buf, buf_size)
-    _raise_if(req_size > buf_size)
+    raise_if(req_size > buf_size)
     return buf.value
 
 ################################################################################
 
-class ACTCTX(_ct.Structure):
+class ACTCTX(ctypes.Structure):
     _fields_ = (
         ("cbSize", ULONG),
         ("dwFlags", DWORD),
@@ -785,37 +785,37 @@ class ACTCTX(_ct.Structure):
         )
 
     def __init__(self):
-        self.cbSize = _ct.sizeof(self)
+        self.cbSize = ctypes.sizeof(self)
 
-PACTCTX = _ct.POINTER(ACTCTX)
+PACTCTX = ctypes.POINTER(ACTCTX)
 
 ################################################################################
 
-_CreateActCtx = _fun_fact(_k32.CreateActCtxW, (HANDLE, PACTCTX))
+_CreateActCtx = fun_fact(_k32.CreateActCtxW, (HANDLE, PACTCTX))
 
 def CreateActCtx(actctx):
-    res = _CreateActCtx(_ref(actctx))
-    _raise_if(res == INVALID_HANDLE_VALUE)
+    res = _CreateActCtx(ref(actctx))
+    raise_if(res == INVALID_HANDLE_VALUE)
     return res
 
 ################################################################################
 
-_ActivateActCtx = _fun_fact(_k32.ActivateActCtx, (BOOL, HANDLE, PULONG_PTR))
+_ActivateActCtx = fun_fact(_k32.ActivateActCtx, (BOOL, HANDLE, PULONG_PTR))
 
 def ActivateActCtx(ctx):
     cookie = ULONG_PTR()
-    _raise_if(not _ActivateActCtx(ctx, _ref(cookie)))
+    raise_if(not _ActivateActCtx(ctx, ref(cookie)))
     return cookie.value
 
 ################################################################################
 
-_DeactivateActCtx = _fun_fact(_k32.DeactivateActCtx, (BOOL, DWORD, ULONG_PTR))
+_DeactivateActCtx = fun_fact(_k32.DeactivateActCtx, (BOOL, DWORD, ULONG_PTR))
 
 def DeactivateActCtx(flags, cookie):
-    _raise_if(not _DeactivateActCtx(flags, cookie))
+    raise_if(not _DeactivateActCtx(flags, cookie))
 
 ################################################################################
 
-ReleaseActCtx = _fun_fact(_k32.ReleaseActCtx, (None, HANDLE))
+ReleaseActCtx = fun_fact(_k32.ReleaseActCtx, (None, HANDLE))
 
 ################################################################################

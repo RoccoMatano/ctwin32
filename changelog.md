@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- mostly internal refactorings, but with a small impact on the samples (ctypes
+  is now included in ctwin32's namespace)
+
 ## [1.5.0]
 
 ### Added

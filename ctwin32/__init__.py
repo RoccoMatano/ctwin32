@@ -24,30 +24,30 @@
 
 version = "1.5.0"
 
-import ctypes as _ct
 from .wtypes import *
+ref = ctypes.byref
 
 ################################################################################
 
-def _raise_if(condition):
+def raise_if(condition):
     if condition:
-        raise _ct.WinError()
+        raise ctypes.WinError()
 
 ################################################################################
 
-def _raise_on_err(err):
+def raise_on_err(err):
     if err:
-        raise _ct.WinError(err)
+        raise ctypes.WinError(err)
 
 ################################################################################
 
-def _raise_on_hr(hr):
+def raise_on_hr(hr):
     if hr < 0:
-        raise _ct.WinError(hr)
+        raise ctypes.WinError(hr)
 
 ################################################################################
 
-def _fun_fact(function, signature):
+def fun_fact(function, signature):
     function.restype = signature[0]
     function.argtypes = signature[1:]
     return function
@@ -55,16 +55,16 @@ def _fun_fact(function, signature):
 ################################################################################
 
 def multi_str_from_addr(addr):
-    WCHAR_SIZE = _ct.sizeof(WCHAR)
+    WCHAR_SIZE = ctypes.sizeof(WCHAR)
     end = addr
     while True:
-        slen = len(_ct.cast(end, PWSTR).value)
+        slen = len(ctypes.cast(end, PWSTR).value)
         if slen:
             end += (slen + 1) * WCHAR_SIZE
         else:
             # +WCHAR_SIZE for final null
             size = (end + WCHAR_SIZE - addr) // WCHAR_SIZE
-            return _ct.wstring_at(addr, size)
+            return ctypes.wstring_at(addr, size)
 
 ################################################################################
 
@@ -209,8 +209,6 @@ SERVICE_ERROR_IGNORE = 0
 SERVICE_ERROR_NORMAL = 1
 SERVICE_ERROR_SEVERE = 2
 SERVICE_ERROR_CRITICAL = 3
-
-
 
 UOI_FLAGS = 1
 UOI_NAME = 2
@@ -3244,8 +3242,6 @@ CO_E_ACNOTINITIALIZED = 0x8001013F
 CO_E_CANCEL_DISABLED = 0x80010140
 RPC_E_UNEXPECTED = 0x8001FFFF
 
-
-
 SW_HIDE             = 0
 SW_SHOWNORMAL       = 1
 SW_NORMAL           = 1
@@ -4336,7 +4332,6 @@ FILE_VOLUME_IS_COMPRESSED = 32768
 IO_COMPLETION_MODIFY_STATE = 2
 DUPLICATE_CLOSE_SOURCE = 1
 DUPLICATE_SAME_ACCESS = 2
-
 
 KEY_QUERY_VALUE = 1
 KEY_SET_VALUE = 2

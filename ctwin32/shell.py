@@ -22,8 +22,6 @@
 #
 ################################################################################
 
-import ctypes as _ct
-
 from .wtypes import *
 from . import (
     INFINITE,
@@ -33,17 +31,19 @@ from . import (
     PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
     CREATE_NEW_CONSOLE,
     EXTENDED_STARTUPINFO_PRESENT,
-    _raise_if,
-    _fun_fact,
+    raise_if,
+    fun_fact,
     kernel,
-    user
+    user,
+    ref,
+    ctypes,
     )
 
 from .kernel import WaitForSingleObject, CloseHandle, LocalFree
 
 ################################################################################
 
-class SHELLEXECUTEINFOW(_ct.Structure):
+class SHELLEXECUTEINFOW(ctypes.Structure):
     _fields_ = (
         ("cbSize", DWORD),
         ("fMask", DWORD),
@@ -62,7 +62,7 @@ class SHELLEXECUTEINFOW(_ct.Structure):
         ("hProcess", HANDLE),
         )
     def __init__(self, file, verb, param, direc, wait, show):
-        self.cbSize = _ct.sizeof(self)
+        self.cbSize = ctypes.sizeof(self)
         self.lpVerb = verb
         self.lpFile = file
         self.lpParameters = param
@@ -72,9 +72,9 @@ class SHELLEXECUTEINFOW(_ct.Structure):
 
 ################################################################################
 
-_ShellExecuteExW = _fun_fact(
-    _ct.windll.shell32.ShellExecuteExW,
-    (BOOL, _ct.POINTER(SHELLEXECUTEINFOW))
+_ShellExecuteExW = fun_fact(
+    ctypes.windll.shell32.ShellExecuteExW,
+    (BOOL, ctypes.POINTER(SHELLEXECUTEINFOW))
     )
 
 ################################################################################
@@ -89,7 +89,7 @@ def ShellExecuteEx(
     ):
     sei = SHELLEXECUTEINFOW(file, verb, param, direc, wait, show)
 
-    _raise_if(not _ShellExecuteExW(_ct.byref(sei)))
+    raise_if(not _ShellExecuteExW(ref(sei)))
 
     if sei.hProcess is not None:
         kernel.WaitForSingleObject(sei.hProcess, INFINITE);
@@ -115,8 +115,8 @@ def relegate(*args, wait=False):
 
 ################################################################################
 
-_CommandLineToArgv = _fun_fact(
-    _ct.windll.shell32.CommandLineToArgvW,
+_CommandLineToArgv = fun_fact(
+    ctypes.windll.shell32.CommandLineToArgvW,
     (PPWSTR, PWSTR, PINT),
     )
 
@@ -127,8 +127,8 @@ def CommandLineToArgv(cmdline):
         return []
 
     argc = INT()
-    pargs = _CommandLineToArgv(cmdline, _ct.byref(argc))
-    _raise_if(not pargs)
+    pargs = _CommandLineToArgv(cmdline, ref(argc))
+    raise_if(not pargs)
     try:
         return [pargs[i] for i in range(argc.value)]
     finally:

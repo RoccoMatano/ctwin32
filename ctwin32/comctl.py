@@ -24,20 +24,19 @@
 
 import tempfile
 import pathlib
-import ctypes as _ct
 
 from .wtypes import *
 from . import (
+    ctypes,
+    ref,
     kernel,
-    _raise_if,
-    _raise_on_hr,
-    _fun_fact,
+    raise_if,
+    raise_on_hr,
+    fun_fact,
     S_OK,
     ACTCTX_FLAG_RESOURCE_NAME_VALID,
     ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID,
     )
-
-_ref = _ct.byref
 
 ################################################################################
 
@@ -76,12 +75,12 @@ def _load_comctl():
 
     # activate context, load libray and and release the context
     cookie = kernel.ActivateActCtx(ctx)
-    comctl = _ct.windll.comctl32            # <- this calls LoadLibrary
+    comctl = ctypes.windll.comctl32     # <- this calls LoadLibrary
     kernel.DeactivateActCtx(0, cookie)
     kernel.ReleaseActCtx(ctx)
 
     # verify DLL version
-    class DLLVERSIONINFO(_ct.Structure):
+    class DLLVERSIONINFO(ctypes.Structure):
         _fields_ = (
             ("cbSize", DWORD),
             ("dwMajorVersion", DWORD),
@@ -90,21 +89,21 @@ def _load_comctl():
             ("dwPlatformID", DWORD),
             )
     dvi = DLLVERSIONINFO()
-    dvi.cbSize = _ct.sizeof(dvi)
-    _raise_on_hr(comctl.DllGetVersion(_ref(dvi)))
+    dvi.cbSize = ctypes.sizeof(dvi)
+    raise_on_hr(comctl.DllGetVersion(ref(dvi)))
     if dvi.dwMajorVersion < 6:
         raise OSError("need at least version 6 of comctl32")
 
     # register window classes
-    class INITCOMMONCONTROLSEX(_ct.Structure):
+    class INITCOMMONCONTROLSEX(ctypes.Structure):
         _fields_ = (
             ("dwSize", DWORD),
             ("dwICC", DWORD),
             )
     icc = INITCOMMONCONTROLSEX()
-    icc.dwSize = _ct.sizeof(icc)
+    icc.dwSize = ctypes.sizeof(icc)
     icc.dwICC = 0xffff
-    _raise_if(not comctl.InitCommonControlsEx(_ref(icc)))
+    raise_if(not comctl.InitCommonControlsEx(ref(icc)))
 
     return comctl
 
@@ -113,7 +112,7 @@ del _load_comctl
 
 ################################################################################
 
-_TaskDialog = _fun_fact(
+_TaskDialog = fun_fact(
     _ctl.TaskDialog, (
         HRESULT,
         HWND,
@@ -129,7 +128,7 @@ _TaskDialog = _fun_fact(
 
 def TaskDialog(owner, title, main_instr, content, buttons, icon, inst=None):
     res = INT()
-    _raise_on_hr(
+    raise_on_hr(
         _TaskDialog(
             owner,
             inst,
@@ -138,14 +137,14 @@ def TaskDialog(owner, title, main_instr, content, buttons, icon, inst=None):
             content,
             buttons,
             icon,
-            _ref(res)
+            ref(res)
             )
         )
     return res.value
 
 ################################################################################
 
-_TaskDialogCallback = _ct.WINFUNCTYPE(
+_TaskDialogCallback = ctypes.WINFUNCTYPE(
     LONG,
     HWND,
     UINT,
@@ -165,25 +164,25 @@ def _TskDlgCb(hwnd, msg, wp, lp, ctxt):
 
 # ALL TASKDIALOG STRUCTURES NEED AN ALIGNMENT OF 1 (_pack_ = 1)!!!
 
-class TASKDIALOG_BUTTON(_ct.Structure):
+class TASKDIALOG_BUTTON(ctypes.Structure):
     _pack_ = 1
     _fields_ = (
         ("nButtonID", INT),
         ("pszButtonText", PWSTR),
         )
 
-PTASKDIALOG_BUTTON = _ct.POINTER(TASKDIALOG_BUTTON)
+PTASKDIALOG_BUTTON = ctypes.POINTER(TASKDIALOG_BUTTON)
 
-class _TD_MAIN_ICON(_ct.Union):
+class _TD_MAIN_ICON(ctypes.Union):
     _pack_ = 1
     _fields_ = (("hMainIcon", HANDLE), ("pszMainIcon", PWSTR))
 
-class _TD_FOOTER_ICON(_ct.Union):
+class _TD_FOOTER_ICON(ctypes.Union):
     _pack_ = 1
     _fields_ = (("hFooterIcon", HANDLE), ("pszFooterIcon", PWSTR))
 
 
-class TASKDIALOGCONFIG(_ct.Structure):
+class TASKDIALOGCONFIG(ctypes.Structure):
     _pack_ = 1
     _anonymous_ = ("_main_icon", "_footer_icon")
     _fields_ = (
@@ -213,13 +212,13 @@ class TASKDIALOGCONFIG(_ct.Structure):
         ("cxWidth", UINT),
         )
     def __init__(self):
-        self.cbSize = _ct.sizeof(self)
+        self.cbSize = ctypes.sizeof(self)
 
-PTASKDIALOGCONFIG = _ct.POINTER(TASKDIALOGCONFIG)
+PTASKDIALOGCONFIG = ctypes.POINTER(TASKDIALOGCONFIG)
 
 ################################################################################
 
-_TaskDialogIndirect = _fun_fact(
+_TaskDialogIndirect = fun_fact(
     _ctl.TaskDialogIndirect, (
         HRESULT,
         PTASKDIALOGCONFIG,
@@ -233,12 +232,12 @@ def TaskDialogIndirect(tsk_dlg_cfg):
     button_idx = INT()
     radio_idx = INT()
     verified = BOOL()
-    _raise_on_hr(
+    raise_on_hr(
         _TaskDialogIndirect(
-            _ref(tsk_dlg_cfg),
-            _ref(button_idx),
-            _ref(radio_idx),
-            _ref(verified)
+            ref(tsk_dlg_cfg),
+            ref(button_idx),
+            ref(radio_idx),
+            ref(verified)
             )
         )
     return button_idx.value, radio_idx.value, bool(verified.value)
@@ -248,7 +247,7 @@ def TaskDialogIndirect(tsk_dlg_cfg):
 def tsk_dlg_callback(tsk_dlg_cfg, callback, context=None):
     ctxt = CallbackContext(callback, context)
     tsk_dlg_cfg.pfCallback  = _TskDlgCb
-    tsk_dlg_cfg.lpCallbackData = _ct.pointer(ctxt)
+    tsk_dlg_cfg.lpCallbackData = ctypes.pointer(ctxt)
     return TaskDialogIndirect(tsk_dlg_cfg)
 
 ################################################################################
@@ -264,7 +263,7 @@ def tsk_dlg_centered(owner, title, instr, content, buttons, icon, inst=None):
     tdc.hInstance = inst
     tdc.dwFlags = TDF_POSITION_RELATIVE_TO_WINDOW
     button_idx = INT()
-    _raise_on_hr(_TaskDialogIndirect(_ref(tdc), _ref(button_idx), None, None))
+    raise_on_hr(_TaskDialogIndirect(ref(tdc), ref(button_idx), None, None))
     return button_idx.value
 
 ################################################################################

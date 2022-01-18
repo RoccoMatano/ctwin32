@@ -22,81 +22,78 @@
 #
 ################################################################################
 
-import ctypes as _ct
-
 from .wtypes import *
-from . import _fun_fact, _raise_on_err
+from . import ctypes, ref, fun_fact, raise_on_err
 
 from .kernel import KHANDLE, PKHANDLE
 
-_ref = _ct.byref
-_vdisk = _ct.windll.virtdisk
+_vdisk = ctypes.windll.virtdisk
 
 ################################################################################
 
-class VIRTUAL_STORAGE_TYPE(_ct.Structure):
+class VIRTUAL_STORAGE_TYPE(ctypes.Structure):
     _fields_ = (
         ("DeviceId", ULONG),
         ("VendorId", GUID),
         )
-PVIRTUAL_STORAGE_TYPE = _ct.POINTER(VIRTUAL_STORAGE_TYPE)
+PVIRTUAL_STORAGE_TYPE = ctypes.POINTER(VIRTUAL_STORAGE_TYPE)
 
 ################################################################################
 
-class _OVDP_VERSION1(_ct.Structure):
+class _OVDP_VERSION1(ctypes.Structure):
     _fields_ = (
         ("RWDepth", ULONG),
         )
-class _OVDP_VERSION2(_ct.Structure):
+class _OVDP_VERSION2(ctypes.Structure):
     _fields_ = (
         ("GetInfoOnly", BOOL),
         ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         )
-class _OVDP_VERSION3(_ct.Structure):
+class _OVDP_VERSION3(ctypes.Structure):
     _fields_ = (
         ("GetInfoOnly", BOOL),
         ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         ("SnapshotId", GUID),
         )
-class _OVDP_UNION(_ct.Union):
+class _OVDP_UNION(ctypes.Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),
         ("Version2", _OVDP_VERSION2),
         ("Version3", _OVDP_VERSION3),
         )
 
-class OPEN_VIRTUAL_DISK_PARAMETERS(_ct.Structure):
+class OPEN_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
     _fields_ = (("Version", LONG), ("u", _OVDP_UNION))
     _anonymous_ = ("u",)
-POPEN_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
+POPEN_VIRTUAL_DISK_PARAMETERS = ctypes.POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 
-class _AVDP_VERSION1(_ct.Structure):
+class _AVDP_VERSION1(ctypes.Structure):
     _fields_ = (
         ("Reserved", ULONG),
         )
-class _AVDP_VERSION2(_ct.Structure):
+class _AVDP_VERSION2(ctypes.Structure):
     _fields_ = (
         ("RestrictedOffset", ULARGE_INTEGER),
         ("RestrictedLength", ULARGE_INTEGER),
         )
-class _AVDP_UNION(_ct.Union):
+class _AVDP_UNION(ctypes.Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),
         ("Version2", _OVDP_VERSION2),
         )
 
-class ATTACH_VIRTUAL_DISK_PARAMETERS(_ct.Structure):
+class ATTACH_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
     _fields_ = (("Version", LONG), ("u", _AVDP_UNION))
     _anonymous_ = ("u",)
-PATTACH_VIRTUAL_DISK_PARAMETERS = _ct.POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
+PATTACH_VIRTUAL_DISK_PARAMETERS = ctypes.POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 
-_OpenVirtualDisk = _fun_fact(
+_OpenVirtualDisk = fun_fact(
     _vdisk.OpenVirtualDisk, (
         DWORD,
         PVIRTUAL_STORAGE_TYPE,
@@ -110,21 +107,21 @@ _OpenVirtualDisk = _fun_fact(
 
 def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
     hdl = KHANDLE()
-    _raise_on_err(
+    raise_on_err(
         _OpenVirtualDisk(
-            _ref(storage_type),
+            ref(storage_type),
             path,
             access_mask,
             flags,
-            None if parameters is None else _ref(parameters),
-            _ref(hdl)
+            None if parameters is None else ref(parameters),
+            ref(hdl)
             )
         )
     return hdl
 
 ################################################################################
 
-_AttachVirtualDisk = _fun_fact(
+_AttachVirtualDisk = fun_fact(
     _vdisk.AttachVirtualDisk, (
         DWORD,
         KHANDLE,
@@ -137,20 +134,20 @@ _AttachVirtualDisk = _fun_fact(
     )
 
 def AttachVirtualDisk(hdl, flags, prov_flags=0, parameters=None):
-    _raise_on_err(
+    raise_on_err(
         _AttachVirtualDisk(
             hdl,
             None,
             flags,
             prov_flags,
-            None if parameters is None else _ref(parameters),
+            None if parameters is None else ref(parameters),
             None
             )
         )
 
 ################################################################################
 
-_DetachVirtualDisk = _fun_fact(
+_DetachVirtualDisk = fun_fact(
     _vdisk.DetachVirtualDisk, (
         DWORD,
         KHANDLE,
@@ -160,6 +157,6 @@ _DetachVirtualDisk = _fun_fact(
     )
 
 def DetachVirtualDisk(hdl, flags=0, prov_flags=0):
-    _raise_on_err(_DetachVirtualDisk(hdl, flags, prov_flags))
+    raise_on_err(_DetachVirtualDisk(hdl, flags, prov_flags))
 
 ################################################################################

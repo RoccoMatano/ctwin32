@@ -22,13 +22,15 @@
 #
 ################################################################################
 
-import ctypes as _ct
 import ipaddress as _iaddr
 from collections import defaultdict as _defdict
 
 from .wtypes import *
 from . import (
-    _fun_fact,
+    ctypes,
+    ref,
+    fun_fact,
+    raise_on_err,
     ERROR_BUFFER_OVERFLOW,
     IF_TYPE_SOFTWARE_LOOPBACK,
     AF_UNSPEC,
@@ -39,37 +41,36 @@ from . import (
     GAA_FLAG_INCLUDE_PREFIX,
     )
 
-_ref = _ct.byref
-_iph = _ct.windll.iphlpapi
+_iph = ctypes.windll.iphlpapi
 
 ################################################################################
 
-class _STRUCTURE(_ct.Structure):
+class _STRUCTURE(ctypes.Structure):
     _fields_ = (("Length", ULONG), ("Flags", ULONG))
 
-class _UNION(_ct.Union):
-    _fields_ = (("Alignment", _ct.c_ulonglong), ("s", _STRUCTURE))
+class _UNION(ctypes.Union):
+    _fields_ = (("Alignment", ctypes.c_ulonglong), ("s", _STRUCTURE))
     _anonymous_ = ("s",)
 
-class SOCKADDR(_ct.Structure):
+class SOCKADDR(ctypes.Structure):
     _fields_ = (("sa_family", WORD), ("sa_data", BYTE * 14))
 
-PSOCKADDR = _ct.POINTER(SOCKADDR)
+PSOCKADDR = ctypes.POINTER(SOCKADDR)
 
 ################################################################################
 
-class SOCKET_ADDRESS(_ct.Structure):
+class SOCKET_ADDRESS(ctypes.Structure):
     _fields_ = (
         ("lpSockaddr", PSOCKADDR),
         ("iSockaddrLength", INT)
         )
-PSOCKET_ADDRESS = _ct.POINTER(SOCKET_ADDRESS)
+PSOCKET_ADDRESS = ctypes.POINTER(SOCKET_ADDRESS)
 
 ################################################################################
 
-class IP_ADAPTER_UNICAST_ADDRESS(_ct.Structure):
+class IP_ADAPTER_UNICAST_ADDRESS(ctypes.Structure):
     pass
-PIP_ADAPTER_UNICAST_ADDRESS = _ct.POINTER(IP_ADAPTER_UNICAST_ADDRESS)
+PIP_ADAPTER_UNICAST_ADDRESS = ctypes.POINTER(IP_ADAPTER_UNICAST_ADDRESS)
 
 IP_ADAPTER_UNICAST_ADDRESS._fields_ = (
     ("u", _UNION),
@@ -80,9 +81,9 @@ IP_ADAPTER_UNICAST_ADDRESS._fields_ = (
 
 ################################################################################
 
-class IP_ADAPTER_PREFIX(_ct.Structure):
+class IP_ADAPTER_PREFIX(ctypes.Structure):
     pass
-PIP_ADAPTER_PREFIX = _ct.POINTER(IP_ADAPTER_PREFIX)
+PIP_ADAPTER_PREFIX = ctypes.POINTER(IP_ADAPTER_PREFIX)
 IP_ADAPTER_PREFIX._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_PREFIX),
@@ -92,9 +93,9 @@ IP_ADAPTER_PREFIX._fields_ = (
 
 ################################################################################
 
-class IP_ADAPTER_ADDRESSES(_ct.Structure):
+class IP_ADAPTER_ADDRESSES(ctypes.Structure):
     pass
-PIP_ADAPTER_ADDRESSES = _ct.POINTER(IP_ADAPTER_ADDRESSES)
+PIP_ADAPTER_ADDRESSES = ctypes.POINTER(IP_ADAPTER_ADDRESSES)
 IP_ADAPTER_ADDRESSES._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_ADDRESSES),
@@ -121,45 +122,45 @@ IP_ADAPTER_ADDRESSES._fields_ = (
 
 ################################################################################
 
-class S_UN_B(_ct.Structure):
+class S_UN_B(ctypes.Structure):
     _fields_ = (
         ("s_b1", BYTE),
         ("s_b2", BYTE),
         ("s_b3", BYTE),
         ("s_b4", BYTE)
         )
-class S_UN_W(_ct.Structure):
+class S_UN_W(ctypes.Structure):
     _fields_ = (("s_w1", WORD), ("s_w2", WORD))
-class S_UN(_ct.Union):
+class S_UN(ctypes.Union):
     _fields_ = (
         ("S_un_b", S_UN_B),
         ("S_un_w", S_UN_W),
         ("S_addr", ULONG.__ctype_be__)
         )
-class IN_ADDR(_ct.Structure):
+class IN_ADDR(ctypes.Structure):
     _fields_ = (("S_un", S_UN),)
-PIN_ADDR = _ct.POINTER(IN_ADDR)
+PIN_ADDR = ctypes.POINTER(IN_ADDR)
 
 ################################################################################
 
-class SOCKADDR_IN(_ct.Structure):
+class SOCKADDR_IN(ctypes.Structure):
     _fields_ = (
         ("sin_family", WORD),
         ("sin_port", WORD),
         ("sin_addr", IN_ADDR),
         ("sin_zero", BYTE * 8)
         )
-PSOCKADDR_IN = _ct.POINTER(SOCKADDR_IN)
+PSOCKADDR_IN = ctypes.POINTER(SOCKADDR_IN)
 
 ################################################################################
 
-class IN6_ADDR(_ct.Union):
+class IN6_ADDR(ctypes.Union):
     _fields_ = (("Byte", BYTE * 16), ("Word", WORD * 8))
-PIN6_ADDR = _ct.POINTER(IN6_ADDR)
+PIN6_ADDR = ctypes.POINTER(IN6_ADDR)
 
 ################################################################################
 
-class SOCKADDR_IN6(_ct.Structure):
+class SOCKADDR_IN6(ctypes.Structure):
     _fields_ = (
         ("sin6_family", WORD),
         ("sin6_port", WORD),
@@ -167,17 +168,17 @@ class SOCKADDR_IN6(_ct.Structure):
         ("sin6_addr", IN6_ADDR),
         ("sin6_scope_id", ULONG),
         )
-PSOCKADDR_IN6 = _ct.POINTER(SOCKADDR_IN6)
+PSOCKADDR_IN6 = ctypes.POINTER(SOCKADDR_IN6)
 
 ################################################################################
 
 def _sock_addr_to_ip_addr(p_sock_addr):
     fam = p_sock_addr.contents.sa_family
     if fam == AF_INET:
-        addr = _ct.cast(p_sock_addr, PSOCKADDR_IN).contents
+        addr = ctypes.cast(p_sock_addr, PSOCKADDR_IN).contents
         return _iaddr.IPv4Address(addr.sin_addr.S_un.S_addr)
     elif fam == AF_INET6:
-        addr = _ct.cast(p_sock_addr, PSOCKADDR_IN6).contents
+        addr = ctypes.cast(p_sock_addr, PSOCKADDR_IN6).contents
         ip = _iaddr.IPv6Address(bytes(addr.sin6_addr.Byte))
         if addr.sin6_scope_id:
             ip = _iaddr.IPv6Address(f"{ip}%{addr.sin6_scope_id}")
@@ -187,7 +188,7 @@ def _sock_addr_to_ip_addr(p_sock_addr):
 
 ################################################################################
 
-_GetAdaptersAddresses = _fun_fact(
+_GetAdaptersAddresses = fun_fact(
     _iph.GetAdaptersAddresses, (
         ULONG,
         ULONG,
@@ -221,25 +222,25 @@ def _best_prefix_len(ip, prefixes):
 def _adapter_addresses_to_interfaces(p_adresses, include_loopback):
     result = _defdict(list)
     while p_adresses:
-        adapter_address = p_adresses.contents
-        p_adresses = adapter_address.Next
-        not_loopback = adapter_address.IfType != IF_TYPE_SOFTWARE_LOOPBACK
+        adptr_addr = p_adresses.contents
+        p_adresses = adptr_addr.Next
+        not_loopback = adptr_addr.IfType != IF_TYPE_SOFTWARE_LOOPBACK
         if not_loopback or include_loopback:
-            pfx_ptr = adapter_address.FirstPrefix
+            pfx_ptr = adptr_addr.FirstPrefix
             prefixes = []
             while pfx_ptr:
                 pfx = pfx_ptr.contents
                 pfx_ptr = pfx.Next
                 prefix = _sock_addr_to_ip_addr(pfx.Address.lpSockaddr)
                 prefixes.append((prefix, pfx.PrefixLength))
-            adapter_name = _ct.string_at(adapter_address.AdapterName).decode()
-            pfua = adapter_address.FirstUnicastAddress
+            adptr_name = ctypes.string_at(adptr_addr.AdapterName).decode()
+            pfua = adptr_addr.FirstUnicastAddress
             while pfua:
                 fua = pfua.contents
                 pfua = fua.Next
                 ip = _sock_addr_to_ip_addr(fua.Address.lpSockaddr)
                 plen = _best_prefix_len(ip, prefixes)
-                result[adapter_name].append(_iaddr.ip_interface(f"{ip}/{plen}"))
+                result[adptr_name].append(_iaddr.ip_interface(f"{ip}/{plen}"))
 
     return dict(result) # no more default values
 
@@ -262,11 +263,10 @@ def get_host_interfaces(version=4, include_loopback=False):
     blen = ULONG(16 * 1024)
     error = ERROR_BUFFER_OVERFLOW
     while error == ERROR_BUFFER_OVERFLOW:
-        buffer = _ct.create_string_buffer(blen.value)
-        p_addr = _ct.cast(buffer, PIP_ADAPTER_ADDRESSES)
-        error = _GetAdaptersAddresses(fam, flags, None, p_addr, _ref(blen))
-    if error:
-        raise _ct.WinError(error)
+        buffer = ctypes.create_string_buffer(blen.value)
+        p_addr = ctypes.cast(buffer, PIP_ADAPTER_ADDRESSES)
+        error = _GetAdaptersAddresses(fam, flags, None, p_addr, ref(blen))
+    raise_on_err(error)
 
     return _adapter_addresses_to_interfaces(p_addr, include_loopback)
 

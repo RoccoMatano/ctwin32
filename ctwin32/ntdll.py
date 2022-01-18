@@ -22,15 +22,16 @@
 #
 ################################################################################
 
-import ctypes as _ct
 from enum import IntFlag as _int_flag
 from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
 
 from .wtypes import *
 from . import (
+    ctypes,
+    ref,
     kernel,
-    _fun_fact,
+    fun_fact,
     ERROR_FILE_NOT_FOUND,
     ERROR_NO_MORE_FILES,
     SystemProcessInformation,
@@ -40,8 +41,7 @@ from . import (
     ProcessBasicInformation,
     )
 
-_nt = _ct.windll.ntdll
-_ref = _ct.byref
+_nt = ctypes.windll.ntdll
 
 def _ntstatus(status):
     return LONG(status).value
@@ -52,7 +52,7 @@ STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 
 ################################################################################
 
-_RtlNtStatusToDosError = _fun_fact(
+_RtlNtStatusToDosError = fun_fact(
     _nt.RtlNtStatusToDosError, (ULONG, LONG)
     )
 
@@ -64,22 +64,22 @@ def RtlNtStatusToDosError(status):
 
 def _raise_failed_status(status):
     if status < 0:
-        raise _ct.WinError(RtlNtStatusToDosError(status))
+        raise ctypes.WinError(RtlNtStatusToDosError(status))
 
 ################################################################################
 
-class UNICODE_STRING(_ct.Structure):
+class UNICODE_STRING(ctypes.Structure):
     _fields_ = (
         ("Length", WORD),
         ("MaximumLength", WORD),
         ("Buffer", PWSTR),
         )
 
-PUNICODE_STRING = _ct.POINTER(UNICODE_STRING)
+PUNICODE_STRING = ctypes.POINTER(UNICODE_STRING)
 
 ################################################################################
 
-class SYSTEM_PROCESS_ID_INFORMATION(_ct.Structure):
+class SYSTEM_PROCESS_ID_INFORMATION(ctypes.Structure):
     _fields_ = (
         ("ProcessId", HANDLE),
         ("ImageName", UNICODE_STRING),
@@ -87,7 +87,7 @@ class SYSTEM_PROCESS_ID_INFORMATION(_ct.Structure):
 
 ################################################################################
 
-class SYSTEM_PROCESS_INFORMATION(_ct.Structure):
+class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
     "this is just a partial definition"
     _fields_ = (
     ("NextEntryOffset", ULONG),
@@ -110,7 +110,7 @@ class SYSTEM_PROCESS_INFORMATION(_ct.Structure):
 
 ################################################################################
 
-class CLIENT_ID(_ct.Structure):
+class CLIENT_ID(ctypes.Structure):
     _fields_ = (
         ("UniqueProcess", LONG_PTR),
         ("UniqueThread", LONG_PTR)
@@ -118,7 +118,7 @@ class CLIENT_ID(_ct.Structure):
 
 ################################################################################
 
-class SYSTEM_HANDLE_TABLE_ENTRY_INFO(_ct.Structure):
+class SYSTEM_HANDLE_TABLE_ENTRY_INFO(ctypes.Structure):
     _fields_ = (
         ("Object", PVOID),
         ("UniqueProcessId", UINT_PTR),
@@ -132,7 +132,7 @@ class SYSTEM_HANDLE_TABLE_ENTRY_INFO(_ct.Structure):
 
 ################################################################################
 
-class PROCESS_BASIC_INFORMATION(_ct.Structure):
+class PROCESS_BASIC_INFORMATION(ctypes.Structure):
     _fields_ = (
         ("ExitStatus", INT),
         ("PebBaseAddress", LONG_PTR),
@@ -144,14 +144,14 @@ class PROCESS_BASIC_INFORMATION(_ct.Structure):
 
 ################################################################################
 
-class PROCESS_EXTENDED_BASIC_INFORMATION(_ct.Structure):
+class PROCESS_EXTENDED_BASIC_INFORMATION(ctypes.Structure):
     _fields_ = (
         ("Size", LONG_PTR),
         ("BasicInfo", PROCESS_BASIC_INFORMATION),
         ("Flags", INT)
         )
     def __init__(self):
-        self.Size = _ct.sizeof(self)
+        self.Size = ctypes.sizeof(self)
 
 class PROCESS_EXTENDED_BASIC_FLAGS(_int_flag):
     IsProtectedProcess   = 1
@@ -166,7 +166,7 @@ class PROCESS_EXTENDED_BASIC_FLAGS(_int_flag):
 
 ################################################################################
 
-class OBJECT_ATTRIBUTES(_ct.Structure):
+class OBJECT_ATTRIBUTES(ctypes.Structure):
     _fields_ = (
         ("Length", ULONG),
         ("RootDirectory", HANDLE),
@@ -177,12 +177,12 @@ class OBJECT_ATTRIBUTES(_ct.Structure):
         )
 
     def __init__(self):
-        self.Length = _ct.sizeof(self)
+        self.Length = ctypes.sizeof(self)
 
 ################################################################################
 
 def _make_handle_info(num_entries):
-    class _handle_info_t(_ct.Structure):
+    class _handle_info_t(ctypes.Structure):
         _fields_ = (
             ("NumberOfHandles", UINT_PTR),
             ("Reserved", UINT_PTR),
@@ -192,7 +192,7 @@ def _make_handle_info(num_entries):
 
 ################################################################################
 
-_NtClose = _fun_fact(_nt.NtClose, (ULONG, PVOID))
+_NtClose = fun_fact(_nt.NtClose, (ULONG, PVOID))
 _NtClose.restype = ULONG
 
 def NtClose(handle):
@@ -200,7 +200,7 @@ def NtClose(handle):
 
 ################################################################################
 
-_NtOpenProcess = _fun_fact(
+_NtOpenProcess = fun_fact(
     _nt.NtOpenProcess,
     (ULONG, PVOID, ULONG, PVOID, PVOID)
     )
@@ -210,26 +210,26 @@ def NtOpenProcess(pid, desired_access):
     cid.UniqueProcess = pid
     h = HANDLE()
     oa = OBJECT_ATTRIBUTES()
-    s = _NtOpenProcess(_ref(h), desired_access, _ref(oa), _ref(cid))
+    s = _NtOpenProcess(ref(h), desired_access, ref(oa), ref(cid))
     _raise_failed_status(s)
     return h
 
 ################################################################################
 
-_RtlAdjustPrivilege = _fun_fact(
+_RtlAdjustPrivilege = fun_fact(
     _nt.RtlAdjustPrivilege,
     (LONG, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
     )
 
 def RtlAdjustPrivilege(priv, enable, thread_priv=False):
     prev = BOOLEAN()
-    status = _RtlAdjustPrivilege(priv, enable, thread_priv, _ref(prev))
+    status = _RtlAdjustPrivilege(priv, enable, thread_priv, ref(prev))
     _raise_failed_status(status)
     return bool(prev)
 
 ################################################################################
 
-_NtQuerySystemInformation = _fun_fact(
+_NtQuerySystemInformation = fun_fact(
     _nt.NtQuerySystemInformation,
     (LONG, LONG, PVOID, ULONG, PULONG)
     )
@@ -239,7 +239,7 @@ def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
 
 ################################################################################
 
-_NtQueryInformationProcess = _fun_fact(
+_NtQueryInformationProcess = fun_fact(
     _nt.NtQueryInformationProcess,
     (ULONG, PVOID, LONG, PVOID, ULONG, PVOID)
     )
@@ -251,14 +251,14 @@ def NtQueryInformationProcess(phandle, pinfo, buf, buf_size, p_ret_len):
 
 def required_sys_info_size(sys_info):
     size = ULONG(0)
-    NtQuerySystemInformation(sys_info, 0, size, _ref(size))
+    NtQuerySystemInformation(sys_info, 0, size, ref(size))
     return size
 
 ################################################################################
 
 def required_proc_info_size(handle, proc_info):
     size = ULONG(0)
-    NtQueryInformationProcess(handle, proc_info, 0, size, _ref(size))
+    NtQueryInformationProcess(handle, proc_info, 0, size, ref(size))
     return size
 
 ################################################################################
@@ -267,7 +267,7 @@ def enum_processes():
     def _name_pid(pi):
         pid = pi.UniqueProcessId if pi.UniqueProcessId else 0
         name = (
-            _ct.wstring_at(pi.ImageName.Buffer, pi.ImageName.Length // 2)
+            ctypes.wstring_at(pi.ImageName.Buffer, pi.ImageName.Length // 2)
             if pi.ImageName.Buffer else
             ("idle" if pid == 0 else "system")
             )
@@ -277,23 +277,25 @@ def enum_processes():
     status = STATUS_INFO_LENGTH_MISMATCH
     while status == STATUS_INFO_LENGTH_MISMATCH:
         size = required_sys_info_size(SystemProcessInformation)
-        buf = _ct.create_string_buffer(size.value)
+        buf = ctypes.create_string_buffer(size.value)
         status = NtQuerySystemInformation(
             SystemProcessInformation,
-            _ref(buf),
+            ref(buf),
             size,
-            _ref(size)
+            ref(size)
             )
     _raise_failed_status(status)
 
-    pi = SYSTEM_PROCESS_INFORMATION.from_address(_ct.addressof(buf))
+    pi = SYSTEM_PROCESS_INFORMATION.from_address(ctypes.addressof(buf))
     res.append(_name_pid(pi))
 
     while True:
         offs = pi.NextEntryOffset
         if offs == 0:
             break
-        pi = SYSTEM_PROCESS_INFORMATION.from_address(_ct.addressof(pi) + offs)
+        pi = SYSTEM_PROCESS_INFORMATION.from_address(
+            ctypes.addressof(pi) + offs
+            )
         res.append(_name_pid(pi))
     return res
 
@@ -324,18 +326,18 @@ def proc_path_from_pid(pid):
     elif pid == 4:
         return "system"
 
-    buf = _ct.create_unicode_buffer(512)
-    size = _ct.sizeof(SYSTEM_PROCESS_ID_INFORMATION)
+    buf = ctypes.create_unicode_buffer(512)
+    size = ctypes.sizeof(SYSTEM_PROCESS_ID_INFORMATION)
     spii = SYSTEM_PROCESS_ID_INFORMATION()
-    spii.ProcessId = _ct.cast(pid, HANDLE)
+    spii.ProcessId = ctypes.cast(pid, HANDLE)
     spii.ImageName.Length = 0
     spii.ImageName.MaximumLength = buf._length_
-    spii.ImageName.Buffer = _ct.addressof(buf)
+    spii.ImageName.Buffer = ctypes.addressof(buf)
 
     while True:
         status = NtQuerySystemInformation(
             SystemProcessIdInformation,
-            _ref(spii),
+            ref(spii),
             size,
             None
             )
@@ -343,8 +345,8 @@ def proc_path_from_pid(pid):
             break
 
         # Required length is stored in MaximumLength.
-        buf = _ct.create_unicode_buffer(spii.ImageName.MaximumLength)
-        spii.ImageName.Buffer = _ct.addressof(buf)
+        buf = ctypes.create_unicode_buffer(spii.ImageName.MaximumLength)
+        spii.ImageName.Buffer = ctypes.addressof(buf)
 
     _raise_failed_status(status)
     return _resolve_device_prefix(buf.value)
@@ -354,12 +356,12 @@ def proc_path_from_pid(pid):
 def proc_path_from_handle(handle):
     info = ProcessImageFileName
     rlen = required_proc_info_size(handle, info)
-    buf = _ct.create_string_buffer(rlen.value)
+    buf = ctypes.create_string_buffer(rlen.value)
     _raise_failed_status(
-        NtQueryInformationProcess(handle, info, _ref(buf), rlen, _ref(rlen))
+        NtQueryInformationProcess(handle, info, ref(buf), rlen, ref(rlen))
         )
     return _resolve_device_prefix(
-        _ct.wstring_at(_ct.addressof(buf) + _ct.sizeof(UNICODE_STRING))
+        ctypes.wstring_at(ctypes.addressof(buf) + ctypes.sizeof(UNICODE_STRING))
         )
 
 ################################################################################
@@ -368,10 +370,10 @@ def get_handles(pid=-1):
     info = SystemExtendedHandleInformation
     hi = _make_handle_info(1)
     rlen = ULONG(0)
-    _NtQuerySystemInformation(info, _ref(hi), _ct.sizeof(hi), _ref(rlen))
+    _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
     hi = _make_handle_info(hi.NumberOfHandles)
     _raise_failed_status(
-        _NtQuerySystemInformation(info, _ref(hi), _ct.sizeof(hi), _ref(rlen))
+        _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
         )
     if pid == -1:
         return list(hi.Handles)
@@ -388,7 +390,7 @@ def get_grouped_handles(pid=-1):
 
 ################################################################################
 
-_NtGetNextProcess = _fun_fact(
+_NtGetNextProcess = fun_fact(
     _nt.NtGetNextProcess,
     (ULONG, PVOID, UINT, UINT, INT, PVOID)
     )
@@ -396,7 +398,7 @@ _NtGetNextProcess = _fun_fact(
 def NtGetNextProcess(current, access, attribs=0, flags=0):
     nxt = HANDLE()
     _raise_failed_status(
-        _NtGetNextProcess(current, access, attribs, flags, _ref(nxt))
+        _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
         )
     return nxt
 
@@ -409,9 +411,9 @@ def get_proc_ext_basic_info(proc_handle):
         NtQueryInformationProcess(
             proc_handle,
             ProcessBasicInformation,
-            _ref(pebi),
-            _ct.sizeof(pebi),
-            _ref(rlen)
+            ref(pebi),
+            ctypes.sizeof(pebi),
+            ref(rlen)
             )
         )
     return pebi
@@ -423,23 +425,23 @@ def pid_from_handle(handle):
 
 ################################################################################
 
-class _DUMMY_STATUS_UNION(_ct.Union):
+class _DUMMY_STATUS_UNION(ctypes.Union):
     _fields_ = (
         ("Status", LONG),
         ("Pointer", PVOID),
         )
 
-class IO_STATUS_BLOCK(_ct.Structure):
+class IO_STATUS_BLOCK(ctypes.Structure):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", _DUMMY_STATUS_UNION),
         ("Information", UINT_PTR),
         )
-PIO_STATUS_BLOCK = _ct.POINTER(IO_STATUS_BLOCK)
+PIO_STATUS_BLOCK = ctypes.POINTER(IO_STATUS_BLOCK)
 
 ################################################################################
 
-class FILE_DIRECTORY_INFORMATION(_ct.Structure):
+class FILE_DIRECTORY_INFORMATION(ctypes.Structure):
     _fields_ = (
     ("NextEntryOffset", ULONG),
     ("FileIndex", ULONG),
@@ -453,11 +455,11 @@ class FILE_DIRECTORY_INFORMATION(_ct.Structure):
     ("FileNameLength", ULONG),
     ("FileName", WCHAR * 1),
     )
-PFILE_DIRECTORY_INFORMATION = _ct.POINTER(FILE_DIRECTORY_INFORMATION)
+PFILE_DIRECTORY_INFORMATION = ctypes.POINTER(FILE_DIRECTORY_INFORMATION)
 
 ################################################################################
 
-_NtQueryDirectoryFile = _fun_fact(
+_NtQueryDirectoryFile = fun_fact(
     _nt.NtQueryDirectoryFile, (
         LONG,
         HANDLE,
@@ -480,13 +482,13 @@ def get_directory_info(hdir, restart_scan):
     iosb = IO_STATUS_BLOCK()
     bsize = 256
     while True:
-        buf = _ct.create_string_buffer(bsize)
+        buf = ctypes.create_string_buffer(bsize)
         stat = _NtQueryDirectoryFile(
             hdir,
             None,
             None,
             None,
-            _ref(iosb),
+            ref(iosb),
             buf,
             bsize,
             1, # FileDirectoryInformation
@@ -504,10 +506,12 @@ def get_directory_info(hdir, restart_scan):
             break
     _raise_failed_status(stat)
 
-    pv = _ct.cast(_ct.addressof(buf), PVOID)
-    dinfo = _ct.cast(_ct.addressof(buf), PFILE_DIRECTORY_INFORMATION).contents
+    pv = ctypes.cast(ctypes.addressof(buf), PVOID)
+    dinfo = ctypes.cast(
+        ctypes.addressof(buf), PFILE_DIRECTORY_INFORMATION
+        ).contents
     name_addr = pv.value + FILE_DIRECTORY_INFORMATION.FileName.offset
-    name = _ct.wstring_at(name_addr, dinfo.FileNameLength // 2)
+    name = ctypes.wstring_at(name_addr, dinfo.FileNameLength // 2)
 
     def la2dt(la):
         return kernel.FileTimeToLocalSystemTime(

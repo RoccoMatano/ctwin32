@@ -21,68 +21,71 @@
 # DEALINGS IN THE SOFTWARE.
 #
 ################################################################################
-
-import ctypes as _ct
-from datetime import datetime as _datetime
-from uuid import UUID
-
-################################################################################
-
+#
 # N.B.: This module is imported by 'import *'. Make sure that any global name
 # that should not be injected into the namespace of importing modules starts
 # with '_'!
+#
+################################################################################
+
+from datetime import datetime as _datetime
+
+# let ctypes and UUID become visible on the outside (by not giving
+# them a '_' name!
+import ctypes
+from uuid import UUID
 
 ################################################################################
 
 # integral types
 
-BYTE = _ct.c_byte
-CHAR = _ct.c_char
+BYTE = ctypes.c_byte
+CHAR = ctypes.c_char
 BOOLEAN = BYTE
 
-WCHAR = _ct.c_wchar
-SHORT = _ct.c_short
-USHORT = _ct.c_ushort
-WORD = _ct.c_ushort
+WCHAR = ctypes.c_wchar
+SHORT = ctypes.c_short
+USHORT = ctypes.c_ushort
+WORD = ctypes.c_ushort
 
-INT = _ct.c_int
-UINT = _ct.c_uint
-LONG = _ct.c_long
-ULONG = _ct.c_ulong
-DWORD = _ct.c_ulong
-BOOL = _ct.c_long
-HRESULT = _ct.c_long
+INT = ctypes.c_int
+UINT = ctypes.c_uint
+LONG = ctypes.c_long
+ULONG = ctypes.c_ulong
+DWORD = ctypes.c_ulong
+BOOL = ctypes.c_long
+HRESULT = ctypes.c_long
 
 # While the large integers are defined as a struct of low and high part, they
 # are also unions containing a long long part. That is why we can simply define
 # them as long longs without changing the aligment. For FILETIME (see below)
 # this is not the case.
 
-LARGE_INTEGER = _ct.c_longlong
-ULARGE_INTEGER = _ct.c_ulonglong
+LARGE_INTEGER = ctypes.c_longlong
+ULARGE_INTEGER = ctypes.c_ulonglong
 
-UINT_PTR = WPARAM = SIZE_T = ULONG_PTR = _ct.c_size_t
-INT_PTR = LPARAM = SSIZE_T = LRESULT = LONG_PTR = _ct.c_ssize_t
+UINT_PTR = WPARAM = SIZE_T = ULONG_PTR = ctypes.c_size_t
+INT_PTR = LPARAM = SSIZE_T = LRESULT = LONG_PTR = ctypes.c_ssize_t
 
 ################################################################################
 
 # floating point types
 
-FLOAT = _ct.c_float
-DOUBLE = _ct.c_double
+FLOAT = ctypes.c_float
+DOUBLE = ctypes.c_double
 
 ################################################################################
 
 # handle types
 
-HANDLE = _ct.c_void_p
+HANDLE = ctypes.c_void_p
 HINSTANCE = HWND = HANDLE
 
 ################################################################################
 
 # some structure definitions
 
-class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
+class GUID(ctypes.c_ulong * 4):         # using c_ulong for correct alignment
     def __init__(self, init=None):
         # init is None or str or GUID or UUID or something that can be
         # converted to bytes (like comtypes.GUID). If init is None we simply
@@ -96,7 +99,7 @@ class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
                 src = init.bytes_le
             else:
                 src = bytes(init)
-            _ct.memmove(self, src, _ct.sizeof(self))
+            ctypes.memmove(self, src, ctypes.sizeof(self))
 
     def uuid(self):
         return UUID(bytes_le=bytes(self))
@@ -109,9 +112,9 @@ class GUID(_ct.c_ulong * 4):            # using c_ulong for correct alignment
 
 ################################################################################
 
-class FILETIME(_ct.Structure):
+class FILETIME(ctypes.Structure):
     "Time in 100 nanosecond steps since January 1, 1601 (UTC)"
-    # cannot represent FILETIME as _ct.c_ulonglong since that would change
+    # cannot represent FILETIME as ctypes.c_ulonglong since that would change
     # the alignment
     _fields_ = (
         ("LowDateTime", DWORD),
@@ -135,7 +138,7 @@ class FILETIME(_ct.Structure):
 
 ################################################################################
 
-class SYSTEMTIME(_ct.Structure):
+class SYSTEMTIME(ctypes.Structure):
     _fields_ = (
         ("Year",         WORD),
         ("Month",        WORD),
@@ -200,7 +203,7 @@ class SYSTEMTIME(_ct.Structure):
 
 ################################################################################
 
-class POINT(_ct.Structure):
+class POINT(ctypes.Structure):
     _fields_ = (
         ("x", LONG),
         ("y", LONG)
@@ -215,7 +218,7 @@ class POINT(_ct.Structure):
 
 ################################################################################
 
-class RECT(_ct.Structure):
+class RECT(ctypes.Structure):
     _fields_ = (
         ("left", LONG),
         ("top", LONG),
@@ -237,41 +240,41 @@ class RECT(_ct.Structure):
 
 ################################################################################
 
-class CallbackContext(_ct.Structure):
+class CallbackContext(ctypes.Structure):
     _fields_ = (
-        ("callback", _ct.py_object),
-        ("context", _ct.py_object)
+        ("callback", ctypes.py_object),
+        ("context", ctypes.py_object)
         )
 
 ################################################################################
 
 # pointer types
 
-PWSTR = _ct.c_wchar_p
-PPWSTR = _ct.POINTER(PWSTR)
-PSTR = _ct.c_char_p
-PVOID = _ct.c_void_p
-PPVOID = _ct.POINTER(PVOID)
-PBYTE = _ct.POINTER(BYTE)
-PCHAR = _ct.POINTER(CHAR)
-PBOOLEAN = _ct.POINTER(BOOLEAN)
-PWCHAR = _ct.POINTER(WCHAR)
-PSHORT = _ct.POINTER(SHORT)
-PUSHORT = PWORD = _ct.POINTER(USHORT)
-PINT = _ct.POINTER(INT)
-PUINT = _ct.POINTER(UINT)
-PLONG = PBOOL = _ct.POINTER(LONG)
-PULONG = PDWORD = _ct.POINTER(ULONG)
-PUINT_PTR = PWPARAM = PSIZE_T = PULONG_PTR = _ct.POINTER(UINT_PTR)
-PLARGE_INTEGER = _ct.POINTER(LARGE_INTEGER)
-PULARGE_INTEGER = _ct.POINTER(ULARGE_INTEGER)
-PHANDLE = _ct.POINTER(HANDLE)
-PGUID = _ct.POINTER(GUID)
-PFILETIME = _ct.POINTER(FILETIME)
-PSYSTEMTIME = _ct.POINTER(SYSTEMTIME)
-PPOINT = _ct.POINTER(POINT)
-PRECT = _ct.POINTER(RECT)
-CallbackContextPtr = _ct.POINTER(CallbackContext)
+PWSTR = ctypes.c_wchar_p
+PPWSTR = ctypes.POINTER(PWSTR)
+PSTR = ctypes.c_char_p
+PVOID = ctypes.c_void_p
+PPVOID = ctypes.POINTER(PVOID)
+PBYTE = ctypes.POINTER(BYTE)
+PCHAR = ctypes.POINTER(CHAR)
+PBOOLEAN = ctypes.POINTER(BOOLEAN)
+PWCHAR = ctypes.POINTER(WCHAR)
+PSHORT = ctypes.POINTER(SHORT)
+PUSHORT = PWORD = ctypes.POINTER(USHORT)
+PINT = ctypes.POINTER(INT)
+PUINT = ctypes.POINTER(UINT)
+PLONG = PBOOL = ctypes.POINTER(LONG)
+PULONG = PDWORD = ctypes.POINTER(ULONG)
+PUINT_PTR = PWPARAM = PSIZE_T = PULONG_PTR = ctypes.POINTER(UINT_PTR)
+PLARGE_INTEGER = ctypes.POINTER(LARGE_INTEGER)
+PULARGE_INTEGER = ctypes.POINTER(ULARGE_INTEGER)
+PHANDLE = ctypes.POINTER(HANDLE)
+PGUID = ctypes.POINTER(GUID)
+PFILETIME = ctypes.POINTER(FILETIME)
+PSYSTEMTIME = ctypes.POINTER(SYSTEMTIME)
+PPOINT = ctypes.POINTER(POINT)
+PRECT = ctypes.POINTER(RECT)
+CallbackContextPtr = ctypes.POINTER(CallbackContext)
 
 ################################################################################
 
@@ -294,7 +297,7 @@ CallbackContextPtr = _ct.POINTER(CallbackContext)
 class ScdToBeClosed():
 
     def __init_subclass__(cls, /, close_func, invalid, **kwargs):
-        if not issubclass(cls, _ct._SimpleCData):
+        if not issubclass(cls, ctypes._SimpleCData):
             raise TypeError("must inherit from ctypes._SimpleCData")
         super().__init_subclass__(**kwargs)
         cls.close_func = close_func

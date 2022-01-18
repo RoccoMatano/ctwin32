@@ -24,12 +24,13 @@
 
 import sys
 import traceback
-import ctypes as _ct
 
-from ctwin32.wtypes import *
-from ctwin32 import (
-    _raise_if,
-    _fun_fact,
+from .wtypes import *
+from . import (
+    ctypes,
+    ref,
+    raise_if,
+    fun_fact,
     kernel,
     user,
     gdi,
@@ -62,18 +63,16 @@ from ctwin32 import (
     MB_ICONERROR,
     )
 
-_ref = _ct.byref
-
 ################################################################################
 
-class NMHDR(_ct.Structure):
+class NMHDR(ctypes.Structure):
     _fields_ = (
         ("hwndFrom", HWND),
         ("idFrom", UINT_PTR),
         ("code", UINT),
         )
 
-PNMHDR = _ct.POINTER(NMHDR)
+PNMHDR = ctypes.POINTER(NMHDR)
 
 ################################################################################
 
@@ -108,7 +107,7 @@ class BaseWnd:
             self.hwnd,
             WM_NOTIFY,
             nmhdr.idFrom,
-            LPARAM(_ct.cast(_ref(nmhdr), PVOID).value)
+            LPARAM(ctypes.cast(ref(nmhdr), PVOID).value)
             )
 
     def destroy(self):
@@ -187,17 +186,17 @@ class BaseWnd:
         user.BringWindowToTop(self.hwnd)
 
     def map_window_point(self, to_bwnd, pt):
-        user.MapWindowPoints(self.hwnd, to_bwnd.hwnd, _ref(pt), 1)
+        user.MapWindowPoints(self.hwnd, to_bwnd.hwnd, ref(pt), 1)
         return pt
 
     def map_window_rect(self, to_bwnd, rc):
-        ppt = _ct.cast(_ref(rc), PPOINT)
+        ppt = ctypes.cast(ref(rc), PPOINT)
         user.MapWindowPoints(self.hwnd, to_bwnd.hwnd, ppt, 2)
         return rc
 
     def lp_pt_to_parent(self, lp):
         pt = POINT.from_lparam(lp)
-        user.MapWindowPoints(self.hwnd, user.GetParent(self.hwnd), _ref(pt), 1)
+        user.MapWindowPoints(self.hwnd, user.GetParent(self.hwnd), ref(pt), 1)
         return pt.as_lparam()
 
     def client_to_screen(self, pt_or_rc):
@@ -215,19 +214,19 @@ class BaseWnd:
 
     def window_rect_as_client(self):
         rc = self.window_rect()
-        ppt = _ct.cast(_ref(rc), PPOINT)
+        ppt = ctypes.cast(ref(rc), PPOINT)
         user.MapWindowPoints(None, self.hwnd, ppt, 2)
         return rc
 
     def window_rect_as_other_client(self, other):
         rc = self.window_rect()
-        ppt = _ct.cast(_ref(rc), PPOINT)
+        ppt = ctypes.cast(ref(rc), PPOINT)
         user.MapWindowPoints(None, other.hwnd, ppt, 2)
         return rc
 
     def get_cursor_pos(self):
         pt = user.GetCursorPos()
-        user.MapWindowPoints(None, self.hwnd, _ref(pt), 1)
+        user.MapWindowPoints(None, self.hwnd, ref(pt), 1)
         return pt;
 
     def get_nc_cursor_pos(self):
@@ -366,7 +365,7 @@ class SimpleWnd(BaseWnd):
             if msg != WM_NCCREATE:
                 self_prop = user.get_prop_def(hwnd, _PROP_SELF)
                 if self_prop:
-                    self = _ct.cast(self_prop, _ct.py_object).value
+                    self = ctypes.cast(self_prop, ctypes.py_object).value
                     res = self.on_message(msg, wp, lp)
                     if msg == WM_NCDESTROY:
                         self.hwnd = None
@@ -377,7 +376,7 @@ class SimpleWnd(BaseWnd):
                 return user.DefWindowProc(hwnd, msg, wp, lp)
 
             cparam = user.CREATESTRUCT.from_address(lp).lpCreateParams
-            self = _ct.cast(cparam, _ct.py_object).value
+            self = ctypes.cast(cparam, ctypes.py_object).value
             if isinstance(self, SimpleWnd):
                 self.hwnd = hwnd
                 self.set_prop(_PROP_SELF, cparam)
@@ -440,10 +439,10 @@ class SimpleWnd(BaseWnd):
             # PVOID (or more precisely ctypes.c_void_p) has a flaw: neither can
             # PVOID.from_param() process a py_object, nor does ctypes.cast()
             # allow to convert a py_object to a PVOID (
-            # _ct.cast(_ct.py_object(self), PVOID) fails).
+            # ctypes.cast(ctypes.py_object(self), PVOID) fails).
             # Therefore we need this odd way of converting a python object
             # pointer to PVOID.
-            PVOID.from_buffer(_ct.py_object(self))
+            PVOID.from_buffer(ctypes.py_object(self))
             )
 
     ############################################################################

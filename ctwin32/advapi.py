@@ -22,15 +22,16 @@
 #
 ################################################################################
 
-import ctypes as _ct
 from types import SimpleNamespace as _namespace
 from datetime import datetime as _dt
 
 from .wtypes import *
 from . import (
-    _raise_if,
-    _raise_on_err,
-    _fun_fact,
+    ctypes,
+    ref,
+    raise_if,
+    raise_on_err,
+    fun_fact,
     REG_DWORD,
     REG_QWORD,
     REG_BINARY,
@@ -52,8 +53,7 @@ from . import (
     )
 from .kernel import LocalFree, GetLastError
 
-_a32 = _ct.windll.advapi32
-_ref = _ct.byref
+_adv = ctypes.windll.advapi32
 
 ################################################################################
 
@@ -74,10 +74,10 @@ _PREDEFINED_KEYS = {
 
 ################################################################################
 
-_RegCloseKey = _fun_fact(_a32.RegCloseKey, (LONG, HANDLE))
+_RegCloseKey = fun_fact(_adv.RegCloseKey, (LONG, HANDLE))
 
 def RegCloseKey(key):
-    _raise_on_err(_RegCloseKey(key))
+    raise_on_err(_RegCloseKey(key))
 
 ################################################################################
 
@@ -88,7 +88,7 @@ class HKEY(ScdToBeClosed, HANDLE, close_func=RegCloseKey, invalid=0):
         if self.value not in _PREDEFINED_KEYS:
             super().close()
 
-PHKEY = _ct.POINTER(HKEY)
+PHKEY = ctypes.POINTER(HKEY)
 
 ################################################################################
 
@@ -120,20 +120,20 @@ def registry_to_py(reg_type, data):
 
 ################################################################################
 
-_RegOpenKeyEx = _fun_fact(
-    _a32.RegOpenKeyExW,
+_RegOpenKeyEx = fun_fact(
+    _adv.RegOpenKeyExW,
     (LONG, HKEY, PWSTR, DWORD, DWORD, PHKEY)
     )
 
 def RegOpenKeyEx(parent, name, access=KEY_READ):
     key = HKEY()
-    _raise_on_err(_RegOpenKeyEx(parent, name, 0, access, _ref(key)))
+    raise_on_err(_RegOpenKeyEx(parent, name, 0, access, ref(key)))
     return key
 
 ################################################################################
 
-_RegQueryInfoKey = _fun_fact(
-    _a32.RegQueryInfoKeyW, (
+_RegQueryInfoKey = fun_fact(
+    _adv.RegQueryInfoKeyW, (
         LONG,
         HKEY,
         PWSTR,
@@ -157,20 +157,20 @@ def RegQueryInfoKey(key):
     max_value_name_len = DWORD()
     max_value_len = DWORD()
     last_written = FILETIME()
-    _raise_on_err(
+    raise_on_err(
         _RegQueryInfoKey(
             key.value,
             None,
             None,
             None,
-            _ref(num_sub_keys),
-            _ref(max_sub_key_len),
+            ref(num_sub_keys),
+            ref(max_sub_key_len),
             None,
-            _ref(num_values),
-            _ref(max_value_name_len),
-            _ref(max_value_len),
+            ref(num_values),
+            ref(max_value_name_len),
+            ref(max_value_len),
             None,
-            _ref(last_written)
+            ref(last_written)
             )
         )
     return _namespace(
@@ -184,8 +184,8 @@ def RegQueryInfoKey(key):
 
 ################################################################################
 
-_RegCreateKeyEx = _fun_fact(
-    _a32.RegCreateKeyExW, (
+_RegCreateKeyEx = fun_fact(
+    _adv.RegCreateKeyExW, (
         LONG,
         HKEY,
         PWSTR,
@@ -201,7 +201,7 @@ _RegCreateKeyEx = _fun_fact(
 
 def RegCreateKeyEx(parent, name, access=KEY_ALL_ACCESS):
     key = HKEY()
-    _raise_on_err(
+    raise_on_err(
         _RegCreateKeyEx(
             parent,
             name,
@@ -209,7 +209,7 @@ def RegCreateKeyEx(parent, name, access=KEY_ALL_ACCESS):
             0,
             access,
             None,
-            _ref(key),
+            ref(key),
             None
             )
         )
@@ -217,12 +217,12 @@ def RegCreateKeyEx(parent, name, access=KEY_ALL_ACCESS):
 
 ################################################################################
 
-_RegDeleteKeyEx = _fun_fact(
-    _a32.RegDeleteKeyExW, (LONG, HKEY, PWSTR, DWORD, DWORD)
+_RegDeleteKeyEx = fun_fact(
+    _adv.RegDeleteKeyExW, (LONG, HKEY, PWSTR, DWORD, DWORD)
     )
 
 def RegDeleteKeyEx(parent, name, access=KEY_WOW64_64KEY):
-    _raise_on_err(
+    raise_on_err(
         _RegDeleteKeyEx(
             parent,
             name,
@@ -233,21 +233,21 @@ def RegDeleteKeyEx(parent, name, access=KEY_WOW64_64KEY):
 
 ################################################################################
 
-_RegDeleteValue = _fun_fact(
-    _a32.RegDeleteValueW, (LONG, HKEY, PWSTR)
+_RegDeleteValue = fun_fact(
+    _adv.RegDeleteValueW, (LONG, HKEY, PWSTR)
     )
 
 def RegDeleteValue(key, name):
-    _raise_on_err(_RegDeleteValue(key, name))
+    raise_on_err(_RegDeleteValue(key, name))
 
 ################################################################################
 
-_RegDeleteKeyValue = _fun_fact(
-    _a32.RegDeleteKeyValueW, (LONG, HKEY, PWSTR, PWSTR)
+_RegDeleteKeyValue = fun_fact(
+    _adv.RegDeleteKeyValueW, (LONG, HKEY, PWSTR, PWSTR)
     )
 
 def RegDeleteKeyValue(parent, key_name, value_name):
-    _raise_on_err(
+    raise_on_err(
         _RegDeleteKeyValue(
             parent,
             key_name,
@@ -266,8 +266,8 @@ _MAX_KEY_LEN = 257
 
 ################################################################################
 
-_RegEnumKeyEx = _fun_fact(
-    _a32.RegEnumKeyExW, (
+_RegEnumKeyEx = fun_fact(
+    _adv.RegEnumKeyExW, (
         LONG,
         HKEY,
         DWORD,
@@ -282,13 +282,13 @@ _RegEnumKeyEx = _fun_fact(
 
 def RegEnumKeyEx(key, index):
     name_len = DWORD(_MAX_KEY_LEN)
-    name = _ct.create_unicode_buffer(_MAX_KEY_LEN)
-    _raise_on_err(
+    name = ctypes.create_unicode_buffer(_MAX_KEY_LEN)
+    raise_on_err(
         _RegEnumKeyEx(
             key,
             index,
             name,
-            _ref(name_len),
+            ref(name_len),
             None,
             None,
             None,
@@ -315,8 +315,8 @@ def reg_enum_keys(key):
 ################################################################################
 
 
-_RegEnumValue = _fun_fact(
-    _a32.RegEnumValueW, (
+_RegEnumValue = fun_fact(
+    _adv.RegEnumValueW, (
         LONG,
         HKEY,
         DWORD,
@@ -333,27 +333,27 @@ def RegEnumValue(key, index):
     info = RegQueryInfoKey(key)
     nlen = DWORD(info.max_value_name_len + 1)
     vlen = DWORD(info.max_value_len + 1)
-    name = _ct.create_unicode_buffer(nlen.value)
-    value = _ct.create_string_buffer(vlen.value)
+    name = ctypes.create_unicode_buffer(nlen.value)
+    value = ctypes.create_string_buffer(vlen.value)
     typ = DWORD()
     while True:
         err = _RegEnumValue(
             key,
             index,
             name,
-            _ref(nlen),
+            ref(nlen),
             None,
-            _ref(typ),
-            _ct.cast(value, PBYTE),
-            _ref(vlen)
+            ref(typ),
+            ctypes.cast(value, PBYTE),
+            ref(vlen)
             )
         if err == 0:
             break
         elif err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
-            value = _ct.create_string_buffer(vlen.value)
+            value = ctypes.create_string_buffer(vlen.value)
         else:
-            raise _ct.WinError(err)
+            raise ctypes.WinError(err)
 
     return (name.value,) + registry_to_py(typ.value, value.raw[:vlen.value])
 
@@ -374,8 +374,8 @@ def reg_enum_values(key):
 
 ################################################################################
 
-_RegQueryValueEx = _fun_fact(
-    _a32.RegQueryValueExW, (
+_RegQueryValueEx = fun_fact(
+    _adv.RegQueryValueExW, (
         LONG,
         HKEY,
         PWSTR,
@@ -388,31 +388,31 @@ _RegQueryValueEx = _fun_fact(
 
 def RegQueryValueEx(key, name):
     vlen = DWORD(256)
-    value = _ct.create_string_buffer(vlen.value)
+    value = ctypes.create_string_buffer(vlen.value)
     typ = DWORD()
     while True:
         err = _RegQueryValueEx(
             key,
             name,
             None,
-            _ref(typ),
-            _ct.cast(value, PBYTE),
-            _ref(vlen)
+            ref(typ),
+            ctypes.cast(value, PBYTE),
+            ref(vlen)
             )
         if err == 0:
             break
         elif err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
-            value = _ct.create_string_buffer(vlen.value)
+            value = ctypes.create_string_buffer(vlen.value)
         else:
-            raise _ct.WinError(err)
+            raise ctypes.WinError(err)
 
     return registry_to_py(typ.value, value[:vlen.value])
 
 ################################################################################
 
-_RegSetValueEx = _fun_fact(
-    _a32.RegSetValueExW, (
+_RegSetValueEx = fun_fact(
+    _adv.RegSetValueExW, (
         LONG,
         HKEY,
         PWSTR,
@@ -424,22 +424,22 @@ _RegSetValueEx = _fun_fact(
     )
 
 def RegSetValueEx(key, name, typ, data):
-    dta = _ct.create_string_buffer(data)
-    _raise_on_err(
+    dta = ctypes.create_string_buffer(data)
+    raise_on_err(
         _RegSetValueEx(
             key,
             name,
             0,
             typ,
-            _ref(dta),
+            ref(dta),
             len(data)
             )
         )
 
 ################################################################################
 
-_RegSetKeyValue = _fun_fact(
-    _a32.RegSetKeyValueW, (
+_RegSetKeyValue = fun_fact(
+    _adv.RegSetKeyValueW, (
         LONG,
         HKEY,
         PWSTR,
@@ -451,14 +451,14 @@ _RegSetKeyValue = _fun_fact(
     )
 
 def RegSetKeyValue(parent, key_name, value_name, typ, data):
-    dta = _ct.create_string_buffer(data)
-    _raise_on_err(
+    dta = ctypes.create_string_buffer(data)
+    raise_on_err(
         _RegSetKeyValue(
             parent,
             key_name,
             value_name,
             typ,
-            _ref(dta),
+            ref(dta),
             len(data)
             )
         )
@@ -469,44 +469,44 @@ def reg_set_str(key, name, string, typ=None):
     typ = REG_SZ if typ is None else typ
     if not typ in (REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ):
         raise ValueError(f"invalid registry type: {typ}")
-    value = _ct.create_unicode_buffer(string)
-    _raise_on_err(
+    value = ctypes.create_unicode_buffer(string)
+    raise_on_err(
         _RegSetValueEx(
             key,
             name,
             0,
             typ,
-            _ref(value),
-            _ct.sizeof(value)
+            ref(value),
+            ctypes.sizeof(value)
             )
         )
 
 ################################################################################
 
 def reg_set_dword(key, name, dword):
-    size = _ct.sizeof(DWORD)
+    size = ctypes.sizeof(DWORD)
     data = dword.to_bytes(size, 'little')
-    _raise_on_err(
+    raise_on_err(
         _RegSetValueEx(
             key,
             name,
             0,
             REG_DWORD,
-            _ref(data),
+            ref(data),
             size
             )
         )
 
 ################################################################################
 
-_IsValidSid = _fun_fact(_a32.IsValidSid, (BOOL, PVOID))
+_IsValidSid = fun_fact(_adv.IsValidSid, (BOOL, PVOID))
 
 def IsValidSid(psid):
     return _IsValidSid(psid) != 0
 
 ################################################################################
 
-_GetLengthSid = _fun_fact(_a32.GetLengthSid, (DWORD, PVOID))
+_GetLengthSid = fun_fact(_adv.GetLengthSid, (DWORD, PVOID))
 
 def GetLengthSid(psid):
     if not IsValidSid(psid):
@@ -515,37 +515,37 @@ def GetLengthSid(psid):
 
 ################################################################################
 
-_ConvertStringSidToSid = _fun_fact(
-    _a32.ConvertStringSidToSidW, (BOOL, PWSTR, PVOID)
+_ConvertStringSidToSid = fun_fact(
+    _adv.ConvertStringSidToSidW, (BOOL, PWSTR, PVOID)
     )
 
 def ConvertStringSidToSid(string_sid):
     sid = PVOID()
     try:
-        _raise_if(not _ConvertStringSidToSid(string_sid, _ref(sid)))
-        return _ct.string_at(sid, GetLengthSid(sid))
+        raise_if(not _ConvertStringSidToSid(string_sid, ref(sid)))
+        return ctypes.string_at(sid, GetLengthSid(sid))
     finally:
         LocalFree(sid)
 
 ################################################################################
 
-_ConvertSidToStringSid = _fun_fact(
-    _a32.ConvertSidToStringSidW, (BOOL, PVOID, PPWSTR)
+_ConvertSidToStringSid = fun_fact(
+    _adv.ConvertSidToStringSidW, (BOOL, PVOID, PPWSTR)
     )
 
 def ConvertSidToStringSid(sid):
-    bin_sid = _ct.create_string_buffer(sid)
+    bin_sid = ctypes.create_string_buffer(sid)
     str_sid = PWSTR()
     try:
-        _raise_if(not _ConvertSidToStringSid(_ref(bin_sid), _ref(str_sid)))
-        return _ct.wstring_at(str_sid)
+        raise_if(not _ConvertSidToStringSid(ref(bin_sid), ref(str_sid)))
+        return ctypes.wstring_at(str_sid)
     finally:
         LocalFree(str_sid)
 
 ################################################################################
 
-_CheckTokenMembership = _fun_fact(
-    _a32.CheckTokenMembership, (
+_CheckTokenMembership = fun_fact(
+    _adv.CheckTokenMembership, (
         BOOL,
         HANDLE,
         PVOID,
@@ -555,8 +555,8 @@ _CheckTokenMembership = _fun_fact(
 
 def CheckTokenMembership(token_handle, sid_to_check):
     res = BOOL()
-    sid = _ct.create_string_buffer(sid_to_check)
-    _raise_if(not _CheckTokenMembership(token_handle, _ref(sid), _ref(res)))
+    sid = ctypes.create_string_buffer(sid_to_check)
+    raise_if(not _CheckTokenMembership(token_handle, ref(sid), ref(res)))
     return res.value != 0
 
 ################################################################################
@@ -567,46 +567,46 @@ def running_as_admin():
 
 ################################################################################
 
-_OpenProcessToken = _fun_fact(
-    _a32.OpenProcessToken, (BOOL, HANDLE, DWORD, PHANDLE)
+_OpenProcessToken = fun_fact(
+    _adv.OpenProcessToken, (BOOL, HANDLE, DWORD, PHANDLE)
     )
 
 def OpenProcessToken(proc_handle, desired_acc):
     token = HANDLE()
-    _raise_if(not _OpenProcessToken(proc_handle, desired_acc, _ref(token)))
+    raise_if(not _OpenProcessToken(proc_handle, desired_acc, ref(token)))
     return token
 
 ################################################################################
 
-class LUID(_ct.Structure):
+class LUID(ctypes.Structure):
     _fields_ = (
         ("LowPart", DWORD),
         ("HighPart", LONG)
         )
 
-_LookupPrivilegeValue = _fun_fact(
-    _a32.LookupPrivilegeValueW, (
+_LookupPrivilegeValue = fun_fact(
+    _adv.LookupPrivilegeValueW, (
         BOOL,
         PWSTR,
         PWSTR,
-        _ct.POINTER(LUID)
+        ctypes.POINTER(LUID)
         )
     )
 
 def LookupPrivilegeValue(sys_name, name):
     luid = LUID()
-    _raise_if(not _LookupPrivilegeValue(sys_name, name, _ref(luid)))
+    raise_if(not _LookupPrivilegeValue(sys_name, name, ref(luid)))
     return luid
 
 ################################################################################
 
-class LUID_AND_ATTRIBUTES(_ct.Structure):
+class LUID_AND_ATTRIBUTES(ctypes.Structure):
     _fields_ = (
         ("Luid", LUID),
         ("Attributes", DWORD)
         )
 
-_AdjustTokenPrivileges = _a32.AdjustTokenPrivileges
+_AdjustTokenPrivileges = _adv.AdjustTokenPrivileges
 _AdjustTokenPrivileges.restype = BOOL
 
 def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
@@ -614,14 +614,14 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
     if not num_la:
         return
 
-    class TOKEN_PRIVILEGES(_ct.Structure):
+    class TOKEN_PRIVILEGES(ctypes.Structure):
         _fields_ = (
             ("PrivilegeCount", DWORD),
             ("Privileges", LUID_AND_ATTRIBUTES * num_la)
             )
-    PTOKEN_PRIVILEGES = _ct.POINTER(TOKEN_PRIVILEGES)
-    _AdjustTokenPrivileges = _fun_fact(
-        _a32.AdjustTokenPrivileges, (
+    PTOKEN_PRIVILEGES = ctypes.POINTER(TOKEN_PRIVILEGES)
+    _AdjustTokenPrivileges = fun_fact(
+        _adv.AdjustTokenPrivileges, (
             BOOL,
             HANDLE,
             BOOL,
@@ -640,19 +640,19 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
     suc = _AdjustTokenPrivileges(
         token,
         disable_all,
-        _ref(privs),
+        ref(privs),
         0,
         None,
         None
         )
-    _raise_if(not suc or _ct.GetLastError())
+    raise_if(not suc or ctypes.GetLastError())
 
 ################################################################################
 
-_CloseServiceHandle = _fun_fact(_a32.CloseServiceHandle, (BOOL, HANDLE))
+_CloseServiceHandle = fun_fact(_adv.CloseServiceHandle, (BOOL, HANDLE))
 
 def CloseServiceHandle(handle):
-    _raise_if(not _CloseServiceHandle(handle))
+    raise_if(not _CloseServiceHandle(handle))
 
 ################################################################################
 
@@ -661,30 +661,30 @@ class SC_HANDLE(ScdToBeClosed, HANDLE, close_func=CloseServiceHandle, invalid=0)
 
 ################################################################################
 
-_OpenSCManager = _fun_fact(
-    _a32.OpenSCManagerW, (HANDLE, PWSTR, PWSTR, DWORD)
+_OpenSCManager = fun_fact(
+    _adv.OpenSCManagerW, (HANDLE, PWSTR, PWSTR, DWORD)
     )
 
 def OpenSCManager(machine_name, database_name, desired_acc):
     res = SC_HANDLE(_OpenSCManager(machine_name, database_name, desired_acc))
-    _raise_if(not res.is_valid())
+    raise_if(not res.is_valid())
     return res
 
 ################################################################################
 
-_OpenService = _fun_fact(
-    _a32.OpenServiceW, (HANDLE, HANDLE, PWSTR, DWORD)
+_OpenService = fun_fact(
+    _adv.OpenServiceW, (HANDLE, HANDLE, PWSTR, DWORD)
     )
 
 def OpenService(scm, name, desired_acc):
     res = SC_HANDLE(_OpenService(scm, name, desired_acc))
-    _raise_if(not res.is_valid())
+    raise_if(not res.is_valid())
     return res
 
 ################################################################################
 
-_CreateService = _fun_fact(
-    _a32.CreateServiceW, (
+_CreateService = fun_fact(
+    _adv.CreateServiceW, (
         HANDLE,
         HANDLE,
         PWSTR,
@@ -728,18 +728,18 @@ def CreateService(
             binary_path_name,
             load_order_group,
             None,
-            _ct.create_unicode_buffer("\x00".join(dependencies)),
+            ctypes.create_unicode_buffer("\x00".join(dependencies)),
             service_start_name,
             password
             )
         )
-    _raise_if(not res.is_valid())
+    raise_if(not res.is_valid())
     return res
 
 ################################################################################
 
-_StartService = _fun_fact(
-    _a32.StartServiceW, (
+_StartService = fun_fact(
+    _adv.StartServiceW, (
         BOOL,
         HANDLE,
         DWORD,
@@ -753,16 +753,16 @@ def StartService(handle, args):
         argv = (PWSTR * alen)()
         for n, a in enumerate(args):
             argv[n] = a
-        pargv = _ref(argv)
+        pargv = ref(argv)
     else:
         alen = 0
         pargv = None
 
-    _raise_if(not _StartService(handle, alen, pargv))
+    raise_if(not _StartService(handle, alen, pargv))
 
 ################################################################################
 
-class SERVICE_STATUS(_ct.Structure):
+class SERVICE_STATUS(ctypes.Structure):
     _fields_ = (
         ("ServiceType", DWORD),
         ("CurrentState", DWORD),
@@ -773,30 +773,30 @@ class SERVICE_STATUS(_ct.Structure):
         ("WaitHint", DWORD),
         )
 
-_ControlService = _fun_fact(
-    _a32.ControlService, (
+_ControlService = fun_fact(
+    _adv.ControlService, (
         BOOL,
         HANDLE,
         DWORD,
-        _ct.POINTER(SERVICE_STATUS)
+        ctypes.POINTER(SERVICE_STATUS)
         )
     )
 
 def ControlService(service, control):
     status = SERVICE_STATUS()
-    _raise_if(not _ControlService(service, control, _ref(status)))
+    raise_if(not _ControlService(service, control, ref(status)))
     return status
 
 ################################################################################
 
-_DeleteService = _fun_fact(_a32.DeleteService, (BOOL, HANDLE))
+_DeleteService = fun_fact(_adv.DeleteService, (BOOL, HANDLE))
 
 def DeleteService(service):
-    _raise_if(not _DeleteService(service))
+    raise_if(not _DeleteService(service))
 
 ################################################################################
 
-class SERVICE_STATUS_PROCESS(_ct.Structure):
+class SERVICE_STATUS_PROCESS(ctypes.Structure):
     _fields_ = (
         ("ServiceType", DWORD),
         ("CurrentState", DWORD),
@@ -809,12 +809,12 @@ class SERVICE_STATUS_PROCESS(_ct.Structure):
         ("ServiceFlags", DWORD),
         )
 
-_QueryServiceStatusEx = _fun_fact(
-    _a32.QueryServiceStatusEx, (
+_QueryServiceStatusEx = fun_fact(
+    _adv.QueryServiceStatusEx, (
         BOOL,
         HANDLE,
         INT,
-        _ct.POINTER(SERVICE_STATUS_PROCESS),
+        ctypes.POINTER(SERVICE_STATUS_PROCESS),
         DWORD,
         PDWORD
         )
@@ -823,28 +823,28 @@ _QueryServiceStatusEx = _fun_fact(
 def QueryServiceStatusEx(service):
     status = SERVICE_STATUS_PROCESS()
     needed = DWORD()
-    _raise_if(
+    raise_if(
         not _QueryServiceStatusEx(
             service,
             SC_STATUS_PROCESS_INFO,
-            _ref(status),
-            _ct.sizeof(status),
-            _ref(needed)
+            ref(status),
+            ctypes.sizeof(status),
+            ref(needed)
             )
         )
     return status
 
 ################################################################################
 
-class ENUM_SERVICE_STATUS_PROCESS(_ct.Structure):
+class ENUM_SERVICE_STATUS_PROCESS(ctypes.Structure):
     _fields_ = (
         ("ServiceName", PWSTR),
         ("DisplayName", PWSTR),
         ("ServiceStatusProcess", SERVICE_STATUS_PROCESS),
         )
 
-_EnumServicesStatusEx = _fun_fact(
-    _a32.EnumServicesStatusExW, (
+_EnumServicesStatusEx = fun_fact(
+    _adv.EnumServicesStatusExW, (
         BOOL,
         HANDLE,
         INT,
@@ -860,30 +860,30 @@ _EnumServicesStatusEx = _fun_fact(
     )
 
 def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
-    esize = _ct.sizeof(ENUM_SERVICE_STATUS_PROCESS)
+    esize = ctypes.sizeof(ENUM_SERVICE_STATUS_PROCESS)
 
     res = []
-    buf = _ct.create_string_buffer(0)
+    buf = ctypes.create_string_buffer(0)
     buf_len = 0
     needed = DWORD()
     num_ret = DWORD()
     resume = DWORD()
 
     while True:
-        buf_addr = _ct.addressof(buf)
+        buf_addr = ctypes.addressof(buf)
         suc = _EnumServicesStatusEx(
             scm,
             SC_ENUM_PROCESS_INFO,
             stype,
             sstate,
-            _ct.cast(buf_addr, PBYTE),
+            ctypes.cast(buf_addr, PBYTE),
             buf_len,
-            _ref(needed),
-            _ref(num_ret),
-            _ref(resume),
+            ref(needed),
+            ref(num_ret),
+            ref(resume),
             group_name
             )
-        _raise_if(not suc and GetLastError() != ERROR_MORE_DATA)
+        raise_if(not suc and GetLastError() != ERROR_MORE_DATA)
 
         for n in range(num_ret.value):
             essp = ENUM_SERVICE_STATUS_PROCESS.from_address(
@@ -899,23 +899,23 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
 
         if suc:
             break
-        buf = _ct.create_string_buffer(needed.value)
+        buf = ctypes.create_string_buffer(needed.value)
         buf_len = needed
 
     return res
 
 ################################################################################
 
-class CREDENTIAL_ATTRIBUTE(_ct.Structure):
+class CREDENTIAL_ATTRIBUTE(ctypes.Structure):
     _fields_ = (
         ("Keyword", PWSTR),
         ("Flags", DWORD),
         ("ValueSize", DWORD),
         ("Value", PBYTE),
         )
-PCREDENTIAL_ATTRIBUTE = _ct.POINTER(CREDENTIAL_ATTRIBUTE)
+PCREDENTIAL_ATTRIBUTE = ctypes.POINTER(CREDENTIAL_ATTRIBUTE)
 
-class CREDENTIAL(_ct.Structure):
+class CREDENTIAL(ctypes.Structure):
     _fields_ = (
         ("Flags", DWORD),
         ("Type", DWORD),
@@ -930,12 +930,12 @@ class CREDENTIAL(_ct.Structure):
         ("TargetAlias", PWSTR),
         ("UserName", PWSTR),
         )
-PCREDENTIAL = _ct.POINTER(CREDENTIAL)
-PPCREDENTIAL = _ct.POINTER(PCREDENTIAL)
-PPPCREDENTIAL = _ct.POINTER(PPCREDENTIAL)
+PCREDENTIAL = ctypes.POINTER(CREDENTIAL)
+PPCREDENTIAL = ctypes.POINTER(PCREDENTIAL)
+PPPCREDENTIAL = ctypes.POINTER(PPCREDENTIAL)
 
-_CredRead = _fun_fact(
-    _a32.CredReadW, (
+_CredRead = fun_fact(
+    _adv.CredReadW, (
         BOOL,
         PWSTR,
         DWORD,
@@ -943,8 +943,8 @@ _CredRead = _fun_fact(
         PPCREDENTIAL
         )
     )
-_CredEnumerate = _fun_fact(
-    _a32.CredEnumerateW, (
+_CredEnumerate = fun_fact(
+    _adv.CredEnumerateW, (
         BOOL,
         PWSTR,
         DWORD,
@@ -952,8 +952,8 @@ _CredEnumerate = _fun_fact(
         PPPCREDENTIAL
         )
     )
-_CredWrite = _fun_fact(_a32.CredWriteW, (BOOL, PCREDENTIAL, DWORD))
-_CredFree = _fun_fact(_a32.CredFree, (None, PVOID))
+_CredWrite = fun_fact(_adv.CredWriteW, (BOOL, PCREDENTIAL, DWORD))
+_CredFree = fun_fact(_adv.CredFree, (None, PVOID))
 
 ################################################################################
 
@@ -962,10 +962,10 @@ def _ns_from_cred(cred):
         return _namespace(
             Keyword=attr.Keyword,
             Flags=attr.Flags,
-            Value=_ct.string_at(attr.Value, attr.ValueSize),
+            Value=ctypes.string_at(attr.Value, attr.ValueSize),
             )
     attr = tuple(a2ns(cred.Attributes[n]) for n in range(cred.AttributeCount))
-    blob = _ct.string_at(cred.CredentialBlob,cred.CredentialBlobSize)
+    blob = ctypes.string_at(cred.CredentialBlob,cred.CredentialBlobSize)
     return _namespace(
         TargetName=cred.TargetName,
         UserName=cred.UserName,
@@ -984,7 +984,7 @@ def _ns_from_cred(cred):
 def CreadRead(TargetName, Type=CRED_TYPE_GENERIC, Flags=0):
     ptr = PCREDENTIAL()
     try:
-        _raise_if(not _CredRead(TargetName, Type, Flags, _ref(ptr)))
+        raise_if(not _CredRead(TargetName, Type, Flags, ref(ptr)))
         return _ns_from_cred(ptr.contents)
     finally:
         _CredFree(ptr)
@@ -995,7 +995,7 @@ def CredEnumerate(Filter=None, Flags=0):
     pptr = PPCREDENTIAL()
     cnt = DWORD()
     try:
-        _raise_if(not _CredEnumerate(Filter, Flags, _ref(cnt), _ref(pptr)))
+        raise_if(not _CredEnumerate(Filter, Flags, ref(cnt), ref(pptr)))
         return tuple(_ns_from_cred(pptr[n].contents) for n in range(cnt.value))
     finally:
         _CredFree(pptr)
@@ -1044,16 +1044,16 @@ def CredWrite(Credential, Flags=0):
                 attr[i].ValueSize = len(val)
                 attr[i].Value = (BYTE * len(val))(*tuple(map(int, val)))
         cred.AttributeCount = len(ns_attr)
-        cred.Attributes = _ct.cast(attr, PCREDENTIAL_ATTRIBUTE)
+        cred.Attributes = ctypes.cast(attr, PCREDENTIAL_ATTRIBUTE)
 
-    _raise_if(not _CredWrite(_ref(cred), Flags))
+    raise_if(not _CredWrite(ref(cred), Flags))
 
 ################################################################################
 
-_CloseEventLog = _fun_fact(_a32.CloseEventLog, (BOOL, HANDLE))
+_CloseEventLog = fun_fact(_adv.CloseEventLog, (BOOL, HANDLE))
 
 def CloseEventLog(hdl):
-    _raise_if(not _CloseEventLog(hdl))
+    raise_if(not _CloseEventLog(hdl))
 
 ################################################################################
 
@@ -1062,18 +1062,18 @@ class EHANDLE(ScdToBeClosed, HANDLE, close_func=CloseEventLog, invalid=0):
 
 ################################################################################
 
-_OpenEventLog = _fun_fact(
-    _a32.OpenEventLogW, (HANDLE, PWSTR, PWSTR,)
+_OpenEventLog = fun_fact(
+    _adv.OpenEventLogW, (HANDLE, PWSTR, PWSTR,)
     )
 
 def OpenEventLog(source, server=None):
     hdl = EHANDLE(_OpenEventLog(server, source))
-    _raise_if(not hdl.is_valid())
+    raise_if(not hdl.is_valid())
     return hdl
 
 ################################################################################
 
-class EVENTLOGRECORD(_ct.Structure):
+class EVENTLOGRECORD(ctypes.Structure):
     _fields_ = (
         ("Length", DWORD),
         ("Reserved", DWORD),
@@ -1103,30 +1103,30 @@ class EVENTLOGRECORD(_ct.Structure):
         # DWORD Length;
         )
 
-PEVENTLOGRECORD = _ct.POINTER(EVENTLOGRECORD)
+PEVENTLOGRECORD = ctypes.POINTER(EVENTLOGRECORD)
 
 ################################################################################
 
 def _evt_from_void_p(vpelr):
-    # vpelr is _ct.c_void_p for simpler address calculations
+    # vpelr is PVOID for simpler address calculations
     strins = []
-    elr = _ct.cast(vpelr, PEVENTLOGRECORD).contents
+    elr = ctypes.cast(vpelr, PEVENTLOGRECORD).contents
     if elr.NumStrings:
         stroffs = elr.StringOffset
         for i in range(elr.NumStrings):
-            nxt = _ct.wstring_at(vpelr.value + stroffs)
-            stroffs += (len(nxt) + 1) * _ct.sizeof(WCHAR)
+            nxt = ctypes.wstring_at(vpelr.value + stroffs)
+            stroffs += (len(nxt) + 1) * ctypes.sizeof(WCHAR)
             strins.append(nxt)
     sid = ""
     if elr.UserSidLength:
         sid = ConvertSidToStringSid(
-            _ct.string_at(vpelr.value + elr.UserSidOffset)
+            ctypes.string_at(vpelr.value + elr.UserSidOffset)
             )
-    data = _ct.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
-    p_str = vpelr.value + _ct.sizeof(EVENTLOGRECORD);
-    src_name = _ct.wstring_at(p_str)
-    p_str += (len(src_name) + 1) * _ct.sizeof(WCHAR)
-    computer_name = _ct.wstring_at(p_str)
+    data = ctypes.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
+    p_str = vpelr.value + ctypes.sizeof(EVENTLOGRECORD);
+    src_name = ctypes.wstring_at(p_str)
+    p_str += (len(src_name) + 1) * ctypes.sizeof(WCHAR)
+    computer_name = ctypes.wstring_at(p_str)
 
     return elr.Length, _namespace(
         ClosingRecordNumber=elr.ClosingRecordNumber,
@@ -1147,8 +1147,8 @@ def _evt_from_void_p(vpelr):
 
 ################################################################################
 
-_ReadEventLog = _fun_fact(
-    _a32.ReadEventLogW, (
+_ReadEventLog = fun_fact(
+    _adv.ReadEventLogW, (
         BOOL,
         HANDLE,
         DWORD,
@@ -1166,8 +1166,8 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
     want = DWORD(size)
     while True:
         got = DWORD()
-        buf = _ct.create_string_buffer(want.value)
-        ok = _ReadEventLog(hdl, flags, offs, buf, want, _ref(got), _ref(want))
+        buf = ctypes.create_string_buffer(want.value)
+        ok = _ReadEventLog(hdl, flags, offs, buf, want, ref(got), ref(want))
         got = got.value
         if not ok:
             err = GetLastError()
@@ -1177,14 +1177,14 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
             elif err == ERROR_INSUFFICIENT_BUFFER:
                 continue
             else:
-                raise _ct.WinError(err)
+                raise ctypes.WinError(err)
         else:
             break
 
     res = []
-    addr = _ct.addressof(buf)
+    addr = ctypes.addressof(buf)
     while got > 0:
-        elen, evt = _evt_from_void_p(_ct.c_void_p(addr))
+        elen, evt = _evt_from_void_p(PVOID(addr))
         res.append(evt)
         addr += elen
         got -= elen

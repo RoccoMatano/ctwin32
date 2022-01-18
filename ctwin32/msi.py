@@ -22,78 +22,82 @@
 #
 ################################################################################
 
-import ctypes as _ct
-
 from .wtypes import *
-from . import _raise_on_err, _fun_fact, ERROR_MORE_DATA, ERROR_NO_MORE_ITEMS
+from . import (
+    ref,
+    ctypes,
+    raise_on_err,
+    fun_fact,
+    ERROR_MORE_DATA,
+    ERROR_NO_MORE_ITEMS
+    )
 
-_msi = _ct.windll.msi
-_ref = _ct.byref
+_msi = ctypes.windll.msi
 
-MSIDBOPEN_READONLY     = _ct.cast(PVOID(0), PWSTR)
-MSIDBOPEN_TRANSACT     = _ct.cast(PVOID(1), PWSTR)
-MSIDBOPEN_DIRECT       = _ct.cast(PVOID(2), PWSTR)
-MSIDBOPEN_CREATE       = _ct.cast(PVOID(3), PWSTR)
-MSIDBOPEN_CREATEDIRECT = _ct.cast(PVOID(4), PWSTR)
-MSIDBOPEN_PATCHFILE    = _ct.cast(PVOID(32 // 2), PWSTR)
+MSIDBOPEN_READONLY     = PWSTR(0)
+MSIDBOPEN_TRANSACT     = PWSTR(1)
+MSIDBOPEN_DIRECT       = PWSTR(2)
+MSIDBOPEN_CREATE       = PWSTR(3)
+MSIDBOPEN_CREATEDIRECT = PWSTR(4)
+MSIDBOPEN_PATCHFILE    = PWSTR(32 // 2)
 
 BIN_NAME_IDX = 1 # field index of binary name
 BIN_DATA_IDX = 2 # field index of binary data
 
 ################################################################################
 
-_MsiCloseHandle = _fun_fact(_msi.MsiCloseHandle, (UINT, ULONG))
+_MsiCloseHandle = fun_fact(_msi.MsiCloseHandle, (UINT, ULONG))
 
 def MsiCloseHandle(hdl):
-    _raise_on_err(_MsiCloseHandle(hdl))
+    raise_on_err(_MsiCloseHandle(hdl))
 
 ################################################################################
 
 class MSIHANDLE(ScdToBeClosed, ULONG, close_func=MsiCloseHandle, invalid=0):
     pass
 
-PMSIHANDLE = _ct.POINTER(MSIHANDLE)
+PMSIHANDLE = ctypes.POINTER(MSIHANDLE)
 
 ################################################################################
 
-_MsiOpenDatabase = _fun_fact(
+_MsiOpenDatabase = fun_fact(
     _msi.MsiOpenDatabaseW, (UINT, PWSTR, PWSTR, PMSIHANDLE)
     )
 
 def MsiOpenDatabase(filename, persist):
     hdl = MSIHANDLE()
-    _raise_on_err(_MsiOpenDatabase(filename, persist, _ref(hdl)))
+    raise_on_err(_MsiOpenDatabase(filename, persist, ref(hdl)))
     return hdl
 
 ################################################################################
 
-_MsiDatabaseOpenView = _fun_fact(
+_MsiDatabaseOpenView = fun_fact(
     _msi.MsiDatabaseOpenViewW, (UINT, MSIHANDLE, PWSTR, PMSIHANDLE)
     )
 
 def MsiDatabaseOpenView(dbase, query):
     hdl = MSIHANDLE()
-    _raise_on_err(_MsiDatabaseOpenView(dbase, query, _ref(hdl)))
+    raise_on_err(_MsiDatabaseOpenView(dbase, query, ref(hdl)))
     return hdl
 
 ################################################################################
 
-_MsiViewExecute = _fun_fact(
+_MsiViewExecute = fun_fact(
     _msi.MsiViewExecute, (UINT, MSIHANDLE, MSIHANDLE)
     )
 
 def MsiViewExecute(view, record):
-    _raise_on_err(_MsiViewExecute(view, record))
+    raise_on_err(_MsiViewExecute(view, record))
 
 ################################################################################
 
-_MsiViewFetch = _fun_fact(
+_MsiViewFetch = fun_fact(
     _msi.MsiViewFetch, (UINT, MSIHANDLE, PMSIHANDLE)
     )
 
 def MsiViewFetch(view):
     hdl = MSIHANDLE()
-    _raise_on_err(_MsiViewFetch(view, _ref(hdl)))
+    raise_on_err(_MsiViewFetch(view, ref(hdl)))
     return hdl
 
 ################################################################################
@@ -112,7 +116,7 @@ def view_enum_records(view):
 
 ################################################################################
 
-_MsiRecordGetString = _fun_fact(
+_MsiRecordGetString = fun_fact(
     _msi.MsiRecordGetStringW, (
         UINT,
         MSIHANDLE,
@@ -126,14 +130,14 @@ def MsiRecordGetString(record, field_idx):
     size = DWORD(512)
     err = ERROR_MORE_DATA
     while err == ERROR_MORE_DATA:
-        buf = _ct.create_unicode_buffer(size.value)
-        err = _MsiRecordGetString(record, field_idx, buf, _ref(size))
-    _raise_on_err(err)
+        buf = ctypes.create_unicode_buffer(size.value)
+        err = _MsiRecordGetString(record, field_idx, buf, ref(size))
+    raise_on_err(err)
     return buf.value
 
 ################################################################################
 
-_MsiRecordReadStream = _fun_fact(
+_MsiRecordReadStream = fun_fact(
     _msi.MsiRecordReadStream, (
         UINT,
         MSIHANDLE,
@@ -144,9 +148,9 @@ _MsiRecordReadStream = _fun_fact(
     )
 
 def MsiRecordReadStream(record, field_idx, size):
-    res = _ct.create_string_buffer(size)
+    res = ctypes.create_string_buffer(size)
     size = DWORD(size)
-    _raise_on_err(_MsiRecordReadStream(record, field_idx, res, _ref(size)))
+    raise_on_err(_MsiRecordReadStream(record, field_idx, res, ref(size)))
     return res.raw[:size.value]
 
 ################################################################################
