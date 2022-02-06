@@ -1086,3 +1086,31 @@ def txt_from_clip(wnd=None):
     return txt
 
 ################################################################################
+
+GetSystemMetrics = fun_fact(_usr.GetSystemMetrics, (INT, INT))
+
+################################################################################
+
+_ScrollWindow = fun_fact(
+    _usr.ScrollWindow, (BOOL, HWND, INT, INT, PRECT, PRECT)
+    )
+
+def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
+    scroll_rect = ref(scroll_rect) if scroll_rect is not None else None
+    clip_rect = ref(clip_rect) if clip_rect is not None else None
+    raise_if(not _ScrollWindow(hwnd, x, y, scroll_rect, clip_rect))
+
+################################################################################
+
+_GetKeyNameText = fun_fact(_usr.GetKeyNameTextW, (INT, LONG, PWSTR, INT))
+
+def GetKeyNameText(lparam):
+    size = ret = 32
+    while ret >= size - 1:
+        size *= 2
+        key_name = ctypes.create_unicode_buffer(size)
+        ret = _GetKeyNameText(lparam, key_name, size)
+        raise_if(not ret)
+    return key_name.value
+
+################################################################################

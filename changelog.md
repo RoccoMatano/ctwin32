@@ -7,10 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- gdi.GetTextMetrics
+- gdi.GetStockObject
+- gdi.SetBkMode
+- gdi.TextOut
+- user.GetSystemMetrics
+- user.ScrollWindow
+- user.GetKeyNameText
+- sample keyview.pyw
+
 ### Changed
 
 - mostly internal refactorings, but with a small impact on the samples (ctypes
   is now included in ctwin32's namespace)
+- fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
 
 ## [1.5.0]
 

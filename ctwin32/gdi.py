@@ -85,3 +85,64 @@ def DeleteObject(hobj):
     raise_if(not _DeleteObject(hobj))
 
 ################################################################################
+
+class TEXTMETRIC(ctypes.Structure):
+    _fields_ = (
+        ("tmHeight", LONG),
+        ("tmAscent", LONG),
+        ("tmDescent", LONG),
+        ("tmInternalLeading", LONG),
+        ("tmExternalLeading", LONG),
+        ("tmAveCharWidth", LONG),
+        ("tmMaxCharWidth", LONG),
+        ("tmWeight", LONG),
+        ("tmOverhang", LONG),
+        ("tmDigitizedAspectX", LONG),
+        ("tmDigitizedAspectY", LONG),
+        ("tmFirstChar", WCHAR),
+        ("tmLastChar", WCHAR),
+        ("tmDefaultChar", WCHAR),
+        ("tmBreakChar", WCHAR),
+        ("tmItalic", BYTE),
+        ("tmUnderlined", BYTE),
+        ("tmStruckOut", BYTE),
+        ("tmPitchAndFamily", BYTE),
+        ("tmCharSet", BYTE),
+        )
+PTEXTMETRIC = ctypes.POINTER(TEXTMETRIC)
+
+################################################################################
+
+_GetTextMetrics = fun_fact(_gdi.GetTextMetricsW, (BOOL, HANDLE, PTEXTMETRIC))
+
+def GetTextMetrics(hdc):
+    tm = TEXTMETRIC()
+    raise_if(not _GetTextMetrics(hdc, ref(tm)))
+    return tm
+
+################################################################################
+
+_GetStockObject = fun_fact(_gdi.GetStockObject, (HANDLE, INT))
+
+def GetStockObject(idx):
+    obj = _GetStockObject(idx)
+    raise_if(obj == 0)
+    return obj
+
+################################################################################
+
+_SetBkMode = fun_fact(_gdi.SetBkMode, (INT, HANDLE, INT))
+
+def SetBkMode(hdc, mode):
+    previous = _SetBkMode(hdc, mode)
+    raise_if(not previous)
+    return previous
+
+################################################################################
+
+_TextOut = fun_fact(_gdi.TextOutW, (BOOL, HANDLE, INT, INT, PWSTR, INT))
+
+def TextOut(hdc, x, y, text):
+    raise_if(not _TextOut(hdc, x, y, text, len(text)))
+
+################################################################################

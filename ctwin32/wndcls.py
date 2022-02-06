@@ -133,7 +133,7 @@ class BaseWnd:
         user.SetForegroundWindow(self.hwnd)
 
     def invalidate_rect(self, rc=None, erase=False):
-        user.InvalidateRect(self.hwnd, rc, Erase)
+        user.InvalidateRect(self.hwnd, rc, erase)
 
     def update(self):
         user.UpdateWindow(self.hwnd)
@@ -154,9 +154,9 @@ class BaseWnd:
     def set_pos(self, wnd_ins_after, x, y, cx, cy, flags):
         user.SetWindowPos(
             self.hwnd,
-            wnd_ins_after.hwnd,
-            X,
-            Y,
+            None if wnd_ins_after is None else wnd_ins_after.hwnd,
+            x,
+            y,
             cx,
             cy,
             flags
@@ -244,8 +244,8 @@ class BaseWnd:
     def get_dc(self):
         return user.GetDC(self.hwnd)
 
-    def release_dc(self):
-        user.ReleaseDC(self.hwnd)
+    def release_dc(self, hdc):
+        user.ReleaseDC(self.hwnd, hdc)
 
     def get_dpi_scale_100(self):
         hdc = self.get_dc()
