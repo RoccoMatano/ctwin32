@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - mostly internal refactorings, but with a small impact on the samples (ctypes
   is now included in ctwin32's namespace)
 - fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
+- fixed parameter quoting in shell.elevate
 
 ## [1.5.0]
 

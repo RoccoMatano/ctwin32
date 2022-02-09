@@ -31,6 +31,7 @@ from . import (
     PROC_THREAD_ATTRIBUTE_PARENT_PROCESS,
     CREATE_NEW_CONSOLE,
     EXTENDED_STARTUPINFO_PRESENT,
+    cmdline_from_args,
     raise_if,
     fun_fact,
     kernel,
@@ -98,7 +99,8 @@ def ShellExecuteEx(
 ################################################################################
 
 def elevate(*args, direc=None, wait=False, show=SW_SHOW):
-    ShellExecuteEx(args[0], "runas", " ".join(args[1:]), direc, wait, show)
+    file, param = args[0], cmdline_from_args(args[1:])
+    ShellExecuteEx(file, "runas", param, direc, wait, show)
 
 ################################################################################
 
