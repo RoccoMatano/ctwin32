@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   is now included in ctwin32's namespace)
 - fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
 - fixed parameter quoting in shell.elevate
+- improved handling of 'None' in ScdToBeClosed
 
 ## [1.5.0]
 

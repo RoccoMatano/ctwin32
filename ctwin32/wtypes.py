@@ -293,6 +293,10 @@ CallbackContextPtr = ctypes.POINTER(CallbackContext)
 #   close_func=CloseHandle,
 #   invalid=0
 #   ):
+#
+# Since most of the time HANDLE/ctypes.c_void_p will be the _SimpleCData base
+# class, we have to deal with the fact that ctypes.c_void_p will report 'None'
+# for its attribute 'value', if the actual integer value is zero.
 
 class ScdToBeClosed():
 
@@ -301,12 +305,14 @@ class ScdToBeClosed():
             raise TypeError("must inherit from ctypes._SimpleCData")
         super().__init_subclass__(**kwargs)
         cls.close_func = close_func
-        cls.invalid_value = invalid
+        cls.invalid_value = int(0 if invalid is None else invalid)
 
     def __init__(self, init=None):
+        if hasattr(init, "value"):
+            init = 0 if init.value is None else init.value
         if init is None:
             init = self.invalid_value
-        self.value = init.value if hasattr(init, "value") else init
+        self.value = init
 
     def close(self):
         if self.is_valid():
@@ -335,9 +341,9 @@ class ScdToBeClosed():
             raise TypeError(msg)
 
     def __int__(self):
-        return self.value
+        return 0 if self.value is None else self.value
 
     def is_valid(self):
-        return self.value != self.invalid_value
+        return int(self) != self.invalid_value
 
 ################################################################################
