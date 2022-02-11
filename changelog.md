@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
 - fixed parameter quoting in shell.elevate
 - improved handling of 'None' in ScdToBeClosed
+- extend list of SE_\*_NAME constants
 
 ## [1.5.0]
 
