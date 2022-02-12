@@ -17,6 +17,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.ScrollWindow
 - user.GetKeyNameText
 - sample keyview.pyw
+- advapi.LookupAccountSid
+- advapi ACL/ACE types
+- advapi.GetAce
+- advapi.GetSecurityDescriptorDacl
+- advapi.GetSecurityDescriptorOwner
+- advapi.GetSecurityDescriptorGroup
+- advapi.GetSecurityDescriptorLength
+- advapi.GetNamedSecurityInfo
+- advapi.SetNamedSecurityInfo
 
 ### Changed
 

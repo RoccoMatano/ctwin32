@@ -41,6 +41,10 @@ from . import (
     KEY_READ,
     KEY_ALL_ACCESS,
     KEY_WOW64_64KEY,
+    OWNER_SECURITY_INFORMATION,
+    GROUP_SECURITY_INFORMATION,
+    DACL_SECURITY_INFORMATION,
+    SACL_SECURITY_INFORMATION,
     SC_ENUM_PROCESS_INFO,
     SC_STATUS_PROCESS_INFO,
     ERROR_MORE_DATA,
@@ -314,7 +318,6 @@ def reg_enum_keys(key):
 
 ################################################################################
 
-
 _RegEnumValue = fun_fact(
     _adv.RegEnumValueW, (
         LONG,
@@ -510,7 +513,7 @@ _GetLengthSid = fun_fact(_adv.GetLengthSid, (DWORD, PVOID))
 
 def GetLengthSid(psid):
     if not IsValidSid(psid):
-        raise ValueError(f"invalid SID: {psid}")
+        raise ValueError(f"invalid SID: {psid:x}")
     return _GetLengthSid(psid)
 
 ################################################################################
@@ -646,6 +649,236 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
         None
         )
     raise_if(not suc or ctypes.GetLastError())
+
+################################################################################
+
+_LookupAccountSid = fun_fact(
+    _adv.LookupAccountSidW,
+    (BOOL, PWSTR, PVOID, PWSTR, PDWORD, PWSTR, PDWORD, PDWORD)
+    )
+
+def LookupAccountSid(sid, system_name=None):
+    name_size = DWORD(0)
+    domain_size = DWORD(0)
+    sid_use = DWORD()
+    ok = _LookupAccountSid(
+        system_name,
+        sid,
+        None,
+        ref(name_size),
+        None,
+        ref(domain_size),
+        ref(sid_use)
+        )
+    err = GetLastError()
+    if ok:
+        raise AssertionError("logic error in LookupAccountSid")
+    if err != ERROR_INSUFFICIENT_BUFFER:
+        raise ctypes.WinError(err)
+
+    name = ctypes.create_unicode_buffer(name_size.value)
+    domain = ctypes.create_unicode_buffer(domain_size.value)
+    raise_if(
+        not _LookupAccountSid(
+            system_name,
+            sid,
+            name,
+            ref(name_size),
+            domain,
+            ref(domain_size),
+            ref(sid_use)
+            )
+        )
+    return name.value, domain.value, sid_use.value
+
+################################################################################
+
+class ACL(ctypes.Structure):
+    _fields_ = (
+        ("AclRevision", BYTE),
+        ("Sbz1", BYTE),
+        ("AclSize", WORD),
+        ("AceCount", WORD),
+        ("Sbz2", WORD),
+        )
+PACL = ctypes.POINTER(ACL)
+PPACL = ctypes.POINTER(PACL)
+
+class ACE_HEADER(ctypes.Structure):
+    _fields_ = (
+        ("AceType", BYTE),
+        ("AceFlags", BYTE),
+        ("AceSize", WORD),
+        )
+
+class ACE(ctypes.Structure):
+    _fields_ = (
+        ("Header", ACE_HEADER),
+        ("Mask", DWORD),
+
+        # first DWORD of SID, remaining bytes of the SID are stored in
+        # contiguous memory after SidStart
+        ("SidStart", DWORD),
+        )
+PACE = ctypes.POINTER(ACE)
+PPACE = ctypes.POINTER(PACE)
+
+class ACL_SIZE_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("AceCount", DWORD),
+        ("AclBytesInUse", DWORD),
+        ("AclBytesFree", DWORD),
+        )
+
+################################################################################
+
+_GetAce = fun_fact(
+    _adv.GetAce,
+    (BOOL, PACL, DWORD, PPACE)
+    )
+
+def GetAce(pacl, idx):
+    pace = PACE()
+    raise_if(not _GetAce(pacl, idx, ref(pace)))
+    return pace
+
+################################################################################
+
+_GetSecurityDescriptorDacl = fun_fact(
+    _adv.GetSecurityDescriptorDacl,
+    (BOOL, PVOID, PBOOL, PPACL, PBOOL)
+    )
+
+def GetSecurityDescriptorDacl(sd):
+    present = BOOL()
+    pacl = PACL()
+    defaulted = BOOL()
+    raise_if(
+        not _GetSecurityDescriptorDacl(
+            sd,
+            ref(present),
+            ref(pacl),
+            ref(defaulted)
+            )
+        )
+    return present, pacl, defaulted
+
+################################################################################
+
+_GetSecurityDescriptorOwner = fun_fact(
+    _adv.GetSecurityDescriptorOwner,
+    (BOOL, PVOID, PVOID, PBOOL)
+    )
+
+def GetSecurityDescriptorOwner(sd):
+    psid = PVOID()
+    defaulted = BOOL()
+    raise_if(
+        not _GetSecurityDescriptorOwner(
+            sd,
+            ref(psid),
+            ref(defaulted)
+            )
+        )
+    return ctypes.string_at(psid, GetLengthSid(psid)), defaulted
+
+################################################################################
+
+_GetSecurityDescriptorGroup = fun_fact(
+    _adv.GetSecurityDescriptorGroup,
+    (BOOL, PVOID, PVOID, PBOOL)
+    )
+
+def GetSecurityDescriptorGroup(sd):
+    psid = PVOID()
+    defaulted = BOOL()
+    raise_if(
+        not _GetSecurityDescriptorGroup(
+            sd,
+            ref(psid),
+            ref(defaulted)
+            )
+        )
+    return ctypes.string_at(psid, GetLengthSid(psid)), defaulted
+
+################################################################################
+
+GetSecurityDescriptorLength = fun_fact(
+    _adv.GetSecurityDescriptorLength, (DWORD, PVOID)
+    )
+
+################################################################################
+
+_GetNamedSecurityInfo = fun_fact(
+    _adv.GetNamedSecurityInfoW,
+    (DWORD, PWSTR, DWORD, DWORD, PPVOID, PPVOID, PPVOID, PPVOID, PPVOID)
+    )
+
+NEARLY_ALL_SECURITY_INFORMATION = (
+    OWNER_SECURITY_INFORMATION |
+    GROUP_SECURITY_INFORMATION |
+    DACL_SECURITY_INFORMATION
+    )
+
+def GetNamedSecurityInfo(name, otype, req_info=NEARLY_ALL_SECURITY_INFORMATION):
+    pOwner = PVOID()
+    pGroup = PVOID()
+    pDacl = PVOID()
+    pSacl = PVOID()
+    pSD = PVOID()
+    raise_on_err(
+        _GetNamedSecurityInfo(
+            name,
+            otype,
+            req_info,
+            ref(pOwner),
+            ref(pGroup),
+            ref(pDacl),
+            ref(pSacl),
+            ref(pSD)
+            )
+        )
+    try:
+        return ctypes.string_at(pSD.value, GetSecurityDescriptorLength(pSD))
+    finally:
+        LocalFree(pSD)
+
+################################################################################
+
+_SetNamedSecurityInfo = fun_fact(
+    _adv.SetNamedSecurityInfoW,
+    (DWORD, PWSTR, DWORD, DWORD, PVOID, PVOID, PVOID, PVOID)
+    )
+
+def SetNamedSecurityInfo(
+    name,
+    otype,
+    *,
+    owner=None,
+    group=None,
+    dacl=None,
+    sacl=None
+    ):
+    set_info = 0
+    if owner is not None:
+        set_info |= OWNER_SECURITY_INFORMATION
+    if group is not None:
+        set_info |= GROUP_SECURITY_INFORMATION
+    if dacl is not None:
+        set_info |= DACL_SECURITY_INFORMATION
+    if sacl is not None:
+        set_info |= SACL_SECURITY_INFORMATION
+    raise_on_err(
+        _SetNamedSecurityInfo(
+            name,
+            otype,
+            set_info,
+            owner,
+            group,
+            dacl,
+            sacl
+            )
+        )
 
 ################################################################################
 
