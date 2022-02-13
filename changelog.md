@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed parameter quoting in shell.elevate
 - improved handling of 'None' in ScdToBeClosed
 - extend list of SE_\*_NAME constants
+- let advapi.OpenProcessToken return a context manager object
+- fix splitting strings in kernel.env_str_to_dict
 
 ## [1.5.0]
 

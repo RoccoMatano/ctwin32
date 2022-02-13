@@ -55,7 +55,7 @@ from . import (
     EVENTLOG_SEQUENTIAL_READ,
     EVENTLOG_BACKWARDS_READ,
     )
-from .kernel import LocalFree, GetLastError
+from .kernel import LocalFree, GetLastError, KHANDLE
 
 _adv = ctypes.windll.advapi32
 
@@ -575,7 +575,7 @@ _OpenProcessToken = fun_fact(
     )
 
 def OpenProcessToken(proc_handle, desired_acc):
-    token = HANDLE()
+    token = KHANDLE()
     raise_if(not _OpenProcessToken(proc_handle, desired_acc, ref(token)))
     return token
 

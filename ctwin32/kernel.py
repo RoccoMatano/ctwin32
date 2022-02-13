@@ -518,7 +518,7 @@ def GetEnvironmentStrings():
         raise_if(not _FreeEnvironmentStrings(ptr))
 
 def env_str_to_dict(estr):
-    return dict(s.rsplit("=", 1) for s in estr.strip("\0").split("\0"))
+    return dict(s.split("=", 1) for s in estr.strip("\0").split("\0"))
 
 def get_env_as_dict():
     return env_str_to_dict(GetEnvironmentStrings())
