@@ -54,7 +54,7 @@ LONG = ctypes.c_long
 ULONG = ctypes.c_ulong
 DWORD = ctypes.c_ulong
 BOOL = ctypes.c_long
-HRESULT = ctypes.c_long
+HRESULT = NTSTATUS = ctypes.c_long
 
 # While the large integers are defined as a struct of low and high part, they
 # are also unions containing a long long part. That is why we can simply define
@@ -240,6 +240,25 @@ class RECT(ctypes.Structure):
 
 ################################################################################
 
+class UNICODE_STRING(ctypes.Structure):
+    _fields_ = (
+        ("Length", WORD),
+        ("MaximumLength", WORD),
+        ("Buffer", ctypes.c_wchar_p),
+        )
+
+################################################################################
+
+class LUID(ctypes.Structure):
+    _fields_ = (
+        ("LowPart", DWORD),
+        ("HighPart", LONG)
+        )
+    def __int__(self):
+        return self.LowPart | (self.HighPart << 32)
+
+################################################################################
+
 class CallbackContext(ctypes.Structure):
     _fields_ = (
         ("callback", ctypes.py_object),
@@ -274,6 +293,9 @@ PFILETIME = ctypes.POINTER(FILETIME)
 PSYSTEMTIME = ctypes.POINTER(SYSTEMTIME)
 PPOINT = ctypes.POINTER(POINT)
 PRECT = ctypes.POINTER(RECT)
+PUNICODE_STRING = ctypes.POINTER(UNICODE_STRING)
+PLUID = ctypes.POINTER(LUID)
+PPLUID = ctypes.POINTER(PLUID)
 CallbackContextPtr = ctypes.POINTER(CallbackContext)
 
 ################################################################################

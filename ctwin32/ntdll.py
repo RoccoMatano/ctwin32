@@ -53,7 +53,7 @@ STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 ################################################################################
 
 _RtlNtStatusToDosError = fun_fact(
-    _nt.RtlNtStatusToDosError, (ULONG, LONG)
+    _nt.RtlNtStatusToDosError, (ULONG, NTSTATUS)
     )
 
 def RtlNtStatusToDosError(status):
@@ -62,20 +62,9 @@ def RtlNtStatusToDosError(status):
 
 ################################################################################
 
-def _raise_failed_status(status):
+def raise_failed_status(status):
     if status < 0:
         raise ctypes.WinError(RtlNtStatusToDosError(status))
-
-################################################################################
-
-class UNICODE_STRING(ctypes.Structure):
-    _fields_ = (
-        ("Length", WORD),
-        ("MaximumLength", WORD),
-        ("Buffer", PWSTR),
-        )
-
-PUNICODE_STRING = ctypes.POINTER(UNICODE_STRING)
 
 ################################################################################
 
@@ -192,17 +181,16 @@ def _make_handle_info(num_entries):
 
 ################################################################################
 
-_NtClose = fun_fact(_nt.NtClose, (ULONG, PVOID))
-_NtClose.restype = ULONG
+_NtClose = fun_fact(_nt.NtClose, (NTSTATUS, PVOID))
 
 def NtClose(handle):
-    _raise_failed_status(_NtClose(handle))
+    raise_failed_status(_NtClose(handle))
 
 ################################################################################
 
 _NtOpenProcess = fun_fact(
     _nt.NtOpenProcess,
-    (ULONG, PVOID, ULONG, PVOID, PVOID)
+    (NTSTATUS, PVOID, ULONG, PVOID, PVOID)
     )
 
 def NtOpenProcess(pid, desired_access):
@@ -211,27 +199,27 @@ def NtOpenProcess(pid, desired_access):
     h = HANDLE()
     oa = OBJECT_ATTRIBUTES()
     s = _NtOpenProcess(ref(h), desired_access, ref(oa), ref(cid))
-    _raise_failed_status(s)
+    raise_failed_status(s)
     return h
 
 ################################################################################
 
 _RtlAdjustPrivilege = fun_fact(
     _nt.RtlAdjustPrivilege,
-    (LONG, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
+    (NTSTATUS, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
     )
 
 def RtlAdjustPrivilege(priv, enable, thread_priv=False):
     prev = BOOLEAN()
     status = _RtlAdjustPrivilege(priv, enable, thread_priv, ref(prev))
-    _raise_failed_status(status)
+    raise_failed_status(status)
     return bool(prev)
 
 ################################################################################
 
 _NtQuerySystemInformation = fun_fact(
     _nt.NtQuerySystemInformation,
-    (LONG, LONG, PVOID, ULONG, PULONG)
+    (NTSTATUS, LONG, PVOID, ULONG, PULONG)
     )
 
 def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
@@ -241,7 +229,7 @@ def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
 
 _NtQueryInformationProcess = fun_fact(
     _nt.NtQueryInformationProcess,
-    (ULONG, PVOID, LONG, PVOID, ULONG, PVOID)
+    (NTSTATUS, PVOID, LONG, PVOID, ULONG, PVOID)
     )
 
 def NtQueryInformationProcess(phandle, pinfo, buf, buf_size, p_ret_len):
@@ -284,7 +272,7 @@ def enum_processes():
             size,
             ref(size)
             )
-    _raise_failed_status(status)
+    raise_failed_status(status)
 
     pi = SYSTEM_PROCESS_INFORMATION.from_address(ctypes.addressof(buf))
     res.append(_name_pid(pi))
@@ -348,7 +336,7 @@ def proc_path_from_pid(pid):
         buf = ctypes.create_unicode_buffer(spii.ImageName.MaximumLength)
         spii.ImageName.Buffer = ctypes.addressof(buf)
 
-    _raise_failed_status(status)
+    raise_failed_status(status)
     return _resolve_device_prefix(buf.value)
 
 ################################################################################
@@ -357,7 +345,7 @@ def proc_path_from_handle(handle):
     info = ProcessImageFileName
     rlen = required_proc_info_size(handle, info)
     buf = ctypes.create_string_buffer(rlen.value)
-    _raise_failed_status(
+    raise_failed_status(
         NtQueryInformationProcess(handle, info, ref(buf), rlen, ref(rlen))
         )
     return _resolve_device_prefix(
@@ -372,7 +360,7 @@ def get_handles(pid=-1):
     rlen = ULONG(0)
     _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
     hi = _make_handle_info(hi.NumberOfHandles)
-    _raise_failed_status(
+    raise_failed_status(
         _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
         )
     if pid == -1:
@@ -392,14 +380,14 @@ def get_grouped_handles(pid=-1):
 
 _NtGetNextProcess = fun_fact(
     _nt.NtGetNextProcess,
-    (ULONG, PVOID, UINT, UINT, INT, PVOID)
+    (NTSTATUS, PVOID, UINT, UINT, INT, PVOID)
     )
 
 def NtGetNextProcess(current, access, attribs=0, flags=0):
     nxt = HANDLE()
-    _raise_failed_status(
-        _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
-        )
+    # have to ignore returned NTSTATUS, success/failure is conveyed by the
+    # nxt handle
+    _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
     return nxt
 
 ################################################################################
@@ -407,7 +395,7 @@ def NtGetNextProcess(current, access, attribs=0, flags=0):
 def get_proc_ext_basic_info(proc_handle):
     pebi = PROCESS_EXTENDED_BASIC_INFORMATION()
     rlen = ULONG(0)
-    _raise_failed_status(
+    raise_failed_status(
         NtQueryInformationProcess(
             proc_handle,
             ProcessBasicInformation,
@@ -461,7 +449,7 @@ PFILE_DIRECTORY_INFORMATION = ctypes.POINTER(FILE_DIRECTORY_INFORMATION)
 
 _NtQueryDirectoryFile = fun_fact(
     _nt.NtQueryDirectoryFile, (
-        LONG,
+        NTSTATUS,
         HANDLE,
         HANDLE,
         PVOID, # PIO_APC_ROUTINE
@@ -504,7 +492,7 @@ def get_directory_info(hdir, restart_scan):
             bsize *= 2
         else:
             break
-    _raise_failed_status(stat)
+    raise_failed_status(stat)
 
     pv = ctypes.cast(ctypes.addressof(buf), PVOID)
     dinfo = ctypes.cast(

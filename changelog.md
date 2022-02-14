@@ -26,6 +26,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - advapi.GetSecurityDescriptorLength
 - advapi.GetNamedSecurityInfo
 - advapi.SetNamedSecurityInfo
+- module secur
+- secure.LsaFreeReturnBuffer
+- secure.LsaGetLogonSessionData
+- secure.LsaEnumerateLogonSessions
+- sample logonsessions.py
 
 ### Changed
 
@@ -37,6 +42,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - extend list of SE_\*_NAME constants
 - let advapi.OpenProcessToken return a context manager object
 - fix splitting strings in kernel.env_str_to_dict
+- moved definition of LUID and UNICODE_STRING to wtypes
+- renamed \_raise_failed_status to raise_failed_status in ntdll
+- fixed various return types in ntdll from ULONG to LONG by using LONG's
+  alias NTSTATUS, which is now available in wtypes
 
 ## [1.5.0]
 

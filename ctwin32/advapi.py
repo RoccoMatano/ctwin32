@@ -581,19 +581,8 @@ def OpenProcessToken(proc_handle, desired_acc):
 
 ################################################################################
 
-class LUID(ctypes.Structure):
-    _fields_ = (
-        ("LowPart", DWORD),
-        ("HighPart", LONG)
-        )
-
 _LookupPrivilegeValue = fun_fact(
-    _adv.LookupPrivilegeValueW, (
-        BOOL,
-        PWSTR,
-        PWSTR,
-        ctypes.POINTER(LUID)
-        )
+    _adv.LookupPrivilegeValueW, (BOOL, PWSTR, PWSTR, PLUID)
     )
 
 def LookupPrivilegeValue(sys_name, name):
