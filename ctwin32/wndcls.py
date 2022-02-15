@@ -78,7 +78,7 @@ PNMHDR = ctypes.POINTER(NMHDR)
 
 class BaseWnd:
 
-    def __init__(hwnd=None):
+    def __init__(self, hwnd=None):
         self.hwnd = hwnd
 
     def def_win_proc(self, msg, wp, lp):

@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - secure.LsaGetLogonSessionData
 - secure.LsaEnumerateLogonSessions
 - sample logonsessions.py
+- user.AdjustWindowRectEx
+- methods 'copy' and '\_\_repr\_\_' for POINT and RECT
+- sample calendar.pyw
+
 
 ### Changed
 
@@ -46,6 +50,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - renamed \_raise_failed_status to raise_failed_status in ntdll
 - fixed various return types in ntdll from ULONG to LONG by using LONG's
   alias NTSTATUS, which is now available in wtypes
+- fixed BaseWnd.\_\_init\_\_
 
 ## [1.5.0]
 

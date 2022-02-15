@@ -216,6 +216,12 @@ class POINT(ctypes.Structure):
     def as_lparam(self):
         return (pt.x & 0xffff) | ((pt.y & 0xffff) << 16)
 
+    def copy(self):
+        return self.__class__(self.x, self.y)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.x}, {self.y})"
+
 ################################################################################
 
 class RECT(ctypes.Structure):
@@ -237,6 +243,13 @@ class RECT(ctypes.Structure):
     @property
     def center(self):
         return (self.left + self.right) // 2, (self.top + self.bottom) // 2
+
+    def copy(self):
+        return self.__class__(self.left, self.top, self.right, self.bottom)
+
+    def __repr__(self):
+        name = self.__class__.__name__
+        return f"{name}({self.left}, {self.top}, {self.right}, {self.bottom})"
 
 ################################################################################
 

@@ -311,6 +311,17 @@ def GetClientRect(hwnd):
 
 ################################################################################
 
+_AdjustWindowRectEx = fun_fact(
+    _usr.AdjustWindowRectEx, (BOOL, PRECT, DWORD, BOOL, DWORD)
+    )
+
+def AdjustWindowRectEx(rc, style, has_menu, exstyle):
+    new_rect = rc.copy()
+    raise_if(not _AdjustWindowRectEx(ref(new_rect), style, has_menu, exstyle))
+    return new_rect
+
+################################################################################
+
 class WINDOWPLACEMENT(ctypes.Structure):
     _fields_ = (
         ("length", UINT),
