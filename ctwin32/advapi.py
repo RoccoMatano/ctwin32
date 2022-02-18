@@ -1128,6 +1128,56 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
 
 ################################################################################
 
+class QUERY_SERVICE_CONFIG(ctypes.Structure):
+    _fields_ = (
+        ("ServiceType", DWORD),
+        ("StartType", DWORD),
+        ("ErrorControl", DWORD),
+        ("BinaryPathName", DWORD),
+        ("LoadOrderGroup", DWORD),
+        ("TagId", DWORD),
+        ("Dependencies", DWORD),
+        ("ServiceStartName", DWORD),
+        ("DisplayName", DWORD),
+        )
+PQUERY_SERVICE_CONFIG = ctypes.POINTER(QUERY_SERVICE_CONFIG)
+
+_QueryServiceConfig = fun_fact(
+    _adv.QueryServiceConfigW, (
+        BOOL,
+        HANDLE,
+        PQUERY_SERVICE_CONFIG,
+        DWORD,
+        PDWORD,
+        )
+    )
+
+def QueryServiceConfig(svc):
+    needed = DWORD()
+    ok = _QueryServiceConfig(svc, None, 0, ref(needed))
+    err = GetLastError()
+    if ok:
+        raise AssertionError("logic error in QueryServiceConfig")
+    if err != ERROR_INSUFFICIENT_BUFFER:
+        raise ctypes.WinError(err)
+    buf = ctypes.create_string_buffer(needed.value)
+    pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
+    raise_if(not _QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
+    qsc = pqsc.contents
+    return _namespace(
+        ServiceType=qsc.ServiceType,
+        StartType=qsc.StartType,
+        ErrorControl=qsc.ErrorControl,
+        BinaryPathName=qsc.BinaryPathName,
+        LoadOrderGroup=qsc.LoadOrderGroup,
+        TagId=qsc.TagId,
+        Dependencies=qsc.Dependencies,
+        ServiceStartName=qsc.ServiceStartName,
+        DisplayName=qsc.DisplayName,
+        )
+
+################################################################################
+
 class CREDENTIAL_ATTRIBUTE(ctypes.Structure):
     _fields_ = (
         ("Keyword", PWSTR),

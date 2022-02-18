@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.ScrollWindow
 - user.GetKeyNameText
 - sample keyview.pyw
+- advapi.QueryServiceConfig
 - advapi.LookupAccountSid
 - advapi ACL/ACE types
 - advapi.GetAce
@@ -34,7 +35,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.AdjustWindowRectEx
 - methods 'copy' and '\_\_repr\_\_' for POINT and RECT
 - sample calendar.pyw
-
 
 ### Changed
 
