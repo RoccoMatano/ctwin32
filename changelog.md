@@ -51,6 +51,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed various return types in ntdll from ULONG to LONG by using LONG's
   alias NTSTATUS, which is now available in wtypes
 - fixed BaseWnd.\_\_init\_\_
+- be more precise about dealing with GUIDs in advapi
 
 ## [1.5.0]
 

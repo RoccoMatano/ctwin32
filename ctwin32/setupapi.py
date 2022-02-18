@@ -122,7 +122,7 @@ def SetupDiGetClassDevs(
     hwnd=None
     ):
     if guid is not None:
-        guid = ref(guid)
+        guid = ref(GUID(guid)) # need ctypes instance
         flags &= ~ DIGCF_ALLCLASSES
     res = _SetupDiGetClassDevs(guid, enumerator, hwnd, flags)
     raise_if(res == INVALID_HANDLE_VALUE)
@@ -269,7 +269,7 @@ _SetupDiClassNameFromGuid = fun_fact(
     )
 
 def SetupDiClassNameFromGuid(guid):
-    guid = GUID(guid)
+    guid = GUID(guid) # need ctypes instance
     req_size = DWORD(0)
     _SetupDiClassNameFromGuid(ref(guid), None, 0, ref(req_size))
     name = ctypes.create_unicode_buffer(req_size.value)
@@ -300,8 +300,7 @@ _SetupDiCreateDeviceInfoList = fun_fact(
 
 def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
     if guid is not None:
-        g = GUID(guid)
-        guid = ref(g)
+        guid = ref(GUID(guid)) # need ctypes instance
     res = _SetupDiCreateDeviceInfoList(guid, hwnd)
     raise_if(res == INVALID_HANDLE_VALUE)
     return res;
@@ -588,7 +587,7 @@ def SetupDiEnumDeviceInterfaces(info_set, guid, idx):
         not _SetupDiEnumDeviceInterfaces(
             info_set,
             None,
-            ref(GUID(guid)),
+            ref(GUID(guid)), # need ctypes instance
             idx,
             ref(did)
             )
