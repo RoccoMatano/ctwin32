@@ -110,6 +110,25 @@ class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
 
 ################################################################################
 
+_SetupDiDestroyDeviceInfoList = fun_fact(
+    _sua.SetupDiDestroyDeviceInfoList, (BOOL, HANDLE)
+    )
+
+def SetupDiDestroyDeviceInfoList(info_set):
+    raise_if(not _SetupDiDestroyDeviceInfoList(info_set))
+
+################################################################################
+
+class HDEVINFO(
+    ScdToBeClosed,
+    HANDLE,
+    close_func=SetupDiDestroyDeviceInfoList,
+    invalid=INVALID_HANDLE_VALUE
+    ):
+    pass
+
+################################################################################
+
 _SetupDiGetClassDevs = fun_fact(
     _sua.SetupDiGetClassDevsW,
     (HANDLE, PGUID, PWSTR, HWND, DWORD)
@@ -124,18 +143,9 @@ def SetupDiGetClassDevs(
     if guid is not None:
         guid = ref(GUID(guid)) # need ctypes instance
         flags &= ~ DIGCF_ALLCLASSES
-    res = _SetupDiGetClassDevs(guid, enumerator, hwnd, flags)
-    raise_if(res == INVALID_HANDLE_VALUE)
+    res = HDEVINFO(_SetupDiGetClassDevs(guid, enumerator, hwnd, flags))
+    raise_if(not res.is_valid())
     return res
-
-################################################################################
-
-_SetupDiDestroyDeviceInfoList = fun_fact(
-    _sua.SetupDiDestroyDeviceInfoList, (BOOL, HANDLE)
-    )
-
-def SetupDiDestroyDeviceInfoList(info_set):
-    raise_if(not _SetupDiDestroyDeviceInfoList(info_set))
 
 ################################################################################
 
@@ -301,8 +311,8 @@ _SetupDiCreateDeviceInfoList = fun_fact(
 def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
     if guid is not None:
         guid = ref(GUID(guid)) # need ctypes instance
-    res = _SetupDiCreateDeviceInfoList(guid, hwnd)
-    raise_if(res == INVALID_HANDLE_VALUE)
+    res = HDEVINFO(_SetupDiCreateDeviceInfoList(guid, hwnd))
+    raise_if(not res.is_valid())
     return res;
 
 ################################################################################
@@ -385,16 +395,15 @@ def enum_dev_ids(guid=None, enumerator=None, flags=None, rx=None):
     if isinstance(rx, str):
         rx = re.compile(rx)
 
-    devs = SetupDiGetClassDevs(guid, enumerator, flags)
-    deinda = SP_DEVINFO_DATA()
-    idx = 0
-    res = []
-    while SetupDiEnumDeviceInfo(devs, idx, ref(deinda)):
-        did = CM_Get_Device_ID(deinda.DevInst)
-        if rx is None or rx.search(did):
-            res.append(did)
-        idx += 1
-    SetupDiDestroyDeviceInfoList(devs)
+    with SetupDiGetClassDevs(guid, enumerator, flags) as devs:
+        deinda = SP_DEVINFO_DATA()
+        idx = 0
+        res = []
+        while SetupDiEnumDeviceInfo(devs, idx, ref(deinda)):
+            did = CM_Get_Device_ID(deinda.DevInst)
+            if rx is None or rx.search(did):
+                res.append(did)
+            idx += 1
     return res
 
 ################################################################################
@@ -409,33 +418,31 @@ def build_info_set(guid=None, enumerator=None, flags=None, rx=None):
     if isinstance(rx, str):
         rx = re.compile(rx)
 
-    enum_devs = SetupDiGetClassDevs(guid, enumerator, flags)
-    deinda = SP_DEVINFO_DATA()
-    idx = 0
-    while SetupDiEnumDeviceInfo(enum_devs, idx, ref(deinda)):
-        did = CM_Get_Device_ID(deinda.DevInst)
-        if rx is None or rx.search(did):
-            SetupDiOpenDeviceInfo(selected, did)
-        idx += 1
-    SetupDiDestroyDeviceInfoList(enum_devs)
+    with SetupDiGetClassDevs(guid, enumerator, flags) as enum_devs:
+        deinda = SP_DEVINFO_DATA()
+        idx = 0
+        while SetupDiEnumDeviceInfo(enum_devs, idx, ref(deinda)):
+            did = CM_Get_Device_ID(deinda.DevInst)
+            if rx is None or rx.search(did):
+                SetupDiOpenDeviceInfo(selected, did)
+            idx += 1
     return selected
 
 ################################################################################
 
 def get_non_present_info_set():
     non_present = SetupDiCreateDeviceInfoList()
-    all_devs = SetupDiGetClassDevs(flags=DIGCF_ALLCLASSES)
-    deinda = SP_DEVINFO_DATA()
-    idx = 0
-    while SetupDiEnumDeviceInfo(all_devs, idx, ref(deinda)):
-        # If the device isn't currently present (as indicated by
-        # failure to retrieve its status), then add it to the list.
-        try:
-            CM_Get_DevNode_Status(deinda.DevInst)
-        except OSError:
-            SetupDiOpenDeviceInfo(non_present, CM_Get_Device_ID(deinda.DevInst))
-        idx += 1
-    SetupDiDestroyDeviceInfoList(all_devs)
+    with SetupDiGetClassDevs(flags=DIGCF_ALLCLASSES) as all_devs:
+        deinda = SP_DEVINFO_DATA()
+        idx = 0
+        while SetupDiEnumDeviceInfo(all_devs, idx, ref(deinda)):
+            # If the device isn't currently present (as indicated by
+            # failure to retrieve its status), then add it to the list.
+            try:
+                CM_Get_DevNode_Status(deinda.DevInst)
+            except OSError:
+                SetupDiOpenDeviceInfo(non_present, CM_Get_Device_ID(deinda.DevInst))
+            idx += 1
     return non_present
 
 ################################################################################
@@ -500,13 +507,12 @@ def _prop_change(
 ################################################################################
 
 def _change_devices(change, guid=None, enumerator=None, rx=None):
-    info_set = build_info_set(guid, enumerator, None, rx)
-    deinda = SP_DEVINFO_DATA()
-    idx = 0
-    while SetupDiEnumDeviceInfo(info_set, idx, ref(deinda)):
-        _prop_change(info_set, deinda, change)
-        idx += 1
-    SetupDiDestroyDeviceInfoList(info_set)
+    with build_info_set(guid, enumerator, None, rx) as info_set:
+        deinda = SP_DEVINFO_DATA()
+        idx = 0
+        while SetupDiEnumDeviceInfo(info_set, idx, ref(deinda)):
+            _prop_change(info_set, deinda, change)
+            idx += 1
 
 ################################################################################
 
@@ -597,12 +603,9 @@ def SetupDiEnumDeviceInterfaces(info_set, guid, idx):
 ################################################################################
 
 def enum_dev_interfaces(guid):
-    info_set = SetupDiGetClassDevs(
-        flags=DIGCF_PRESENT | DIGCF_DEVICEINTERFACE,
-        guid=guid
-        )
-    idx = 0
-    try:
+    flags = DIGCF_PRESENT | DIGCF_DEVICEINTERFACE
+    with SetupDiGetClassDevs(flags=flags, guid=guid) as info_set:
+        idx = 0
         while True:
             try:
                 did = SetupDiEnumDeviceInterfaces(info_set, guid, idx)
@@ -612,8 +615,6 @@ def enum_dev_interfaces(guid):
                 raise
             idx += 1
             yield info_set, did
-    finally:
-        SetupDiDestroyDeviceInfoList(info_set)
 
 ################################################################################
 

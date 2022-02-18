@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   alias NTSTATUS, which is now available in wtypes
 - fixed BaseWnd.\_\_init\_\_
 - be more precise about dealing with GUIDs in advapi
+- let HDEVINFOs be context managers in setupapi
 
 ## [1.5.0]
 
