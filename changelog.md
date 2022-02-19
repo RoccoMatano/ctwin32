@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+- removed duplicate constants from \_\_init\_\_.py
+
+
 ## [1.6.0]
 
 ### Added
