@@ -19,7 +19,7 @@ Compared with pywin32 the coverage of ctwin32 is less than tiny.
 
 Note: Even though ctwin32 is a pure Python module, it can of course only be used
 on Windows. Therefore, the wheel packages provided are intentionally tagged with
-the x86 bit and x64 bit Windows platform tags (in terms of content, the two are
+the x86, x64 and and arm64 Windows platform tags (in terms of content, those are
 the same). This is just to keep
 [pip](https://packaging.python.org/tutorials/installing-packages/)
 from installing them on a non-Windows OS.

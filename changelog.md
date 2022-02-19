@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - removed duplicate constants from \_\_init\_\_.py
+- since py3.11 will support ARM64 on windows, also build a wheel with the
+  corresponding platform tag
 
 
 ## [1.6.0]

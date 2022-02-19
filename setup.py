@@ -62,4 +62,7 @@ setup(**params)
 global_platform_tag = "win32"
 setup(**params)
 
+global_platform_tag = "win_arm64"
+setup(**params)
+
 ################################################################################
