@@ -73,6 +73,9 @@ LEGACY_RSAPRIVATE_BLOB     = "CAPIPRIVATEBLOB"
 BCRYPT_ECCFULLPUBLIC_BLOB  = "ECCFULLPUBLICBLOB"
 BCRYPT_ECCFULLPRIVATE_BLOB = "ECCFULLPRIVATEBLOB"
 SSL_ECCPUBLIC_BLOB         = "SSLECCPUBLICBLOB"
+BCRYPT_OPAQUE_KEY_BLOB     = "OpaqueKeyBlob"
+BCRYPT_KEY_DATA_BLOB       = "KeyDataBlob"
+BCRYPT_AES_WRAP_KEY_BLOB   = "Rfc3565KeyWrapBlob"
 
 BCRYPT_RSA_ALGORITHM               = "RSA"
 BCRYPT_RSA_SIGN_ALGORITHM          = "RSA_SIGN"
@@ -124,7 +127,14 @@ def BCryptDestroyKey(key):
     raise_failed_status(_BCryptDestroyKey(key))
 
 class BCRYPT_KEY(ScdToBeClosed, HANDLE, close_func=BCryptDestroyKey, invalid=0):
-    pass
+    def __init__(self, init=None):
+        super().__init__(init)
+        # additional buffer for symmetric keys
+        self.buf = None
+
+    def close(self):
+        super().close()
+        self.buf = None
 
 ################################################################################
 
@@ -187,13 +197,35 @@ def BCryptGetProperty(obj, name):
     raise_failed_status(_BCryptGetProperty(obj, name, None, 0, ref(size), 0))
     buf = ctypes.create_string_buffer(size.value)
     raise_failed_status(_BCryptGetProperty(obj, name, buf, size, ref(size), 0))
-    return buf
+    return bytes(buf)
 
 def get_property_ulong(obj, name):
     _bytes = BCryptGetProperty(obj, name)
     if len(_bytes) != ctypes.sizeof(ULONG):
         raise ValueError(f"property size mismatch ({len(_bytes)})")
     return int.from_bytes(_bytes, 'little', signed=False)
+
+################################################################################
+
+_BCryptSetProperty = fun_fact(
+    _bcr.BCryptSetProperty, (
+        NTSTATUS,
+        HANDLE,
+        PWSTR,
+        PCHAR,
+        ULONG,
+        ULONG
+        )
+    )
+
+def BCryptSetProperty(obj, name, value):
+    if isinstance(value, int):
+        buf = value.to_bytes(((value.bit_length() + 31) // 32) * 4, "little")
+    elif isinstance(value, str):
+        buf = bytes(ctypes.create_unicode_buffer(value))
+    else:
+        buf = bytes(value)
+    raise_failed_status(_BCryptSetProperty(obj, name, buf, len(buf), 0))
 
 ################################################################################
 
@@ -244,14 +276,14 @@ _BCryptFinishHash = fun_fact(
 def BCryptFinishHash(bhash, dig_size):
     buf = ctypes.create_string_buffer(dig_size)
     raise_failed_status(_BCryptFinishHash(bhash, buf, len(buf), 0))
-    return buf.value
+    return bytes(buf)
 
 ################################################################################
 
 class BCryptHash:
     "standard python hash wrapper for a BCrypt hash"
 
-    def __init__(self, alg, secret=None):
+    def __init__(self, alg):
         self.alg = alg
         self.dig_size = 0
         self.hash = None
@@ -337,7 +369,7 @@ def BCryptExportKey(key, btype, exp_key=None):
     raise_failed_status(
         _BCryptExportKey(key, exp_key, btype, blob, size, ref(size), 0)
         )
-    return blob
+    return bytes(blob)
 
 ################################################################################
 
@@ -358,6 +390,38 @@ _BCryptFinalizeKeyPair = fun_fact(
 
 def BCryptFinalizeKeyPair(key):
     raise_failed_status(_BCryptFinalizeKeyPair(key, 0))
+
+################################################################################
+
+_BCryptGenerateSymmetricKey = fun_fact(
+    _bcr.BCryptGenerateSymmetricKey, (
+        NTSTATUS,
+        HANDLE,
+        PHANDLE,
+        PCHAR,
+        ULONG,
+        PCHAR,
+        ULONG,
+        ULONG
+        )
+    )
+
+def BCryptGenerateSymmetricKey(balg, secret):
+    ksize = get_property_ulong(balg, BCRYPT_OBJECT_LENGTH)
+    key = BCRYPT_KEY()
+    key.buf = ctypes.create_string_buffer(ksize)
+    raise_failed_status(
+        _BCryptGenerateSymmetricKey(
+            balg,
+            ref(key),
+            key.buf,
+            len(key.buf),
+            secret,
+            len(secret),
+            0
+            )
+        )
+    return key
 
 ################################################################################
 
@@ -415,7 +479,7 @@ def BCryptSignHash(key, digest, flags=0):
             0
             )
         )
-    return signature
+    return bytes(signature)
 
 ################################################################################
 
@@ -445,5 +509,107 @@ def BCryptVerifySignature(key, digest, signature):
     if status < 0 and status != STATUS_INVALID_SIGNATURE:
         raise_failed_status(status)
     return status == 0
+
+################################################################################
+
+_BCryptEncrypt = fun_fact(
+    _bcr.BCryptEncrypt, (
+        NTSTATUS,
+        HANDLE,
+        PCHAR,
+        ULONG,
+        PVOID,
+        PCHAR,
+        ULONG,
+        PCHAR,
+        ULONG,
+        PULONG,
+        ULONG
+        )
+    )
+
+def BCryptEncrypt(key, input, iv=None, flags=0):
+    size = ULONG()
+    raise_failed_status(
+        _BCryptEncrypt(
+            key,
+            input,
+            len(input),
+            None,
+            iv,
+            0 if iv is None else len(iv),
+            None,
+            0,
+            ref(size),
+            flags
+            )
+        )
+    output = ctypes.create_string_buffer(size.value)
+    raise_failed_status(
+        _BCryptEncrypt(
+            key,
+            input,
+            len(input),
+            None,
+            iv,
+            0 if iv is None else len(iv),
+            output,
+            size,
+            ref(size),
+            flags
+            )
+        )
+    return bytes(output)
+
+################################################################################
+
+_BCryptDecrypt = fun_fact(
+    _bcr.BCryptDecrypt, (
+        NTSTATUS,
+        HANDLE,
+        PCHAR,
+        ULONG,
+        PVOID,
+        PCHAR,
+        ULONG,
+        PCHAR,
+        ULONG,
+        PULONG,
+        ULONG
+        )
+    )
+
+def BCryptDecrypt(key, input, iv=None, flags=0):
+    size = ULONG()
+    raise_failed_status(
+        _BCryptDecrypt(
+            key,
+            input,
+            len(input),
+            None,
+            iv,
+            0 if iv is None else len(iv),
+            None,
+            0,
+            ref(size),
+            flags
+            )
+        )
+    output = ctypes.create_string_buffer(size.value)
+    raise_failed_status(
+        _BCryptDecrypt(
+            key,
+            input,
+            len(input),
+            None,
+            iv,
+            0 if iv is None else len(iv),
+            output,
+            size,
+            ref(size),
+            flags
+            )
+        )
+    return bytes(output)
 
 ################################################################################
