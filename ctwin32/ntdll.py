@@ -49,6 +49,7 @@ def _ntstatus(status):
 STATUS_INFO_LENGTH_MISMATCH = _ntstatus(0xC0000004)
 STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
 STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
+STATUS_INVALID_SIGNATURE = _ntstatus(0xC000A000)
 
 ################################################################################
 

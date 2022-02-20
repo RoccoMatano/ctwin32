@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- module bcrypt with functions required for creating and verifying signatures
+- samples rm_sign_tool.py and test_sign_tool.py
 
 ### Changed
 
