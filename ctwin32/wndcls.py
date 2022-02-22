@@ -27,7 +27,6 @@ import traceback
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     raise_if,
     fun_fact,

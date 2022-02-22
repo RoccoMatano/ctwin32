@@ -27,7 +27,6 @@ import pathlib
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     kernel,
     raise_if,

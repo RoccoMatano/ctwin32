@@ -27,7 +27,6 @@ from collections import defaultdict as _defdict
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     fun_fact,
     raise_on_err,

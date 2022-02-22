@@ -25,7 +25,6 @@
 from .wtypes import *
 from . import (
     ref,
-    ctypes,
     raise_on_err,
     fun_fact,
     ERROR_MORE_DATA,

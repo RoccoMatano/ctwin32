@@ -26,7 +26,6 @@ import collections as _collections
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     raise_if,
     fun_fact,

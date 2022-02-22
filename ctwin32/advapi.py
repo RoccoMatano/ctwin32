@@ -27,7 +27,6 @@ from datetime import datetime as _dt
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     raise_if,
     raise_on_err,

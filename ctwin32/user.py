@@ -26,7 +26,6 @@ from types import SimpleNamespace as _namespace
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     kernel,
     raise_if,

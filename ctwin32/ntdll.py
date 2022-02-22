@@ -28,7 +28,6 @@ from collections import defaultdict as _defdict
 
 from .wtypes import *
 from . import (
-    ctypes,
     ref,
     kernel,
     fun_fact,

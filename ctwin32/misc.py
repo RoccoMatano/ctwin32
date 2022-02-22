@@ -27,7 +27,6 @@ from types import SimpleNamespace as _namespace
 from .wtypes import *
 from .ntdll import _raise_failed_status
 from . import (
-    ctypes,
     ref,
     fun_fact,
     raise_if,

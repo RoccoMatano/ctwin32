@@ -37,7 +37,6 @@ from . import (
     kernel,
     user,
     ref,
-    ctypes,
     )
 
 from .kernel import WaitForSingleObject, CloseHandle, LocalFree

@@ -23,7 +23,7 @@
 ################################################################################
 
 from .wtypes import *
-from . import ctypes, ref, fun_fact, raise_on_err
+from . import ref, fun_fact, raise_on_err
 
 from .kernel import KHANDLE, PKHANDLE
 

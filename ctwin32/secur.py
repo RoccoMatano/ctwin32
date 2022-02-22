@@ -24,7 +24,7 @@
 
 from types import SimpleNamespace as _namespace
 from .wtypes import *
-from . import ctypes, ref, fun_fact
+from . import ref, fun_fact
 from .ntdll import raise_failed_status
 from .kernel import FileTimeToLocalFileTime, FileTimeToSystemTime
 from .advapi import GetLengthSid, ConvertSidToStringSid
