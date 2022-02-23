@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - samples rm_sign_tool.py and test_sign_tool.py
 - extended bcrypt for encryption
 - sample simple_aes.py
+- sample senv.py
 
 ### Changed
 
