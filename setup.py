@@ -21,7 +21,7 @@ class hacked_bdist_wheel(bdist_wheel):
 
 ################################################################################
 
-empty = " "
+github_url = "https://github.com/RoccoMatano/ctwin32"
 params = {
     "cmdclass": {'bdist_wheel': hacked_bdist_wheel},
     "name" : "ctwin32",
@@ -32,9 +32,10 @@ params = {
     "license" : "MIT License",
     "packages": ["ctwin32"],
     "install_requires" : [],
-    "author_email": empty,
+    "author_email": " ",
     "platforms": ["win32"],
-    "url": "https://github.com/RoccoMatano/ctwin32",
+    "url": github_url,
+    "project_urls": {"Changelog": f"{github_url}/blob/master/changelog.md",},
     "python_requires": ">=3.6",
     "classifiers": [
         "License :: OSI Approved :: MIT License",
@@ -47,6 +48,7 @@ params = {
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         ]
     }
 
