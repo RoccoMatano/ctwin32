@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - extended bcrypt for encryption
 - sample simple_aes.py
 - sample senv.py
+- ENDIANNESS in wtypes
 
 ### Changed
 

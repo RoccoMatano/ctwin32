@@ -28,6 +28,7 @@
 #
 ################################################################################
 
+import sys as _sys
 from datetime import datetime as _datetime
 
 # let ctypes and UUID become visible on the outside (by not giving
@@ -38,6 +39,8 @@ from uuid import UUID
 ################################################################################
 
 # integral types
+
+ENDIANNESS = _sys.byteorder
 
 BYTE = ctypes.c_byte
 CHAR = ctypes.c_char

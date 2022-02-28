@@ -115,7 +115,7 @@ def registry_to_py(reg_type, data):
             if reg_type == REG_MULTI_SZ:
                 result = result.split("\0")
     elif reg_type in (REG_DWORD, REG_QWORD) :
-        result = int.from_bytes(data, byteorder="little", signed=False)
+        result = int.from_bytes(data, byteorder=ENDIANNESS, signed=False)
     else:
         result = data
 
@@ -487,7 +487,7 @@ def reg_set_str(key, name, string, typ=None):
 
 def reg_set_dword(key, name, dword):
     size = ctypes.sizeof(DWORD)
-    data = dword.to_bytes(size, 'little')
+    data = dword.to_bytes(size, ENDIANNESS)
     raise_on_err(
         _RegSetValueEx(
             key,

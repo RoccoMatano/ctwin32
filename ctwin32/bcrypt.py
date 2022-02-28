@@ -203,7 +203,7 @@ def get_property_ulong(obj, name):
     _bytes = BCryptGetProperty(obj, name)
     if len(_bytes) != ctypes.sizeof(ULONG):
         raise ValueError(f"property size mismatch ({len(_bytes)})")
-    return int.from_bytes(_bytes, 'little', signed=False)
+    return int.from_bytes(_bytes, ENDIANNESS, signed=False)
 
 ################################################################################
 
@@ -220,7 +220,7 @@ _BCryptSetProperty = fun_fact(
 
 def BCryptSetProperty(obj, name, value):
     if isinstance(value, int):
-        buf = value.to_bytes(((value.bit_length() + 31) // 32) * 4, "little")
+        buf = value.to_bytes(((value.bit_length() + 31) // 32) * 4, ENDIANNESS)
     elif isinstance(value, str):
         buf = bytes(ctypes.create_unicode_buffer(value))
     else:

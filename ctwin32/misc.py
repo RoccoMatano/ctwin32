@@ -58,7 +58,7 @@ def get_system_execution_state():
     bts = CallNtPowerInformation(SystemExecutionState, ctypes.sizeof(ULONG))
     # result is a combination of ES_SYSTEM_REQUIRED, ES_DISPLAY_REQUIRED,
     # ES_USER_PRESENT, ES_AWAYMODE_REQUIRED and ES_CONTINUOUS
-    return int.from_bytes(bts, byteorder='little', signed=False)
+    return int.from_bytes(bts, byteorder=ENDIANNESS, signed=False)
 
 ################################################################################
 
