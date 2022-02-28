@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed and simplified wtypes.ScdToBeClosed.from_param (no more integer overflow)
 - moved virtual disk constants from \_\_init\_\_.py to virtdisk.py
 - moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
+- removed unused import from keyview.pyw
 
 ## [1.6.0]
 

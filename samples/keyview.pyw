@@ -27,7 +27,6 @@
 
 import dataclasses
 from ctwin32 import (
-    ctypes,
     user,
     gdi,
     wndcls,
