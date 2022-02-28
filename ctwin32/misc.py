@@ -25,7 +25,7 @@
 from types import SimpleNamespace as _namespace
 
 from .wtypes import *
-from .ntdll import _raise_failed_status
+from .ntdll import raise_failed_status
 from . import (
     ref,
     fun_fact,
@@ -49,7 +49,7 @@ _CallNtPowerInformation = fun_fact(
 def CallNtPowerInformation(level, outsize=0, input=None):
     src, slen = (None, 0) if not input else (ref(input), ULONG(len(input)))
     dst, dlen = ctypes.create_string_buffer(outsize), ULONG(outsize)
-    _raise_failed_status(_CallNtPowerInformation(level, src, slen, dst, dlen))
+    raise_failed_status(_CallNtPowerInformation(level, src, slen, dst, dlen))
     return dst.value
 
 ################################################################################
