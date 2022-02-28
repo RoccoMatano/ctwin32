@@ -167,7 +167,7 @@ def RegQueryInfoKey(key):
     last_written = FILETIME()
     raise_on_err(
         _RegQueryInfoKey(
-            key.value,
+            key,
             None,
             None,
             None,

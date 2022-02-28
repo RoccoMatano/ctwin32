@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - since py3.11 will support ARM64 on windows, also build a wheel with the
   corresponding platform tag
 - fixed wrong \_raise_failed_status import in misc
+- fixed and simplified wtypes.ScdToBeClosed.from_param (no more integer overflow)
 
 ## [1.6.0]
 

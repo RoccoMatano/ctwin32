@@ -365,18 +365,7 @@ class ScdToBeClosed():
 
     @classmethod
     def from_param(cls, obj):
-        if hasattr(obj, "value"):
-            return obj.value
-        elif isinstance(obj, int):
-            return obj
-        elif obj is None:
-            return cls.invalid_value
-        else:
-            msg = (
-                "Don't know how to convert from " +
-                f"{type(obj).__name__} to {cls.__name__}"
-                )
-            raise TypeError(msg)
+        return obj if isinstance(obj, cls) else cls(obj)
 
     def __int__(self):
         return 0 if self.value is None else self.value
