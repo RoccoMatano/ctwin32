@@ -35,12 +35,24 @@ from . import (
     AF_UNSPEC,
     AF_INET,
     AF_INET6,
-    GAA_FLAG_SKIP_ANYCAST,
-    GAA_FLAG_SKIP_MULTICAST,
-    GAA_FLAG_INCLUDE_PREFIX,
     )
 
 _iph = ctypes.windll.iphlpapi
+
+################################################################################
+
+GAA_FLAG_SKIP_UNICAST                = 0x0001
+GAA_FLAG_SKIP_ANYCAST                = 0x0002
+GAA_FLAG_SKIP_MULTICAST              = 0x0004
+GAA_FLAG_SKIP_DNS_SERVER             = 0x0008
+GAA_FLAG_INCLUDE_PREFIX              = 0x0010
+GAA_FLAG_SKIP_FRIENDLY_NAME          = 0x0020
+GAA_FLAG_INCLUDE_WINS_INFO           = 0x0040
+GAA_FLAG_INCLUDE_GATEWAYS            = 0x0080
+GAA_FLAG_INCLUDE_ALL_INTERFACES      = 0x0100
+GAA_FLAG_INCLUDE_ALL_COMPARTMENTS    = 0x0200
+GAA_FLAG_INCLUDE_TUNNEL_BINDINGORDER = 0x0400
+GAA_FLAG_SKIP_DNS_INFO               = 0x0800
 
 ################################################################################
 
