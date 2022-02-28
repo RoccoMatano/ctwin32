@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample simple_aes.py
 - sample senv.py
 - ENDIANNESS in wtypes
+- is_registry_string in advapi
 
 ### Changed
 

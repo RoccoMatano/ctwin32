@@ -104,8 +104,13 @@ HKLM = HKEY_LOCAL_MACHINE
 
 ################################################################################
 
+def is_registry_string(reg_type):
+    return reg_type in (REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ)
+
+################################################################################
+
 def registry_to_py(reg_type, data):
-    if reg_type in (REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ):
+    if is_registry_string(reg_type):
         if len(data) <= 1:
             result = [] if reg_type == REG_MULTI_SZ else ""
         else:
@@ -469,9 +474,9 @@ def RegSetKeyValue(parent, key_name, value_name, typ, data):
 
 def reg_set_str(key, name, string, typ=None):
     typ = REG_SZ if typ is None else typ
-    if not typ in (REG_SZ, REG_EXPAND_SZ, REG_MULTI_SZ):
+    if not is_registry_string(typ):
         raise ValueError(f"invalid registry type: {typ}")
-    value = ctypes.create_unicode_buffer(string)
+    value = ctypes.create_unicode_buffer(string, len(string))
     raise_on_err(
         _RegSetValueEx(
             key,
