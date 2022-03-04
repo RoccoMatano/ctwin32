@@ -1114,13 +1114,13 @@ def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
 
 _GetKeyNameText = fun_fact(_usr.GetKeyNameTextW, (INT, LONG, PWSTR, INT))
 
-def GetKeyNameText(lparam):
+def GetKeyNameText(lparam, expect_empty=False):
     size = ret = 32
     while ret >= size - 1:
         size *= 2
         key_name = ctypes.create_unicode_buffer(size)
         ret = _GetKeyNameText(lparam, key_name, size)
-        raise_if(not ret)
+        raise_if(not ret and not expect_empty)
     return key_name.value
 
 ################################################################################

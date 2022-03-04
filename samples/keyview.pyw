@@ -145,7 +145,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
             line = self.msg_fmt[is_char] % (
                 self.msg_name[then.msg - WM_KEYFIRST],
                 then.wp,
-                " " if is_char else user.GetKeyNameText(then.lp),
+                " " if is_char else user.GetKeyNameText(then.lp, True),
                 then.wp if is_char else ' ',
                 then.lp & 0xffff,
                 (then.lp >> 16) & 0xff,

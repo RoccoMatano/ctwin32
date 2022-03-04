@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - moved virtual disk constants from \_\_init\_\_.py to virtdisk.py
 - moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
 - removed unused import from keyview.pyw
+- allow GetKeyNameText to return an empty string on purpose
 
 ## [1.6.0]
 
