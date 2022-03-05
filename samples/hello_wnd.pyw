@@ -64,16 +64,6 @@ class HelloWnd(wndcls.SimpleWnd):
             lf.lfFaceName = "MS Shell Dlg"
             lf.lfHeight = -72
             self.font = gdi.CreateFontIndirect(lf)
-
-            for idx in range(1, 1024):
-                try:
-                    ico = user.LoadIcon(self.hinstance(), idx)
-                    self.send_msg(WM_SETICON, 0, ico)
-                    self.send_msg(WM_SETICON, 1, ico)
-                    break
-                except OSError:
-                    pass
-
             return 0
 
         elif msg == WM_PAINT:
@@ -121,6 +111,7 @@ if __name__ == "__main__":
 
     wcp = wndcls.WndCreateParams()
     wcp.name = "Hello Window"
+    wcp.cls.hIcon = wndcls.load_py_ico()
     wnd = HelloWnd(wcp)
     wnd.show()
 

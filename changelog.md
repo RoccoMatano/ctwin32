@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - is_registry_string in advapi
 - sample stopnow.py
 - shell.SHGetFolderPath
+- user.CreateIconFromResourceEx
+- wndcls.load_py_ico
 
 ### Changed
 
@@ -29,6 +31,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
 - removed unused import from keyview.pyw
 - allow GetKeyNameText to return an empty string on purpose
+- use wndcls.load_py_ico in samples calendar, hello_wnd and keyview
 
 ## [1.6.0]
 

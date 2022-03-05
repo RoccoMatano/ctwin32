@@ -40,6 +40,7 @@ from . import (
     SWP_NOZORDER,
     GMEM_MOVEABLE,
     CF_UNICODETEXT,
+    LR_DEFAULTSIZE,
     )
 from .ntdll import proc_path_from_pid
 
@@ -1122,5 +1123,33 @@ def GetKeyNameText(lparam, expect_empty=False):
         ret = _GetKeyNameText(lparam, key_name, size)
         raise_if(not ret and not expect_empty)
     return key_name.value
+
+################################################################################
+
+_CreateIconFromResourceEx = fun_fact(
+    _usr.CreateIconFromResourceEx, (
+        HANDLE, PVOID, DWORD, BOOL, DWORD, INT, INT, UINT
+        )
+    )
+
+def CreateIconFromResourceEx(
+    data,
+    cx=0,
+    cy=0,
+    is_icon=True,
+    default_size=False
+    ):
+
+    res = _CreateIconFromResourceEx(
+        data,
+        len(data),
+        is_icon,
+        0x00030000,
+        cx,
+        cy,
+        LR_DEFAULTSIZE if default_size else 0
+        )
+    raise_if(not res)
+    return res
 
 ################################################################################

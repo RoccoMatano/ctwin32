@@ -24,6 +24,8 @@
 
 import sys
 import traceback
+import lzma
+import base64
 
 from .wtypes import *
 from . import (
@@ -454,5 +456,47 @@ class SimpleWnd(BaseWnd):
     def __del__(self):
         if self.is_window():
             self.destroy()
+
+################################################################################
+
+def load_ico_lzma_b85(lzma_b85_data):
+    data = lzma.decompress(base64.b85decode(lzma_b85_data))
+    return user.CreateIconFromResourceEx(data)
+
+################################################################################
+
+_py_icon = (
+    b'{Wp48S^xk9=GL@E0stWa761SMbT8$j;1H(;>RkX705Aj)f+J6yP9T}Bko})j#+i7N>;e(Cc8'
+    b'*b~t=p!4Q*Y-|8I`wx%g@F}t$1qY3`ER*6QY*}qNii+qAYq`NROBYh+Ot_RpNEGPRoAI1^Td'
+    b'&(&<AnDap)j_o`+IK<rpFw3)<etl<IYLkGU|B2d7e`60A9qtCtFsg1{>=)qA*sCV&QUE12Nq'
+    b'qR_6W0oGLTfny)d!CWv4njsF>CeO1THX!>_^ENrpO&Oy0;%fq$|!F3nno<dnv3(2y{c&itUa'
+    b'1iK56!K;Z`9i*&0yl8zC$m9Tv+nv1#?r;S#KU<`4!FpMXj?Ht_jotwz*o?L-cp`Gc?6%uw_6'
+    b't-iWwadkQ7p<wFOI{#$S>sEa%fQbn&d5~&Tf->4?!WxGsv#=5n_b6v8kR;1Cxo}y}5chHkKd'
+    b'+8<F2RVe^G^ZEH+XgIa*gbPH{u*_zX);IzvXAhgqBMc`{q6a%PeKwiU|3SKU_TZo;yWN+Jy5'
+    b'{H{pQ+Q)RoAL)HBGYX-&-tgz0xCGDfYU0rZ3x-h+7onOS%J|hx^_kxhEy4c&JL<s`(xMxnMY'
+    b'3?)MsDJGWRx;uosq;9nuFDfkJz-rEujXPpx0UITtH-mffmG<;y@p5W9+R*F!}6-#vKH-+lyX'
+    b';J+#?QvOB7uPy4C53q`2Bt%8BHejw~~yQp1p{IKP_zJ3!Oq7|+)Ds@pyQ_64-$*ww>zN_2t5'
+    b'o6k+215Gr)oYa5_P2;!g`oDgxp@9XFqjZ0x0m6TN5EZEvT?mtyP@QR*?VdVxiqkI%LqCL_04'
+    b'8HcMK?Ej3afNs@Qs2L9gev&tW=$BmQbP*Gs+reQAWKocl|u*?5E^;`<qa9m|E&NKq1GAK$lC'
+    b'4gp*7+h$GLJ;1nx8-No(Y%o*@?nBP8sE3D2`G3|+d)3Ul+wliQ~7A9gsR8N!>nL@g}ZSFIE<'
+    b'3m(pl;5Ur1C9Mqcuyh-kf^e??xt{`a4E{mmds6mf6NUP&GKgkxYRM(g}FU5>lb>wTQ(m8dsL'
+    b'{N-YuOa>4c3fm+n`!MpQ_(c6FmIq5-rI5_=(FhR{10ek%v;Pb!Y9)b1iKktnF@^w8;oP<S57'
+    b'B-quZtTE=3L>_6TdPcc0A*;>4w-Y=gs%Z@-EDdv0g4m8a#V|5<Zt;?(@wYrVb-Mk1Zdw%Y09'
+    b'Gn=e1&7;wA~N&ryFEU*V)J&^KvQY@Ak>Zm{0ooZsRK7?-#1(gu$iVqGdslP=0S|Q3<Fa-xec'
+    b'8uu5r%nQ4UlsMx^Vni(7Bskl7aQdNJe>Db2}fWQ}$geIyG@D7n&OyNG7>c!_70Cy>lzy?L6p'
+    b'<=%0-^CQkVI#_teeId#xO_L^xsUL?ycSIzlppqI74YA6(Zt6g{fFa6gQ(#f&Xs(UOr7@lz7L'
+    b'Xc%_<xA_oa^vO}LkvmhHHq%Qe_z3^am;#oZ~$FtL3o@Cl{K^hF6+CUh+JE8-<96BRbQ2sw+0'
+    b'07hXrCaq6ZRIn6iVjyQ^ufxm4gbLmXnMgIjh?7(|D&?Nlb2S%9rK@)Jz_irCdm`I{$-zZLXJ'
+    b'v!RG$;h}KR@@r7eX*74~#4FYiyZBtxv8w`%IDomf2+mQ=p-v-~~BnB4ky$7MTefMN~%ZLb%`'
+    b'9HAuZy>YC5wbuq}fsUv>XN>?<(K|l9W_i0*$<>pocq&1w+=2XX=ZTZ!b+9?|3)6=`R%F!}Z&'
+    b'a3Qm#HB{fW|T^Vk!~MbAjB%uoKE2KB?<{2C4_7P^XpCPOvLvb*=`u!@U??9&!FwtogjvKchT'
+    b'JYXIjeMr`}Q^G8vJ%n;<f;*!&FZ!Ihx~1V$NR`5Y3LJT5Gs{MWKOM$(1PgZT`{b##@>Y~@{s'
+    b')vnA~VaZp}VEy{WN=0EzUX~N5K4PI_3hVd(<@S@?%#NnfV#o&CTj&LSlM;dAJ}n;7UKjmt%e'
+    b'cG-MV+#m^)RYoItH4F4SpRv>o$*ci&39VZ{Gn)82#qhvYI77MY6k>v2iQs00000F``J)J91k'
+    b'700D*!s38CVB-0#!vBYQl0ssI200dcD'
+    )
+
+def load_py_ico():
+    return load_ico_lzma_b85(_py_icon)
 
 ################################################################################

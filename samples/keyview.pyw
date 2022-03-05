@@ -118,14 +118,6 @@ class KeyViewWnd(wndcls.SimpleWnd):
             )
         self.history = [None] * self.max_lines
 
-        for idx in range(1, 1024):
-            try:
-                ico = user.LoadIcon(self.hinstance(), idx)
-                self.send_msg(WM_SETICON, 0, ico)
-                self.send_msg(WM_SETICON, 1, ico)
-                break
-            except OSError:
-                pass
         return 0
 
     ############################################################################
@@ -201,6 +193,7 @@ if __name__ == "__main__":
 
     wcp = wndcls.WndCreateParams()
     wcp.name = "keyview"
+    wcp.cls.hIcon = wndcls.load_py_ico()
     wnd = KeyViewWnd(wcp)
     wnd.show()
 

@@ -112,12 +112,7 @@ if __name__ == "__main__":
     wcp = wndcls.WndCreateParams()
     wcp.name = "Calendar"
     wcp.wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
-    for idx in range(1, 1024):
-        try:
-            wcp.cls.hIcon = user.LoadIcon(wcp.cls.hInstance, idx)
-            break
-        except OSError:
-            pass
+    wcp.cls.hIcon = wndcls.load_py_ico()
     wnd = CalendarWnd(wcp)
     wnd.show()
 
