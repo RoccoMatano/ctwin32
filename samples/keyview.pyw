@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
     wcp = wndcls.WndCreateParams()
     wcp.name = "keyview"
-    wcp.cls.hIcon = wndcls.load_py_ico()
+    wcp.cls.hIcon = wndcls.load_ctwin32_ico()
     wnd = KeyViewWnd(wcp)
     wnd.show()
 

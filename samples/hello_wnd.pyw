@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     wcp = wndcls.WndCreateParams()
     wcp.name = "Hello Window"
-    wcp.cls.hIcon = wndcls.load_py_ico()
+    wcp.cls.hIcon = wndcls.load_ctwin32_ico()
     wnd = HelloWnd(wcp)
     wnd.show()
 

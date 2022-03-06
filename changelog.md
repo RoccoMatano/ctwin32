@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.GlobalAddAtom
 - kernel.global_add_atom
 - kernel.GlobalDeleteAtom
+- doc/images/ctwin32.ico and wndcls.load_ctwin32_ico
 
 ### Changed
 
@@ -32,9 +33,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
 - removed unused import from keyview.pyw
 - allow GetKeyNameText to return an empty string on purpose
-- use wndcls.load_py_ico in samples calendar, hello_wnd and keyview
 - use atom instead of string for SimpleWnd window property
 - revised this changelog
+- use wndcls.load_ctwin32_ico in samples calendar, hello_wnd and keyview
 
 ### Fixed
 

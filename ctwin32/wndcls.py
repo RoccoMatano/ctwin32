@@ -500,3 +500,34 @@ def load_py_ico():
     return load_ico_lzma_b85(_py_icon)
 
 ################################################################################
+
+_ctwin32_icon = (
+    b'{Wp48S^xk9=GL@E0stWa761SMbT8$j;0UJ#&0PQ#05Aj)f+J6yaHvHu1q>Gs(yZ)`rT4VqYn'
+    b'%B-HIH~>jeV{SNI_{JHVRTYsiKzK7CwQ=tJ2Ks!~srhl-I*p0o!hI-fpo^97Xi*4Q!Dd3X}v'
+    b'$8WKulmA{F!7oZCs)IAY;ZLMh6_No@b0ca=PkNzVlN3cC!ob60RrU0=4ndqroAy}qIF?$;ZH'
+    b'Ufdr4QqNydBJoi**2(b>LJtsq1--PQVunbK*nFuD0^<0YG0-)S3tS_@5y)&cQ=s^k)-n~=oM'
+    b'02WzYUu?pZecGjm&)ry+Orfv<jRMfx!kc1P+ahYuS(p%J>Y|E(NvE5ZQb(61)+uYPYcZKA?4'
+    b'y3*?c3~|o@e>T)A&e2>Qsiwrg(x})20YiS)c@q~frD|ufg|rFed$7w!;pG&;vB0orztE80g1'
+    b'5I$1~{%oA8kJqG8F5WFuF%de0KZlqk)<^C2K?eE3mj3mf16t&%ma@|F%17nc2|)O8_#Lldac'
+    b'FKC#?m7Ga6mIU+oCQ4>>QHY^>Au-AQr)+1y^BmO-flIkHJsV)N);I;ebT<`hX9)46w<Rg3FL'
+    b'i)nM%7pg~SO#qz-ze-1-*zMpUl#X<!?Q_$_PfG77v&?(kBe4H7IG?zCE?~%aW3h~O~Nk#)1H'
+    b'v=0R1#>@CNEYYT5RzSq>D#w>P>#BfdIYc)Z?l^6ml~-ykX8X8NnIqKq+G;v$hN(Y<Jt)r?c9'
+    b'>GCHY0zJilG#Dgj6g&_Ar1vUBMuh7e1c=)&+mJs_S(AEH(w+z@wOPz`09ec$bD^<B20sPmtQ'
+    b';9O8ejb}|4A@5yHoQ|la1UXI=fK{SBk8E0dNDC-7yw%?a9h+@fRDw!w6q>w{eR6p%f9?J2ey'
+    b'sbWHE%E5LjOC=}=%xLInY)d36&`<eV73u+U8SBisPCILL$*_AbshRHS~A(Eo9HFi__M)NO{L'
+    b'k}hiLF?7EhWwHZo$Xt984N&;?2^{2k^@GcRUbM$+nhqIJ0$;#L=XESY=_B_hRlCH6Hx-@ItE'
+    b'@4C^*r-Z*y%%>?H81t0$s$1c97#vHl%HhMw%^^5Tid??!_#@o>WP7mN#K1i21pownz?8>#_R'
+    b'67v0mi1&j!iRKMdj-fwjC}mJ4deM2@pDkT)?qtiS1a~80#D^R~9XM3@7QZL?zs-ZA-pCJo6{'
+    b'R>GbdV}c`%kbaf1&ZpLT&u%w>OgdQZ*~7)q(fpFA=qdeAt|9=O5NX(*%bl8iYPJ(FJbra1Lc'
+    b'1<m23X?h%S;!h}bzIodaWjLg}aLqJ_oc`_kb`^egLfTdLSI6#rFaK)MtiwsG%!qr%(+$M7=i'
+    b'FsygaUfDcG1`f1)_y!(vw(U!A(ly-<MbTl&@rjG$BKX<x{({u@XJ*QsEUvq@f(bmc6v=U8!5'
+    b'}p{K5@GE7Jm9Z!Bv3CFo#1ZHV7*nTNaA10bQO+6x22LetMJ2b#}!7h6#~GL*UD=`~w_>msdT'
+    b'YdUl6{}zNFtK;1wkl9@$K|*;m;I}jOF`7rfqE9`8A2}5MAYGOm&Bd@13Bgk?!sLhcJ65PFvq'
+    b'EK-oczoVl#{I->+Rapc9fQ>LT)>~&`%W3cz@D3$X)<L+qpZSQ4LslJyc~^rDkdX00000gHzk'
+    b'KXFSSV00HR<s1X1FO9VA)vBYQl0ssI200dcD'
+    )
+
+def load_ctwin32_ico():
+    return load_ico_lzma_b85(_ctwin32_icon)
+
+################################################################################
