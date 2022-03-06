@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - shell.SHGetFolderPath
 - user.CreateIconFromResourceEx
 - wndcls.load_py_ico
+- kernel.GlobalAddAtom
+- kernel.global_add_atom
+- kernel.GlobalDeleteAtom
 
 ### Changed
 
@@ -32,6 +35,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - removed unused import from keyview.pyw
 - allow GetKeyNameText to return an empty string on purpose
 - use wndcls.load_py_ico in samples calendar, hello_wnd and keyview
+- use atom instead of string for SimpleWnd window property
 
 ## [1.6.0]
 

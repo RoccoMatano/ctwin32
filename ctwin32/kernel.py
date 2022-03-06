@@ -823,3 +823,21 @@ def DeactivateActCtx(flags, cookie):
 ReleaseActCtx = fun_fact(_k32.ReleaseActCtx, (None, HANDLE))
 
 ################################################################################
+
+_GlobalAddAtom = fun_fact(_k32.GlobalAddAtomW, (WORD, PWSTR))
+
+def GlobalAddAtom(name):
+    atom = _GlobalAddAtom(name)
+    raise_if(not atom)
+    return atom
+
+################################################################################
+
+def global_add_atom(name):
+    return ctypes.cast(GlobalAddAtom(name), PWSTR)
+
+################################################################################
+
+GlobalDeleteAtom = fun_fact(_k32.GlobalDeleteAtom, (None, WORD))
+
+################################################################################

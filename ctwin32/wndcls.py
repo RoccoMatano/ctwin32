@@ -341,7 +341,7 @@ class WndCreateParams:
 
 ################################################################################
 
-_PROP_SELF = f"ctwin32:SimpleWnd:self"
+_PROP_SELF = kernel.global_add_atom("ctwin32:SimpleWnd:self")
 
 class SimpleWnd(BaseWnd):
 
