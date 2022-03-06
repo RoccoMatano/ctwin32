@@ -28,16 +28,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - removed duplicate constants from \_\_init\_\_.py
 - since py3.11 will support ARM64 on windows, also build a wheel with the
   corresponding platform tag
-- fixed wrong \_raise_failed_status import in misc
-- fixed and simplified wtypes.ScdToBeClosed.from_param (no more integer overflow)
 - moved virtual disk constants from \_\_init\_\_.py to virtdisk.py
 - moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
 - removed unused import from keyview.pyw
 - allow GetKeyNameText to return an empty string on purpose
 - use wndcls.load_py_ico in samples calendar, hello_wnd and keyview
 - use atom instead of string for SimpleWnd window property
+- revised this changelog
 
-## [1.6.0]
+### Fixed
+
+- fixed wrong \_raise_failed_status import in misc
+- fixed and simplified wtypes.ScdToBeClosed.from_param (no more integer overflow)
+
+## [1.6.0] - 2022-02-18
 
 ### Added
 
@@ -72,21 +76,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - mostly internal refactorings, but with a small impact on the samples (ctypes
   is now included in ctwin32's namespace)
-- fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
-- fixed parameter quoting in shell.elevate
 - improved handling of 'None' in ScdToBeClosed
 - extend list of SE_\*_NAME constants
 - let advapi.OpenProcessToken return a context manager object
-- fix splitting strings in kernel.env_str_to_dict
 - moved definition of LUID and UNICODE_STRING to wtypes
 - renamed \_raise_failed_status to raise_failed_status in ntdll
-- fixed various return types in ntdll from ULONG to LONG by using LONG's
-  alias NTSTATUS, which is now available in wtypes
-- fixed BaseWnd.\_\_init\_\_
 - be more precise about dealing with GUIDs in advapi
 - let HDEVINFOs be context managers in setupapi
 
-## [1.5.0]
+### Fixed
+
+- fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
+- fixed parameter quoting in shell.elevate
+- fix splitting strings in kernel.env_str_to_dict
+- fixed various return types in ntdll from ULONG to LONG by using LONG's
+  alias NTSTATUS, which is now available in wtypes
+- fixed BaseWnd.\_\_init\_\_
+
+## [1.5.0] - 2022-01-17
 
 ### Added
 
@@ -180,7 +187,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample hello_wnd.py now demonstrates comctl.tsk_dlg_callback on right-click
 - setup activation context in comctl before loading comctl32.dll
 
-## [1.4.0]
+## [1.4.0] - 2021-12-23
 
 ### Added
 
@@ -204,7 +211,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - virtdisk.OpenVirtualDisk returns context manager KHANDLE
 
-## [1.3.0]
+## [1.3.0] - 2021-12-06
 
 ### Added
 
@@ -231,7 +238,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - advapi: Let predefined keys (e.g. HKCU) be instances of HKEY (i.e they
   can be used in `with` statements like ordinary keys).
 
-## [1.2.0]
+## [1.2.0] - 2021-11-29
 
 ### Added
 
@@ -249,7 +256,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed memory allocation race in ntdll.enum_processes
 - Fixed unreliable cleanup in setupapi.enum_info_set
 
-## [1.1.0]
+## [1.1.0] - 2021-11-06
 
 ### Added
 
@@ -261,7 +268,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   ntdll. The sample listpipes.py demonstrates a way how these functions can
   be used.
 
-## [1.0.0]
+## [1.0.0] - 2021-10-20
 
 ### Fixed
 
@@ -273,9 +280,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Sample sua_enums.py
 
-## [0.1.4]
+## [0.1.4] - 2021-10-20
 
 ### Added
 
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
+
+
+[1.6.0]: https://github.com/RoccoMatano/ctwin32/compare/1.5.0...1.6.0
+[1.5.0]: https://github.com/RoccoMatano/ctwin32/compare/1.4.0...1.5.0
+[1.4.0]: https://github.com/RoccoMatano/ctwin32/compare/1.3.0...1.4.0
+[1.3.0]: https://github.com/RoccoMatano/ctwin32/compare/1.2.0...1.3.0
+[1.2.0]: https://github.com/RoccoMatano/ctwin32/compare/1.1.0...1.2.0
+[1.1.0]: https://github.com/RoccoMatano/ctwin32/compare/1.0.0...1.1.0
+[1.0.0]: https://github.com/RoccoMatano/ctwin32/compare/0.1.4...1.0.0
+[0.1.4]: https://github.com/RoccoMatano/ctwin32/releases/tag/0.1.4
