@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- sample endis_bsl_usb.py
+
 ## [1.7.12] - 2022-03-10
 
 ### Added
