@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.7.12] - 2022-03-10
+
 ### Added
 - module bcrypt with functions required for creating and verifying signatures
 - samples rm_sign_tool.py and test_sign_tool.py
@@ -288,7 +290,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
-
+[1.7.12]: https://github.com/RoccoMatano/ctwin32/compare/1.6.0...1.7.12
 [1.6.0]: https://github.com/RoccoMatano/ctwin32/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/RoccoMatano/ctwin32/compare/1.4.0...1.5.0
 [1.4.0]: https://github.com/RoccoMatano/ctwin32/compare/1.3.0...1.4.0
