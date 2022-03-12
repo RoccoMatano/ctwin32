@@ -14,7 +14,7 @@ solely dictated by my needs and preferences.
 
 ctwin32 is *__definitely__* not a replacement for [pywin32](https://pypi.org/project/pywin32/),
 although it serves that purpose for me (in conjunction with [comtypes](https://pypi.org/project/comtypes/)).
-Compared with pywin32 the coverage of ctwin32 is less than tiny.
+Compared with pywin32 the coverage of ctwin32 is downright tiny.
 
 See the [samples directory](https://github.com/RoccoMatano/ctwin32/tree/master/samples)
 for several instances of how ctwin32 can be used.

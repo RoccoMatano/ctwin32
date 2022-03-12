@@ -42,7 +42,7 @@ from uuid import UUID
 
 ENDIANNESS = _sys.byteorder
 
-BYTE = ctypes.c_byte
+BYTE = ctypes.c_ubyte
 CHAR = ctypes.c_char
 BOOLEAN = BYTE
 

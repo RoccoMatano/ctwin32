@@ -12,6 +12,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample endis_bsl_usb.py
 - user.SetFocus and BaseWnd.set_focus
 - user.GetGUIThreadInfo
+- kernel.FreeLibrary
+- kernel.LoadLibrary
+- kernel.LoadLibraryEx
+- kernel.EnumResourceNames
+- kernel.FindResource
+- kernel.SizeofResource
+- kernel.LoadResource
+- kernel.get_resource_info
+- sample extract_ico.py
 
 ### Fixed
 

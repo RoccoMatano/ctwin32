@@ -30,6 +30,7 @@ from . import (
     raise_if,
     fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
+    ERROR_RESOURCE_ENUM_USER_STOP,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
     multi_str_from_addr,
@@ -839,5 +840,114 @@ def global_add_atom(name):
 ################################################################################
 
 GlobalDeleteAtom = fun_fact(_k32.GlobalDeleteAtom, (None, WORD))
+
+################################################################################
+
+_FreeLibrary = fun_fact(_k32.FreeLibrary, (BOOL, HANDLE))
+
+def FreeLibrary(hmod):
+    raise_if(not _FreeLibrary(hmod))
+
+################################################################################
+
+class HMODULE(ScdToBeClosed, HANDLE, close_func=FreeLibrary, invalid=0):
+    pass
+
+################################################################################
+
+_LoadLibraryEx = fun_fact(_k32.LoadLibraryExW, (HANDLE, PWSTR, HANDLE, DWORD))
+
+def LoadLibraryEx(filename, flags=0):
+    hmod = HMODULE(_LoadLibraryEx(filename, None, flags))
+    raise_if(not hmod.is_valid())
+    return hmod
+
+def LoadLibrary(filename):
+    return LoadLibraryEx(filename, 0)
+
+################################################################################
+
+_EnumResNameCallback = ctypes.WINFUNCTYPE(
+    BOOL,
+    HANDLE,
+    PVOID,  # must not use PWSTR as parameter type since ctypes conversion
+    PVOID,  # code will get confused by 16-bit IDs that are NOT valid pointers
+    CallbackContextPtr
+    )
+
+@_EnumResNameCallback
+def _EnumResNameCb(hmod, typ, name, ctxt):
+    typ = typ if not (typ >> 16) else ctypes.wstring_at(typ)
+    name = name if not (name >> 16) else ctypes.wstring_at(name)
+    cbc = ctxt.contents
+    res = cbc.callback(hmod, typ, name, cbc.context)
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
+
+
+_EnumResourceNames = fun_fact(
+    _k32.EnumResourceNamesW,
+    (BOOL, HANDLE, PWSTR, _EnumResNameCallback, CallbackContextPtr)
+    )
+
+def EnumResourceNames(hmod, typ, callback, context):
+    cbc = CallbackContext(callback, context)
+    if not _EnumResourceNames(hmod, typ, _EnumResNameCb, ref(cbc)):
+        err = GetLastError()
+        if err != ERROR_RESOURCE_ENUM_USER_STOP:
+            raise ctypes.WinError(err)
+
+################################################################################
+
+def get_resource_names(hmod, typ):
+    names = []
+
+    @_EnumResNameCallback
+    def collect(hmod, not_used1, name, not_used2):
+        if name >= 0x10000:
+            name = PWSTR(name).value
+        names.append(name)
+        return True
+
+    raise_on_zero(_EnumResourceNames(hmod, typ, collect, None))
+    return names
+
+################################################################################
+
+_FindResource = fun_fact(
+    _k32.FindResourceW, (HANDLE, HANDLE, PWSTR, PWSTR)
+    )
+
+def FindResource(hmod, name, typ):
+    name = name if isinstance(name, PWSTR) else PWSTR(name)
+    typ = typ if isinstance(typ, PWSTR) else PWSTR(typ)
+    res = _FindResource(hmod, name, typ)
+    raise_if(not res)
+    return res
+
+################################################################################
+
+_SizeofResource = fun_fact(_k32.SizeofResource, (DWORD, HANDLE, HANDLE))
+
+def SizeofResource(hmod, hrsc):
+    res = _SizeofResource(hmod, hrsc)
+    raise_if(not res)
+    return res
+
+################################################################################
+
+_LoadResource = fun_fact(_k32.LoadResource, (PVOID, HANDLE, HANDLE))
+
+def LoadResource(hmod, hrsc):
+    res = _LoadResource(hmod, hrsc)
+    raise_if(not res)
+    return res
+
+################################################################################
+
+def get_resource_info(hmod, name, typ):
+    hrsc = FindResource(hmod, name, typ)
+    size = SizeofResource(hmod, hrsc)
+    return LoadResource(hmod, hrsc), size
 
 ################################################################################
