@@ -133,6 +133,9 @@ class BaseWnd:
     def set_foreground(self):
         user.SetForegroundWindow(self.hwnd)
 
+    def set_focus(self):
+        return self.__class__(user.SetFocus(self.hwnd))
+
     def invalidate_rect(self, rc=None, erase=False):
         user.InvalidateRect(self.hwnd, rc, erase)
 

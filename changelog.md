@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - sample endis_bsl_usb.py
+- user.SetFocus and BaseWnd.set_focus
+- user.GetGUIThreadInfo
+
+### Fixed
+
+- keyboard handling in sample calendar.pyw
 
 ## [1.7.12] - 2022-03-10
 

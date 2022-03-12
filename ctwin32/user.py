@@ -838,6 +838,10 @@ SetForegroundWindow = fun_fact(_usr.SetForegroundWindow, (BOOL, HWND))
 
 ################################################################################
 
+SetFocus = fun_fact(_usr.SetFocus, (HWND, HWND))
+
+################################################################################
+
 GetParent = fun_fact(_usr.GetParent, (HWND, HWND))
 
 ################################################################################
@@ -1151,5 +1155,33 @@ def CreateIconFromResourceEx(
         )
     raise_if(not res)
     return res
+
+################################################################################
+
+class GUITHREADINFO(ctypes.Structure):
+    _fields_ = (
+        ("cbSize",        DWORD),
+        ("flags",         DWORD),
+        ("hwndActive",    HWND),
+        ("hwndFocus",     HWND),
+        ("hwndCapture",   HWND),
+        ("hwndMenuOwner", HWND),
+        ("hwndMoveSize",  HWND),
+        ("hwndCaret",     HWND),
+        ("rcCaret",       RECT),
+        )
+    def __init__(self):
+        self.cbSize = ctypes.sizeof(self)
+
+PGUITHREADINFO = ctypes.POINTER(GUITHREADINFO)
+
+_GetGUIThreadInfo = fun_fact(
+    _usr.GetGUIThreadInfo, (BOOL, DWORD, PGUITHREADINFO)
+    )
+
+def GetGUIThreadInfo(tid=0):
+    gti = GUITHREADINFO()
+    raise_if(not _GetGUIThreadInfo(tid, ref(gti)))
+    return gti
 
 ################################################################################

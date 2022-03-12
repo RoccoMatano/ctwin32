@@ -29,6 +29,7 @@ from ctwin32 import (
     wndcls,
     RECT,
     WM_CREATE,
+    WM_SETFOCUS,
     WM_DESTROY,
     WM_QUIT,
     WS_BORDER,
@@ -54,7 +55,7 @@ class CalendarWnd(wndcls.SimpleWnd):
     def on_message(self, msg, wp, lp):
 
         if msg == WM_CREATE:
-            hcal = wndcls.BaseWnd(
+            self.cal = wndcls.BaseWnd(
                 user.CreateWindowEx(
                     0,
                     MONTHCAL_CLASS,
@@ -70,10 +71,10 @@ class CalendarWnd(wndcls.SimpleWnd):
 
             # get the size required to show an entire month
             control = RECT()
-            hcal.send_msg(MCM_GETMINREQRECT, 0, ctypes.addressof(control))
+            self.cal.send_msg(MCM_GETMINREQRECT, 0, ctypes.addressof(control))
 
             # resize the control and parent
-            hcal.set_pos(
+            self.cal.set_pos(
                 None,
                 0,
                 0,
@@ -96,6 +97,10 @@ class CalendarWnd(wndcls.SimpleWnd):
                 frame.height,
                 SWP_NOZORDER
                 )
+            return 0
+
+        elif msg == WM_SETFOCUS:
+            self.cal.set_focus()
             return 0
 
         elif msg == WM_DESTROY:
