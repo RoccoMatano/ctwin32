@@ -373,4 +373,8 @@ class ScdToBeClosed():
     def is_valid(self):
         return int(self) != self.invalid_value
 
+    def raise_on_invalid(self):
+        if int(self) == self.invalid_value:
+            raise ctypes.WinError()
+
 ################################################################################

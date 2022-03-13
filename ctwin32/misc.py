@@ -29,7 +29,7 @@ from .ntdll import raise_failed_status
 from . import (
     ref,
     fun_fact,
-    raise_if,
+    raise_on_zero,
     multi_str_from_addr,
     SystemExecutionState,
     TOKEN_READ,
@@ -68,7 +68,7 @@ _SetSuspendState = fun_fact(
     )
 
 def SetSuspendState(hibernate, force, wakeup_events_disabled):
-    raise_if(not _SetSuspendState(hibernate, force, wakeup_events_disabled))
+    raise_on_zero(_SetSuspendState(hibernate, force, wakeup_events_disabled))
 
 ################################################################################
 
@@ -97,7 +97,7 @@ _WTSEnumerateSessions = fun_fact(
 def WTSEnumerateSessions(server=None):
     info = P_SESSION_INFO()
     count = DWORD()
-    raise_if(not _WTSEnumerateSessions(server, 0, 1, ref(info), ref(count)))
+    raise_on_zero(_WTSEnumerateSessions(server, 0, 1, ref(info), ref(count)))
     try:
         res = tuple(
             _namespace(
@@ -118,7 +118,7 @@ _WTSDisconnectSession = fun_fact(
     )
 
 def WTSDisconnectSession(session_id, server=None, wait=True):
-    raise_if(not _WTSDisconnectSession(server, session_id, wait))
+    raise_on_zero(_WTSDisconnectSession(server, session_id, wait))
 
 ################################################################################
 
@@ -134,11 +134,11 @@ _CreateEnvironmentBlock = fun_fact(
 
 def _env_block_from_token(token):
     ptr = PVOID()
-    raise_if(not _CreateEnvironmentBlock(ref(ptr), token, False))
+    raise_on_zero(_CreateEnvironmentBlock(ref(ptr), token, False))
     try:
         return multi_str_from_addr(ptr.value)
     finally:
-        raise_if(not _DestroyEnvironmentBlock(ptr))
+        raise_on_zero(_DestroyEnvironmentBlock(ptr))
 
 def CreateEnvironmentBlock(token=None):
     if token is None:

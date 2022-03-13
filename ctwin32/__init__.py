@@ -35,6 +35,12 @@ def raise_if(condition):
 
 ################################################################################
 
+def raise_on_zero(value):
+    if value == 0 or getattr(value, "value", 1) is None:
+        raise ctypes.WinError()
+
+################################################################################
+
 def raise_on_err(err):
     if err:
         raise ctypes.WinError(err)

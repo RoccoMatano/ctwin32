@@ -28,6 +28,7 @@ from .wtypes import *
 from . import (
     ref,
     raise_if,
+    raise_on_zero,
     fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_RESOURCE_ENUM_USER_STOP,
@@ -68,7 +69,7 @@ _GlobalAlloc = fun_fact(_k32.GlobalAlloc, (HANDLE, UINT, SIZE_T))
 
 def GlobalAlloc(flags, size):
     res = _GlobalAlloc(flags, size)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -77,7 +78,7 @@ _GlobalLock = fun_fact(_k32.GlobalLock, (PVOID, HANDLE))
 
 def GlobalLock(hmem):
     res = _GlobalLock(hmem)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -89,7 +90,7 @@ GlobalUnlock = fun_fact(_k32.GlobalUnlock, (PVOID, HANDLE))
 _CloseHandle = fun_fact(_k32.CloseHandle, (BOOL, HANDLE))
 
 def CloseHandle(handle):
-    raise_if(not _CloseHandle(handle))
+    raise_on_zero(_CloseHandle(handle))
 
 ################################################################################
 
@@ -147,7 +148,7 @@ def CreateFile(file_name, access, share_mode, sec_attr, dispo, flags, template):
             template
             )
         )
-    raise_if(not hdl.is_valid())
+    hdl.raise_on_invalid()
     return hdl
 
 ################################################################################
@@ -206,8 +207,8 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
         out = ctypes.create_string_buffer(out_len)
         optr, olen = ref(out), out_len
 
-    raise_if(
-        not _DeviceIoControl(
+    raise_on_zero(
+        _DeviceIoControl(
             hdl,
             ioctl,
             iptr,
@@ -240,7 +241,7 @@ _GetModuleHandle = fun_fact(_k32.GetModuleHandleW, (HANDLE, PWSTR))
 
 def GetModuleHandle(mod_name):
     res = _GetModuleHandle(mod_name)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -262,7 +263,7 @@ _OpenProcess = fun_fact(
 
 def OpenProcess(desired_acc, inherit, pid):
     res = KHANDLE(_OpenProcess(desired_acc, inherit, pid))
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res
 
 ################################################################################
@@ -272,7 +273,7 @@ _TerminateProcess = fun_fact(
     )
 
 def TerminateProcess(handle, exit_code):
-    raise_if(not _TerminateProcess(handle, exit_code))
+    raise_on_zero(_TerminateProcess(handle, exit_code))
 
 ################################################################################
 
@@ -308,7 +309,7 @@ def GetSystemTimeAsFileTime():
 ################################################################################
 
 def SetSystemTime(st):
-    raise_if(not _k32.SetSystemTime(ref(st)))
+    raise_on_zero(_k32.SetSystemTime(ref(st)))
 
 ################################################################################
 
@@ -320,36 +321,34 @@ def GetLocalTime():
 ################################################################################
 
 def SetLocalTime(st):
-    raise_if(not _k32.SetLocalTime(ref(st)))
+    raise_on_zero(_k32.SetLocalTime(ref(st)))
 
 ################################################################################
 
 def FileTimeToSystemTime(ft):
     st = SYSTEMTIME()
-    raise_if(not _k32.FileTimeToSystemTime(ref(ft), ref(st)))
+    raise_on_zero(_k32.FileTimeToSystemTime(ref(ft), ref(st)))
     return st
 
 ################################################################################
 
 def SystemTimeToFileTime(st):
     ft = FILETIME()
-    raise_if(not _k32.SystemTimeToFileTime(ref(st), ref(ft)))
+    raise_on_zero(_k32.SystemTimeToFileTime(ref(st), ref(ft)))
     return ft
 
 ################################################################################
 
 def FileTimeToLocalFileTime(ft):
     lft = FILETIME()
-    raise_if(not _k32.FileTimeToLocalFileTime(ref(ft), ref(lft)))
+    raise_on_zero(_k32.FileTimeToLocalFileTime(ref(ft), ref(lft)))
     return lft
 
 ################################################################################
 
 def FileTimeToLocalSystemTime(ft):
     st = FileTimeToSystemTime(ft)
-    raise_if(
-        not _k32.SystemTimeToTzSpecificLocalTime(0, ref(st), ref(st))
-        )
+    raise_on_zero(_k32.SystemTimeToTzSpecificLocalTime(0, ref(st), ref(st)))
     return st
 
 ################################################################################
@@ -358,7 +357,7 @@ def AdjustTime(SecondsToAdjust):
     ft = GetSystemTimeAsFileTime()
     ft += int(SecondsToAdjust * 1e7)
     st = FileTimeToSystemTime(ft)
-    raise_if(not _k32.SetSystemTime(ref(st)))
+    raise_on_zero(_k32.SetSystemTime(ref(st)))
 
 ################################################################################
 
@@ -381,8 +380,7 @@ _SetFileAttributes = fun_fact(
 ################################################################################
 
 def SetFileAttributes(fname, attribs):
-    suc = _SetFileAttributes(fname, attribs)
-    raise_if(not suc)
+    raise_on_zero(_SetFileAttributes(fname, attribs))
 
 ################################################################################
 
@@ -470,7 +468,7 @@ def WritePrivateProfileSection(secname, secdata, filename):
     # That's why we need to detour 'secdata' through a unicode buffer. Since
     # py310 that would no longer be necessary (ctypes was fixed).
     buf = ctypes.create_unicode_buffer(secdata, len(secdata))
-    raise_if(not _WritePrivateProfileSection(secname, buf, filename))
+    raise_on_zero(_WritePrivateProfileSection(secname, buf, filename))
 
 ################################################################################
 
@@ -484,7 +482,7 @@ def GetEnvironmentVariable(name):
     while True:
         var = ctypes.create_unicode_buffer(size)
         req = _GetEnvironmentVariable(name, var, size)
-        raise_if(req == 0)
+        raise_on_zero(req)
         if req <= size:
             break
         else:
@@ -499,7 +497,7 @@ _SetEnvironmentVariable = fun_fact(
     )
 
 def SetEnvironmentVariable(name, value):
-    raise_if(not _SetEnvironmentVariable(name, value))
+    raise_on_zero(_SetEnvironmentVariable(name, value))
 
 ################################################################################
 
@@ -514,11 +512,11 @@ _GetEnvironmentStrings = fun_fact(_k32.GetEnvironmentStringsW, (PVOID,))
 
 def GetEnvironmentStrings():
     ptr = _GetEnvironmentStrings()
-    raise_if(not ptr)
+    raise_on_zero(ptr)
     try:
         return multi_str_from_addr(ptr)
     finally:
-        raise_if(not _FreeEnvironmentStrings(ptr))
+        raise_on_zero(_FreeEnvironmentStrings(ptr))
 
 def env_str_to_dict(estr):
     return dict(s.split("=", 1) for s in estr.strip("\0").split("\0"))
@@ -536,7 +534,7 @@ _SetEnvironmentStrings = fun_fact(
 def SetEnvironmentStrings(strings):
     # see comment on PyUnicode_AsWideCharString above
     buf = ctypes.create_unicode_buffer(strings, len(strings))
-    raise_if(not _SetEnvironmentStrings(buf))
+    raise_on_zero(_SetEnvironmentStrings(buf))
 
 ################################################################################
 
@@ -550,7 +548,7 @@ def ExpandEnvironmentStrings(template):
     while True:
         var = ctypes.create_unicode_buffer(size)
         req = _ExpandEnvironmentStrings(template, var, size)
-        raise_if(req == 0)
+        raise_on_zero(req)
         if req <= size:
             break
         else:
@@ -635,8 +633,8 @@ _UpdateProcThreadAttribute = fun_fact(
 
 def UpdateProcThreadAttribute(alst, flags, id, attr):
     size = SIZE_T(ctypes.sizeof(attr))
-    raise_if(
-        not _UpdateProcThreadAttribute(
+    raise_on_zero(
+        _UpdateProcThreadAttribute(
             alst,
             flags,
             id,
@@ -717,8 +715,8 @@ def CreateProcess(
         psi = ref(startup_info.StartupInfo)
     else:
         psi = ref(startup_info)
-    raise_if(
-        not _CreateProcess(
+    raise_on_zero(
+        _CreateProcess(
             app_name,
             cmd_line,
             ref(proc_attr) if proc_attr is not None else None,
@@ -809,7 +807,7 @@ _ActivateActCtx = fun_fact(_k32.ActivateActCtx, (BOOL, HANDLE, PULONG_PTR))
 
 def ActivateActCtx(ctx):
     cookie = ULONG_PTR()
-    raise_if(not _ActivateActCtx(ctx, ref(cookie)))
+    raise_on_zero(_ActivateActCtx(ctx, ref(cookie)))
     return cookie.value
 
 ################################################################################
@@ -817,7 +815,7 @@ def ActivateActCtx(ctx):
 _DeactivateActCtx = fun_fact(_k32.DeactivateActCtx, (BOOL, DWORD, ULONG_PTR))
 
 def DeactivateActCtx(flags, cookie):
-    raise_if(not _DeactivateActCtx(flags, cookie))
+    raise_on_zero(_DeactivateActCtx(flags, cookie))
 
 ################################################################################
 
@@ -829,7 +827,7 @@ _GlobalAddAtom = fun_fact(_k32.GlobalAddAtomW, (WORD, PWSTR))
 
 def GlobalAddAtom(name):
     atom = _GlobalAddAtom(name)
-    raise_if(not atom)
+    raise_on_zero(atom)
     return atom
 
 ################################################################################
@@ -846,7 +844,7 @@ GlobalDeleteAtom = fun_fact(_k32.GlobalDeleteAtom, (None, WORD))
 _FreeLibrary = fun_fact(_k32.FreeLibrary, (BOOL, HANDLE))
 
 def FreeLibrary(hmod):
-    raise_if(not _FreeLibrary(hmod))
+    raise_on_zero(_FreeLibrary(hmod))
 
 ################################################################################
 
@@ -859,7 +857,7 @@ _LoadLibraryEx = fun_fact(_k32.LoadLibraryExW, (HANDLE, PWSTR, HANDLE, DWORD))
 
 def LoadLibraryEx(filename, flags=0):
     hmod = HMODULE(_LoadLibraryEx(filename, None, flags))
-    raise_if(not hmod.is_valid())
+    hmod.raise_on_invalid()
     return hmod
 
 def LoadLibrary(filename):
@@ -922,7 +920,7 @@ def FindResource(hmod, name, typ):
     name = name if isinstance(name, PWSTR) else PWSTR(name)
     typ = typ if isinstance(typ, PWSTR) else PWSTR(typ)
     res = _FindResource(hmod, name, typ)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -931,7 +929,7 @@ _SizeofResource = fun_fact(_k32.SizeofResource, (DWORD, HANDLE, HANDLE))
 
 def SizeofResource(hmod, hrsc):
     res = _SizeofResource(hmod, hrsc)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -940,7 +938,7 @@ _LoadResource = fun_fact(_k32.LoadResource, (PVOID, HANDLE, HANDLE))
 
 def LoadResource(hmod, hrsc):
     res = _LoadResource(hmod, hrsc)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################

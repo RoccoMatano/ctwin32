@@ -26,6 +26,7 @@ from .wtypes import *
 from . import (
     ref,
     raise_if,
+    raise_on_zero,
     fun_fact,
     HGDI_ERROR,
     )
@@ -64,7 +65,7 @@ _CreateFontIndirect = fun_fact(_gdi.CreateFontIndirectW, (HANDLE, PLOGFONT))
 
 def CreateFontIndirect(lf):
     res = _CreateFontIndirect(ref(lf))
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -81,7 +82,7 @@ def SelectObject(hdc, hobj):
 _DeleteObject = fun_fact(_gdi.DeleteObject, (BOOL, HANDLE))
 
 def DeleteObject(hobj):
-    raise_if(not _DeleteObject(hobj))
+    raise_on_zero(_DeleteObject(hobj))
 
 ################################################################################
 
@@ -116,7 +117,7 @@ _GetTextMetrics = fun_fact(_gdi.GetTextMetricsW, (BOOL, HANDLE, PTEXTMETRIC))
 
 def GetTextMetrics(hdc):
     tm = TEXTMETRIC()
-    raise_if(not _GetTextMetrics(hdc, ref(tm)))
+    raise_on_zero(_GetTextMetrics(hdc, ref(tm)))
     return tm
 
 ################################################################################
@@ -125,7 +126,7 @@ _GetStockObject = fun_fact(_gdi.GetStockObject, (HANDLE, INT))
 
 def GetStockObject(idx):
     obj = _GetStockObject(idx)
-    raise_if(obj == 0)
+    raise_on_zero(obj)
     return obj
 
 ################################################################################
@@ -134,7 +135,7 @@ _SetBkMode = fun_fact(_gdi.SetBkMode, (INT, HANDLE, INT))
 
 def SetBkMode(hdc, mode):
     previous = _SetBkMode(hdc, mode)
-    raise_if(not previous)
+    raise_on_zero(previous)
     return previous
 
 ################################################################################
@@ -142,6 +143,6 @@ def SetBkMode(hdc, mode):
 _TextOut = fun_fact(_gdi.TextOutW, (BOOL, HANDLE, INT, INT, PWSTR, INT))
 
 def TextOut(hdc, x, y, text):
-    raise_if(not _TextOut(hdc, x, y, text, len(text)))
+    raise_on_zero(_TextOut(hdc, x, y, text, len(text)))
 
 ################################################################################

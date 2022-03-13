@@ -29,6 +29,7 @@ from .wtypes import *
 from . import (
     ref,
     raise_if,
+    raise_on_zero,
     raise_on_err,
     fun_fact,
     REG_DWORD,
@@ -529,7 +530,7 @@ _ConvertStringSidToSid = fun_fact(
 def ConvertStringSidToSid(string_sid):
     sid = PVOID()
     try:
-        raise_if(not _ConvertStringSidToSid(string_sid, ref(sid)))
+        raise_on_zero(_ConvertStringSidToSid(string_sid, ref(sid)))
         return ctypes.string_at(sid, GetLengthSid(sid))
     finally:
         LocalFree(sid)
@@ -544,7 +545,7 @@ def ConvertSidToStringSid(sid):
     bin_sid = ctypes.create_string_buffer(sid)
     str_sid = PWSTR()
     try:
-        raise_if(not _ConvertSidToStringSid(ref(bin_sid), ref(str_sid)))
+        raise_on_zero(_ConvertSidToStringSid(ref(bin_sid), ref(str_sid)))
         return ctypes.wstring_at(str_sid)
     finally:
         LocalFree(str_sid)
@@ -563,7 +564,7 @@ _CheckTokenMembership = fun_fact(
 def CheckTokenMembership(token_handle, sid_to_check):
     res = BOOL()
     sid = ctypes.create_string_buffer(sid_to_check)
-    raise_if(not _CheckTokenMembership(token_handle, ref(sid), ref(res)))
+    raise_on_zero(_CheckTokenMembership(token_handle, ref(sid), ref(res)))
     return res.value != 0
 
 ################################################################################
@@ -580,7 +581,7 @@ _OpenProcessToken = fun_fact(
 
 def OpenProcessToken(proc_handle, desired_acc):
     token = KHANDLE()
-    raise_if(not _OpenProcessToken(proc_handle, desired_acc, ref(token)))
+    raise_on_zero(_OpenProcessToken(proc_handle, desired_acc, ref(token)))
     return token
 
 ################################################################################
@@ -591,7 +592,7 @@ _LookupPrivilegeValue = fun_fact(
 
 def LookupPrivilegeValue(sys_name, name):
     luid = LUID()
-    raise_if(not _LookupPrivilegeValue(sys_name, name, ref(luid)))
+    raise_on_zero(_LookupPrivilegeValue(sys_name, name, ref(luid)))
     return luid
 
 ################################################################################
@@ -671,8 +672,8 @@ def LookupAccountSid(sid, system_name=None):
 
     name = ctypes.create_unicode_buffer(name_size.value)
     domain = ctypes.create_unicode_buffer(domain_size.value)
-    raise_if(
-        not _LookupAccountSid(
+    raise_on_zero(
+        _LookupAccountSid(
             system_name,
             sid,
             name,
@@ -732,7 +733,7 @@ _GetAce = fun_fact(
 
 def GetAce(pacl, idx):
     pace = PACE()
-    raise_if(not _GetAce(pacl, idx, ref(pace)))
+    raise_on_zero(_GetAce(pacl, idx, ref(pace)))
     return pace
 
 ################################################################################
@@ -746,8 +747,8 @@ def GetSecurityDescriptorDacl(sd):
     present = BOOL()
     pacl = PACL()
     defaulted = BOOL()
-    raise_if(
-        not _GetSecurityDescriptorDacl(
+    raise_on_zero(
+        _GetSecurityDescriptorDacl(
             sd,
             ref(present),
             ref(pacl),
@@ -766,8 +767,8 @@ _GetSecurityDescriptorOwner = fun_fact(
 def GetSecurityDescriptorOwner(sd):
     psid = PVOID()
     defaulted = BOOL()
-    raise_if(
-        not _GetSecurityDescriptorOwner(
+    raise_on_zero(
+        _GetSecurityDescriptorOwner(
             sd,
             ref(psid),
             ref(defaulted)
@@ -785,8 +786,8 @@ _GetSecurityDescriptorGroup = fun_fact(
 def GetSecurityDescriptorGroup(sd):
     psid = PVOID()
     defaulted = BOOL()
-    raise_if(
-        not _GetSecurityDescriptorGroup(
+    raise_on_zero(
+        _GetSecurityDescriptorGroup(
             sd,
             ref(psid),
             ref(defaulted)
@@ -878,7 +879,7 @@ def SetNamedSecurityInfo(
 _CloseServiceHandle = fun_fact(_adv.CloseServiceHandle, (BOOL, HANDLE))
 
 def CloseServiceHandle(handle):
-    raise_if(not _CloseServiceHandle(handle))
+    raise_on_zero(_CloseServiceHandle(handle))
 
 ################################################################################
 
@@ -893,7 +894,7 @@ _OpenSCManager = fun_fact(
 
 def OpenSCManager(machine_name, database_name, desired_acc):
     res = SC_HANDLE(_OpenSCManager(machine_name, database_name, desired_acc))
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res
 
 ################################################################################
@@ -904,7 +905,7 @@ _OpenService = fun_fact(
 
 def OpenService(scm, name, desired_acc):
     res = SC_HANDLE(_OpenService(scm, name, desired_acc))
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res
 
 ################################################################################
@@ -959,7 +960,7 @@ def CreateService(
             password
             )
         )
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res
 
 ################################################################################
@@ -984,7 +985,7 @@ def StartService(handle, args):
         alen = 0
         pargv = None
 
-    raise_if(not _StartService(handle, alen, pargv))
+    raise_on_zero(_StartService(handle, alen, pargv))
 
 ################################################################################
 
@@ -1010,7 +1011,7 @@ _ControlService = fun_fact(
 
 def ControlService(service, control):
     status = SERVICE_STATUS()
-    raise_if(not _ControlService(service, control, ref(status)))
+    raise_on_zero(_ControlService(service, control, ref(status)))
     return status
 
 ################################################################################
@@ -1018,7 +1019,7 @@ def ControlService(service, control):
 _DeleteService = fun_fact(_adv.DeleteService, (BOOL, HANDLE))
 
 def DeleteService(service):
-    raise_if(not _DeleteService(service))
+    raise_on_zero(_DeleteService(service))
 
 ################################################################################
 
@@ -1049,8 +1050,8 @@ _QueryServiceStatusEx = fun_fact(
 def QueryServiceStatusEx(service):
     status = SERVICE_STATUS_PROCESS()
     needed = DWORD()
-    raise_if(
-        not _QueryServiceStatusEx(
+    raise_on_zero(
+        _QueryServiceStatusEx(
             service,
             SC_STATUS_PROCESS_INFO,
             ref(status),
@@ -1166,7 +1167,7 @@ def QueryServiceConfig(svc):
         raise ctypes.WinError(err)
     buf = ctypes.create_string_buffer(needed.value)
     pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
-    raise_if(not _QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
+    raise_on_zero(_QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
     qsc = pqsc.contents
     return _namespace(
         ServiceType=qsc.ServiceType,
@@ -1260,7 +1261,7 @@ def _ns_from_cred(cred):
 def CreadRead(TargetName, Type=CRED_TYPE_GENERIC, Flags=0):
     ptr = PCREDENTIAL()
     try:
-        raise_if(not _CredRead(TargetName, Type, Flags, ref(ptr)))
+        raise_on_zero(_CredRead(TargetName, Type, Flags, ref(ptr)))
         return _ns_from_cred(ptr.contents)
     finally:
         _CredFree(ptr)
@@ -1271,7 +1272,7 @@ def CredEnumerate(Filter=None, Flags=0):
     pptr = PPCREDENTIAL()
     cnt = DWORD()
     try:
-        raise_if(not _CredEnumerate(Filter, Flags, ref(cnt), ref(pptr)))
+        raise_on_zero(_CredEnumerate(Filter, Flags, ref(cnt), ref(pptr)))
         return tuple(_ns_from_cred(pptr[n].contents) for n in range(cnt.value))
     finally:
         _CredFree(pptr)
@@ -1322,14 +1323,14 @@ def CredWrite(Credential, Flags=0):
         cred.AttributeCount = len(ns_attr)
         cred.Attributes = ctypes.cast(attr, PCREDENTIAL_ATTRIBUTE)
 
-    raise_if(not _CredWrite(ref(cred), Flags))
+    raise_on_zero(_CredWrite(ref(cred), Flags))
 
 ################################################################################
 
 _CloseEventLog = fun_fact(_adv.CloseEventLog, (BOOL, HANDLE))
 
 def CloseEventLog(hdl):
-    raise_if(not _CloseEventLog(hdl))
+    raise_on_zero(_CloseEventLog(hdl))
 
 ################################################################################
 
@@ -1344,7 +1345,7 @@ _OpenEventLog = fun_fact(
 
 def OpenEventLog(source, server=None):
     hdl = EHANDLE(_OpenEventLog(server, source))
-    raise_if(not hdl.is_valid())
+    hdl.raise_on_invalid()
     return hdl
 
 ################################################################################

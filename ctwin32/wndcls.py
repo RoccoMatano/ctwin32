@@ -30,7 +30,6 @@ import base64
 from .wtypes import *
 from . import (
     ref,
-    raise_if,
     fun_fact,
     kernel,
     user,

@@ -29,6 +29,7 @@ from . import (
     ref,
     kernel,
     raise_if,
+    raise_on_zero,
     fun_fact,
     WAIT_FAILED,
     GWL_STYLE,
@@ -82,7 +83,7 @@ def GetWindowText(hwnd):
 _SetWindowText = fun_fact(_usr.SetWindowTextW, (BOOL, HWND, PWSTR))
 
 def SetWindowText(hwnd, txt):
-    raise_if(not _SetWindowText(hwnd, txt))
+    raise_on_zero(_SetWindowText(hwnd, txt))
 
 ################################################################################
 
@@ -96,7 +97,7 @@ def GetClassName(hwnd):
         size *= 2
         buf = ctypes.create_unicode_buffer(size)
         res = _GetClassName(hwnd, buf, buf._length_)
-        raise_if(not res)
+        raise_on_zero(res)
         if res != size - 1:
             return buf.value
 
@@ -231,7 +232,7 @@ _PostMessage = fun_fact(
     )
 
 def PostMessage(hwnd, msg, wp, lp):
-    raise_if(not _PostMessage(hwnd, msg, wp, lp))
+    raise_on_zero(_PostMessage(hwnd, msg, wp, lp))
 
 ################################################################################
 
@@ -264,8 +265,8 @@ _SendMessageTimeout = fun_fact(
 
 def SendMessageTimeout(hwnd, msg, wp, lp, flags, timeout):
     result = DWORD()
-    raise_if(
-        0 == _SendMessageTimeout(
+    raise_on_zero(
+        _SendMessageTimeout(
             hwnd,
             msg,
             wp,
@@ -297,7 +298,7 @@ _GetWindowRect = fun_fact(_usr.GetWindowRect, (BOOL, HWND, PRECT))
 
 def GetWindowRect(hwnd):
     rc = RECT()
-    raise_if(not _GetWindowRect(hwnd, ref(rc)))
+    raise_on_zero(_GetWindowRect(hwnd, ref(rc)))
     return rc
 
 ################################################################################
@@ -306,7 +307,7 @@ _GetClientRect = fun_fact(_usr.GetClientRect, (BOOL, HWND, PRECT))
 
 def GetClientRect(hwnd):
     rc = RECT()
-    raise_if(not _GetClientRect(hwnd, ref(rc)))
+    raise_on_zero(_GetClientRect(hwnd, ref(rc)))
     return rc
 
 ################################################################################
@@ -317,7 +318,7 @@ _AdjustWindowRectEx = fun_fact(
 
 def AdjustWindowRectEx(rc, style, has_menu, exstyle):
     new_rect = rc.copy()
-    raise_if(not _AdjustWindowRectEx(ref(new_rect), style, has_menu, exstyle))
+    raise_on_zero(_AdjustWindowRectEx(ref(new_rect), style, has_menu, exstyle))
     return new_rect
 
 ################################################################################
@@ -363,7 +364,7 @@ _GetWindowPlacement = fun_fact(
 
 def GetWindowPlacement(hwnd):
     wpt = WINDOWPLACEMENT()
-    raise_if(not _GetWindowPlacement(hwnd, ref(wpt)))
+    raise_on_zero(_GetWindowPlacement(hwnd, ref(wpt)))
     return wpt
 
 ################################################################################
@@ -373,7 +374,7 @@ _SetWindowPlacement = fun_fact(
     )
 
 def SetWindowPlacement(hwnd, wpt):
-    raise_if(not _SetWindowPlacement(hwnd, ref(wpt)))
+    raise_on_zero(_SetWindowPlacement(hwnd, ref(wpt)))
 
 ################################################################################
 
@@ -382,7 +383,7 @@ _SetWindowPos = fun_fact(
     )
 
 def SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags):
-    raise_if(not _SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags))
+    raise_on_zero(_SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags))
 
 ################################################################################
 
@@ -391,14 +392,14 @@ _AttachThreadInput = fun_fact(
     )
 
 def AttachThreadInput(id_attach, id_attach_to, do_attach):
-    raise_if(not _AttachThreadInput(id_attach, id_attach_to, do_attach))
+    raise_on_zero(_AttachThreadInput(id_attach, id_attach_to, do_attach))
 
 ################################################################################
 
 _BringWindowToTop = fun_fact(_usr.BringWindowToTop, (BOOL, HWND))
 
 def BringWindowToTop(hwnd):
-    raise_if(not _BringWindowToTop(hwnd))
+    raise_on_zero(_BringWindowToTop(hwnd))
 
 def to_top_maybe_attach(hwnd):
     wnd_id, _ = GetWindowThreadProcessId(hwnd)
@@ -424,7 +425,7 @@ _MessageBox = fun_fact(
 
 def MessageBox(hwnd, text, caption, flags):
     res = _MessageBox(hwnd, text, caption, flags)
-    raise_if(res == 0)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -509,21 +510,21 @@ def SendInput(inputs):
             ptr = ctypes.cast(inputs, PINPUT)
         except Exception as e:
             raise TypeError(f"expected INPUT or list of INPUTs: {e}")
-    raise_if(0 == _SendInput(num, ptr, ctypes.sizeof(INPUT)))
+    raise_on_zero(_SendInput(num, ptr, ctypes.sizeof(INPUT)))
 
 ################################################################################
 
 _ExitWindowsEx = fun_fact(_usr.ExitWindowsEx, (BOOL, UINT, DWORD))
 
 def ExitWindowsEx(flags, reason):
-    raise_if(0 == _ExitWindowsEx(flags, reason))
+    raise_on_zero(_ExitWindowsEx(flags, reason))
 
 ################################################################################
 
 _LockWorkStation = fun_fact(_usr.LockWorkStation, (BOOL,))
 
 def LockWorkStation():
-    raise_if(0 == _LockWorkStation())
+    raise_on_zero(_LockWorkStation())
 
 ################################################################################
 
@@ -559,7 +560,7 @@ _GetMonitorInfo = fun_fact(_usr.GetMonitorInfoW, (BOOL, HANDLE, PMONITORINFO))
 
 def GetMonitorInfo(hmon):
     mi = MONITORINFO()
-    raise_if(not _GetMonitorInfo(hmon, ref(mi)))
+    raise_on_zero(_GetMonitorInfo(hmon, ref(mi)))
     return mi
 
 ################################################################################
@@ -591,7 +592,7 @@ def LoadCursor(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
         cname = ctypes.cast(cname, PWSTR)
     res = _LoadCursor(hinst, cname)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -602,7 +603,7 @@ def LoadIcon(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
         cname = ctypes.cast(cname, PWSTR)
     res = _LoadIcon(hinst, cname)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -692,7 +693,7 @@ _GetClassInfo = fun_fact(_usr.GetClassInfoW, (BOOL, HANDLE, PWSTR, PWNDCLASS))
 
 def GetClassInfo(hinst, cname):
     wclass = WNDCLASS()
-    raise_if(not _GetClassInfo(hinst, cname, ref(wclass)))
+    raise_on_zero(_GetClassInfo(hinst, cname, ref(wclass)))
     return wclass
 
 ################################################################################
@@ -701,7 +702,7 @@ _RegisterClass = fun_fact(_usr.RegisterClassW, (WORD, PWNDCLASS))
 
 def RegisterClass(wclass):
     res = _RegisterClass(ref(wclass))
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -752,7 +753,7 @@ def CreateWindowEx(
         hinst,
         create_param
         )
-    raise_if(not hwnd)
+    raise_on_zero(hwnd)
     return hwnd
 
 ################################################################################
@@ -791,14 +792,14 @@ def ShowWindow(hwnd, cmd):
 _UpdateWindow = fun_fact(_usr.UpdateWindow, (BOOL, HWND))
 
 def UpdateWindow(hwnd):
-    raise_if(not _UpdateWindow(hwnd))
+    raise_on_zero(_UpdateWindow(hwnd))
 
 ################################################################################
 
 _DestroyWindow = fun_fact(_usr.DestroyWindow, (BOOL, HWND))
 
 def DestroyWindow(hwnd):
-    raise_if(not _DestroyWindow(hwnd))
+    raise_on_zero(_DestroyWindow(hwnd))
 
 ################################################################################
 
@@ -810,7 +811,7 @@ _GetDlgItem = fun_fact(_usr.GetDlgItem, (HWND, HWND, INT))
 
 def GetDlgItem(hwnd, id):
     res = _GetDlgItem(hwnd, id)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -826,7 +827,7 @@ _SetDlgItemText = fun_fact(
     )
 
 def SetDlgItemText(dlg, id, txt):
-    raise_if(not _SetDlgItemText(dlg, id, txt))
+    raise_on_zero(_SetDlgItemText(dlg, id, txt))
 
 ################################################################################
 
@@ -850,7 +851,7 @@ _InvalidateRect = fun_fact(_usr.InvalidateRect, (BOOL, HWND, PRECT, BOOL))
 
 def InvalidateRect(hwnd, rc, erase):
     prc = ref(rc) if rc is not None else None
-    raise_if(not _InvalidateRect(hwnd, prc, erase))
+    raise_on_zero(_InvalidateRect(hwnd, prc, erase))
 
 ################################################################################
 
@@ -871,7 +872,7 @@ _MoveWindow = fun_fact(
     )
 
 def MoveWindow(hwnd, x, y, width, height, repaint):
-    raise_if(not _MoveWindow(hwnd, x, y, width, height, repaint))
+    raise_on_zero(_MoveWindow(hwnd, x, y, width, height, repaint))
 
 ################################################################################
 
@@ -891,7 +892,7 @@ _GetCursorPos = fun_fact(_usr.GetCursorPos, (BOOL, PPOINT))
 
 def GetCursorPos():
     pt = POINT()
-    raise_if(not GetCursorPos(ref(pt)))
+    raise_on_zero(GetCursorPos(ref(pt)))
     return pt
 
 ################################################################################
@@ -900,7 +901,7 @@ _GetDC = fun_fact(_usr.GetDC, (HANDLE, HWND))
 
 def GetDC(hwnd):
     res = _GetDC(hwnd)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -909,7 +910,7 @@ _GetWindowDC = fun_fact(_usr.GetWindowDC, (HANDLE, HWND))
 
 def GetWindowDC(hwnd):
     res = _GetWindowDC(hwnd)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -917,28 +918,28 @@ def GetWindowDC(hwnd):
 _ReleaseDC = fun_fact(_usr.ReleaseDC, (INT, HWND, HANDLE))
 
 def ReleaseDC(hwnd, hdc):
-    raise_if(not _ReleaseDC(hwnd, hdc))
+    raise_on_zero(_ReleaseDC(hwnd, hdc))
 
 ################################################################################
 
 _SetTimer = fun_fact(_usr.SetTimer, (UINT_PTR, HWND, UINT_PTR, UINT, PVOID))
 
 def SetTimer(hwnd, timer_id, period_ms):
-    raise_if(not _SetTimer(hwnd, timer_id, period_ms, None))
+    raise_on_zero(_SetTimer(hwnd, timer_id, period_ms, None))
 
 ################################################################################
 
 _KillTimer = fun_fact(_usr.KillTimer, (BOOL, HWND, UINT_PTR))
 
 def KillTimer(hwnd, timer_id):
-    raise_if(not _KillTimer(hwnd, timer_id))
+    raise_on_zero(_KillTimer(hwnd, timer_id))
 
 ################################################################################
 
 _CheckDlgButton = fun_fact(_usr.CheckDlgButton, (BOOL, HWND, INT, UINT))
 
 def CheckDlgButton(dlg, id, check):
-    raise_if(not _CheckDlgButton(dlg, id, check))
+    raise_on_zero(_CheckDlgButton(dlg, id, check))
 
 ################################################################################
 
@@ -951,7 +952,7 @@ _BeginPaint = fun_fact(_usr.BeginPaint, (HANDLE, HWND, PPAINTSTRUCT))
 def BeginPaint(hwnd):
     ps = PAINTSTRUCT()
     hdc = _BeginPaint(hwnd, ref(ps))
-    raise_if(not hdc)
+    raise_on_zero(hdc)
     return hdc, ps
 
 ################################################################################
@@ -959,21 +960,21 @@ def BeginPaint(hwnd):
 _EndPaint = fun_fact(_usr.EndPaint, (BOOL, HWND, PPAINTSTRUCT))
 
 def EndPaint(hwnd, ps):
-    raise_if(not _EndPaint(hwnd, ref(ps)))
+    raise_on_zero(_EndPaint(hwnd, ref(ps)))
 
 ################################################################################
 
 _DrawText = fun_fact(_usr.DrawTextW, (INT, HANDLE, PWSTR, INT, PRECT, UINT))
 
 def DrawText(hdc, txt, rc, fmt):
-    raise_if(0 == _DrawText(hdc, txt, len(txt), ref(rc), fmt))
+    raise_on_zero(_DrawText(hdc, txt, len(txt), ref(rc), fmt))
 
 ################################################################################
 
 _SetProp = fun_fact(_usr.SetPropW, (BOOL, HWND, PWSTR, HANDLE))
 
 def SetProp(hwnd, name, data):
-    raise_if(not _SetProp(hwnd, name, data))
+    raise_on_zero(_SetProp(hwnd, name, data))
 
 ################################################################################
 
@@ -981,7 +982,7 @@ _GetProp = fun_fact(_usr.GetPropW, (HANDLE, HWND, PWSTR))
 
 def GetProp(hwnd, name):
     data = _GetProp(hwnd, name)
-    raise_if(not data)
+    raise_on_zero(data)
     return data
 
 def get_prop_def(hwnd, name, default=None):
@@ -994,7 +995,7 @@ _RemoveProp = fun_fact(_usr.RemovePropW, (HANDLE, HWND, PWSTR))
 
 def RemoveProp(hwnd, name):
     data = _RemoveProp(hwnd, name)
-    raise_if(not data)
+    raise_on_zero(data)
     return data
 
 ################################################################################
@@ -1029,14 +1030,14 @@ def EnumPropsEx(hwnd, callback, context):
 _OpenClipboard = fun_fact(_usr.OpenClipboard, (BOOL, HWND))
 
 def OpenClipboard(hwnd):
-    raise_if(not _OpenClipboard(hwnd))
+    raise_on_zero(_OpenClipboard(hwnd))
 
 ################################################################################
 
 _EmptyClipboard = fun_fact(_usr.EmptyClipboard, (BOOL,))
 
 def EmptyClipboard():
-    raise_if(not _EmptyClipboard())
+    raise_on_zero(_EmptyClipboard())
 
 ################################################################################
 
@@ -1044,7 +1045,7 @@ _SetClipboardData = fun_fact(_usr.SetClipboardData, (HANDLE, UINT, HANDLE))
 
 def SetClipboardData(fmt, hmem):
     res = _SetClipboardData(fmt, hmem)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -1053,7 +1054,7 @@ _GetClipboardData = fun_fact(_usr.GetClipboardData, (HANDLE, UINT))
 
 def GetClipboardData(fmt):
     res = _GetClipboardData(fmt)
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -1067,7 +1068,7 @@ IsClipboardFormatAvailable = fun_fact(
 _CloseClipboard = fun_fact(_usr.CloseClipboard, (BOOL,))
 
 def CloseClipboard():
-    raise_if(not _CloseClipboard())
+    raise_on_zero(_CloseClipboard())
 
 ################################################################################
 
@@ -1113,7 +1114,7 @@ _ScrollWindow = fun_fact(
 def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
     scroll_rect = ref(scroll_rect) if scroll_rect is not None else None
     clip_rect = ref(clip_rect) if clip_rect is not None else None
-    raise_if(not _ScrollWindow(hwnd, x, y, scroll_rect, clip_rect))
+    raise_on_zero(_ScrollWindow(hwnd, x, y, scroll_rect, clip_rect))
 
 ################################################################################
 
@@ -1153,7 +1154,7 @@ def CreateIconFromResourceEx(
         cy,
         LR_DEFAULTSIZE if default_size else 0
         )
-    raise_if(not res)
+    raise_on_zero(res)
     return res
 
 ################################################################################
@@ -1181,7 +1182,7 @@ _GetGUIThreadInfo = fun_fact(
 
 def GetGUIThreadInfo(tid=0):
     gti = GUITHREADINFO()
-    raise_if(not _GetGUIThreadInfo(tid, ref(gti)))
+    raise_on_zero(_GetGUIThreadInfo(tid, ref(gti)))
     return gti
 
 ################################################################################

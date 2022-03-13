@@ -28,6 +28,7 @@ from .wtypes import *
 from . import (
     ref,
     raise_if,
+    raise_on_zero,
     fun_fact,
     INVALID_HANDLE_VALUE,
     DIGCF_PRESENT,
@@ -114,7 +115,7 @@ _SetupDiDestroyDeviceInfoList = fun_fact(
     )
 
 def SetupDiDestroyDeviceInfoList(info_set):
-    raise_if(not _SetupDiDestroyDeviceInfoList(info_set))
+    raise_on_zero(_SetupDiDestroyDeviceInfoList(info_set))
 
 ################################################################################
 
@@ -143,7 +144,7 @@ def SetupDiGetClassDevs(
         guid = ref(GUID(guid)) # need ctypes instance
         flags &= ~ DIGCF_ALLCLASSES
     res = HDEVINFO(_SetupDiGetClassDevs(guid, enumerator, hwnd, flags))
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res
 
 ################################################################################
@@ -282,8 +283,8 @@ def SetupDiClassNameFromGuid(guid):
     req_size = DWORD(0)
     _SetupDiClassNameFromGuid(ref(guid), None, 0, ref(req_size))
     name = ctypes.create_unicode_buffer(req_size.value)
-    raise_if(
-        not _SetupDiClassNameFromGuid(
+    raise_on_zero(
+        _SetupDiClassNameFromGuid(
             ref(guid),
             name,
             req_size.value,
@@ -299,7 +300,7 @@ _SetupDiRemoveDevice = fun_fact(
     )
 
 def SetupDiRemoveDevice(info_set, deinda):
-    raise_if(not _SetupDiRemoveDevice(info_set, deinda))
+    raise_on_zero(_SetupDiRemoveDevice(info_set, deinda))
 
 ################################################################################
 
@@ -311,7 +312,7 @@ def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
     if guid is not None:
         guid = ref(GUID(guid)) # need ctypes instance
     res = HDEVINFO(_SetupDiCreateDeviceInfoList(guid, hwnd))
-    raise_if(not res.is_valid())
+    res.raise_on_invalid()
     return res;
 
 ################################################################################
@@ -325,8 +326,8 @@ def SetupDiGetDeviceInstanceId(info_set, deinda):
     req_size = DWORD()
     _SetupDiGetDeviceInstanceId(info_set, deinda, None, 0, ref(req_size))
     idstr = ctypes.create_unicode_buffer(req_size.value)
-    raise_if(
-        not _SetupDiGetDeviceInstanceId(
+    raise_on_zero(
+        _SetupDiGetDeviceInstanceId(
             info_set,
             deinda,
             idstr,
@@ -344,8 +345,8 @@ _SetupDiOpenDeviceInfo = fun_fact(
     )
 
 def SetupDiOpenDeviceInfo(info_set, inst_id, hwnd=None, flags=0, p_info=None):
-    raise_if(
-        not _SetupDiOpenDeviceInfo(info_set, inst_id, hwnd, flags, p_info)
+    raise_on_zero(
+        _SetupDiOpenDeviceInfo(info_set, inst_id, hwnd, flags, p_info)
         )
 
 ################################################################################
@@ -374,8 +375,8 @@ def SetupDiClassGuidsFromNameEx(cls_name, machine_name=None):
         )
     CLASS_GUIDS = GUID * req_size.value
     guids = CLASS_GUIDS()
-    raise_if(
-        not _SetupDiClassGuidsFromNameEx(
+    raise_on_zero(
+        _SetupDiClassGuidsFromNameEx(
             cls_name,
             ctypes.cast(guids, PGUID),
             req_size.value,
@@ -471,8 +472,8 @@ _SetupDiSetClassInstallParams = fun_fact(
     )
 
 def SetupDiSetClassInstallParams(info_set, deinda, pparams):
-    raise_if(
-        not _SetupDiSetClassInstallParams(
+    raise_on_zero(
+        _SetupDiSetClassInstallParams(
             info_set,
             deinda,
             pparams,
@@ -488,7 +489,7 @@ _SetupDiCallClassInstaller = fun_fact(
     )
 
 def SetupDiCallClassInstaller(func, info_set, deinda):
-    raise_if(not _SetupDiCallClassInstaller(func, info_set, deinda))
+    raise_on_zero(_SetupDiCallClassInstaller(func, info_set, deinda))
 
 ################################################################################
 
@@ -551,8 +552,8 @@ def SetupDiGetDeviceRegistryProperty(info_set, deinda, prop):
         ref(req_size)
         )
     buf = ctypes.create_string_buffer(req_size.value)
-    raise_if(
-        not _SetupDiGetDeviceRegistryProperty(
+    raise_on_zero(
+        _SetupDiGetDeviceRegistryProperty(
             info_set,
             deinda,
             prop,
@@ -588,8 +589,8 @@ _SetupDiEnumDeviceInterfaces = fun_fact(
 
 def SetupDiEnumDeviceInterfaces(info_set, guid, idx):
     did = SP_DEVICE_INTERFACE_DATA()
-    raise_if(
-        not _SetupDiEnumDeviceInterfaces(
+    raise_on_zero(
+        _SetupDiEnumDeviceInterfaces(
             info_set,
             None,
             ref(GUID(guid)), # need ctypes instance
@@ -650,8 +651,8 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
     ifdetail.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
     deinda = SP_DEVINFO_DATA()
 
-    raise_if(
-        not _SetupDiGetDeviceInterfaceDetail(
+    raise_on_zero(
+        _SetupDiGetDeviceInterfaceDetail(
             info_set,
             ref(did),
             ref(ifdetail),

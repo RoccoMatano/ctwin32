@@ -29,7 +29,7 @@ from .wtypes import *
 from . import (
     ref,
     kernel,
-    raise_if,
+    raise_on_zero,
     raise_on_hr,
     fun_fact,
     S_OK,
@@ -102,7 +102,7 @@ def _load_comctl():
     icc = INITCOMMONCONTROLSEX()
     icc.dwSize = ctypes.sizeof(icc)
     icc.dwICC = 0xffff
-    raise_if(not comctl.InitCommonControlsEx(ref(icc)))
+    raise_on_zero(comctl.InitCommonControlsEx(ref(icc)))
 
     return comctl
 

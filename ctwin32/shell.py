@@ -33,7 +33,7 @@ from . import (
     CREATE_NEW_CONSOLE,
     EXTENDED_STARTUPINFO_PRESENT,
     cmdline_from_args,
-    raise_if,
+    raise_on_zero,
     raise_on_hr,
     fun_fact,
     kernel,
@@ -158,7 +158,7 @@ def ShellExecuteEx(
     ):
     sei = SHELLEXECUTEINFOW(file, verb, param, direc, wait, show)
 
-    raise_if(not _ShellExecuteExW(ref(sei)))
+    raise_on_zero(_ShellExecuteExW(ref(sei)))
 
     if sei.hProcess is not None:
         kernel.WaitForSingleObject(sei.hProcess, INFINITE);
@@ -195,7 +195,7 @@ def CommandLineToArgv(cmdline):
 
     argc = INT()
     pargs = _CommandLineToArgv(cmdline, ref(argc))
-    raise_if(not pargs)
+    raise_on_zero(pargs)
     try:
         return [pargs[i] for i in range(argc.value)]
     finally:
