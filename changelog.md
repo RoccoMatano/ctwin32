@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - replaced calls to raise_if with raise_on_zero or raise_on_invalid where
   applicable
+- move cfgmgr32.dll functionality from setupapi to new module cfgmgr
 
 ### Fixed
 

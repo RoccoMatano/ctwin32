@@ -23,11 +23,9 @@
 ################################################################################
 
 import re
-
 from .wtypes import *
 from . import (
     ref,
-    raise_if,
     raise_on_zero,
     fun_fact,
     INVALID_HANDLE_VALUE,
@@ -37,12 +35,17 @@ from . import (
     DICS_ENABLE,
     DICS_DISABLE,
     DICS_FLAG_CONFIGSPECIFIC,
-    MAX_DEVICE_ID_LEN,
-    MAX_PATH,
     DIF_PROPERTYCHANGE,
-    CR_SUCCESS,
     SPDRP_DEVICEDESC,
     ERROR_NO_MORE_ITEMS,
+    )
+from .cfgmgr import (
+    CM_Get_Device_ID,
+    CM_Get_DevNode_Status,
+    CM_Enumerate_Enumerators,
+    CM_Get_Parent,
+    CM_Request_Device_Eject,
+    CM_Enumerate_Classes,
     )
 from .advapi import registry_to_py
 
@@ -159,83 +162,6 @@ def SetupDiEnumDeviceInfo(info_set, idx, deinda):
 
 ################################################################################
 
-_CM_Get_Device_ID = fun_fact(
-    _sua.CM_Get_Device_IDW,
-    (DWORD, DWORD, PWSTR, ULONG, ULONG)
-    )
-
-def CM_Get_Device_ID(devinst):
-    idstr = ctypes.create_unicode_buffer(MAX_DEVICE_ID_LEN)
-    raise_if(_CM_Get_Device_ID(devinst, idstr, MAX_DEVICE_ID_LEN, 0))
-    return idstr.value
-
-################################################################################
-
-_CM_Get_DevNode_Status = fun_fact(
-    _sua.CM_Get_DevNode_Status,
-    (DWORD, PULONG, PULONG, DWORD, ULONG)
-    )
-
-def CM_Get_DevNode_Status(dev_inst):
-    status = ULONG()
-    problem = ULONG()
-    raise_if(_CM_Get_DevNode_Status(ref(status), ref(problem), dev_inst, 0))
-    return status.value, problem.value
-
-################################################################################
-
-_CM_Enumerate_Enumerators = fun_fact(
-    _sua.CM_Enumerate_EnumeratorsW,
-    (DWORD, ULONG, PWSTR, PULONG, ULONG)
-    )
-
-def CM_Enumerate_Enumerators(idx):
-    enum_str = ctypes.create_unicode_buffer(MAX_DEVICE_ID_LEN)
-    size = ULONG(MAX_DEVICE_ID_LEN)
-    raise_if(_CM_Enumerate_Enumerators(idx, enum_str, ref(size), 0))
-    return enum_str.value
-
-################################################################################
-
-_CM_Get_Parent = fun_fact(
-    _sua.CM_Get_Parent, (DWORD, PDWORD, DWORD, ULONG)
-    )
-
-def CM_Get_Parent(devinst):
-    parent = DWORD()
-    raise_if(_CM_Get_Parent(ref(parent), devinst, 0))
-    return parent.value
-
-################################################################################
-
-_CM_Request_Device_Eject = fun_fact(
-    _sua.CM_Request_Device_EjectW, (
-        DWORD,
-        DWORD,
-        PINT,
-        PWSTR,
-        ULONG,
-        ULONG
-        )
-    )
-
-def CM_Request_Device_Eject(devinst):
-    veto_type = INT()
-    veto_name = ctypes.create_unicode_buffer(MAX_PATH)
-    err = _CM_Request_Device_Eject(
-        devinst,
-        ref(veto_type),
-        veto_name,
-        MAX_PATH,
-        0
-        )
-    if err != 0 or veto_type.value != 0:
-        vv = veto_type.value
-        vn = veto_name.value
-        raise OSError(16, f"device removal was vetoed ({vv}): {vn}")
-
-################################################################################
-
 def get_device_enumerators():
     res = []
     idx = 0
@@ -246,17 +172,6 @@ def get_device_enumerators():
         except OSError as e:
             break
     return res
-
-################################################################################
-
-_CM_Enumerate_Classes = fun_fact(
-    _sua.CM_Enumerate_Classes, (DWORD, ULONG, PGUID, ULONG)
-    )
-
-def CM_Enumerate_Classes(idx, flags=0):
-    guid = GUID()
-    raise_if(_CM_Enumerate_Classes(idx, ref(guid), flags))
-    return guid
 
 ################################################################################
 
@@ -437,7 +352,7 @@ def get_non_present_info_set():
         idx = 0
         while SetupDiEnumDeviceInfo(all_devs, idx, ref(deinda)):
             # If the device isn't currently present (as indicated by
-            # failure to retrieve its status), then add it to the list.
+            # failing to retrieve its status), then add it to the list.
             try:
                 CM_Get_DevNode_Status(deinda.DevInst)
             except OSError:
