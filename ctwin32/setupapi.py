@@ -49,7 +49,7 @@ from .cfgmgr import (
     )
 from .advapi import registry_to_py
 
-_sua = ctypes.windll.setupapi
+_sua = ctypes.WinDLL("setupapi.dll")
 
 ################################################################################
 

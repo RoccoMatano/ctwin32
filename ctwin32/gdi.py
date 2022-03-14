@@ -31,7 +31,7 @@ from . import (
     HGDI_ERROR,
     )
 
-_gdi = ctypes.windll.gdi32
+_gdi = ctypes.WinDLL("gdi32.dll")
 
 ################################################################################
 

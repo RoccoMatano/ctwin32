@@ -43,7 +43,7 @@ from . import (
 
 from .kernel import WaitForSingleObject, CloseHandle, LocalFree
 
-_sh = ctypes.windll.shell32
+_sh = ctypes.WinDLL("shell32.dll")
 
 ################################################################################
 

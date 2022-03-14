@@ -31,7 +31,7 @@ from . import (
     ERROR_NO_MORE_ITEMS
     )
 
-_msi = ctypes.windll.msi
+_msi = ctypes.WinDLL("msi.dll")
 
 MSIDBOPEN_READONLY     = PWSTR(0)
 MSIDBOPEN_TRANSACT     = PWSTR(1)

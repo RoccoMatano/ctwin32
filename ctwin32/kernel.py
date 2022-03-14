@@ -38,7 +38,7 @@ from . import (
     cmdline_from_args,
     )
 
-_k32 = ctypes.windll.kernel32
+_k32 = ctypes.WinDLL("kernel32.dll")
 
 ################################################################################
 

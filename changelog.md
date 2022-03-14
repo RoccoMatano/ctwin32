@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.get_resource_info
 - sample extract_ico.py
 - ctwin32.raise_on_zero and wtypes.ScdToBeClosed.raise_on_invalid
+- use WinDLL("\<name>") instead of windll.\<name>
 
 ### Changed
 

@@ -45,7 +45,7 @@ from . import (
     )
 from .ntdll import proc_path_from_pid
 
-_usr = ctypes.windll.user32
+_usr = ctypes.WinDLL("user32.dll")
 
 ################################################################################
 

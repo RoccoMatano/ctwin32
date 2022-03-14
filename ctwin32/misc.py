@@ -39,7 +39,7 @@ from . import (
 
 ################################################################################
 
-_popro = ctypes.windll.powrprof
+_popro = ctypes.WinDLL("powrprof.dll")
 
 _CallNtPowerInformation = fun_fact(
     _popro.CallNtPowerInformation,
@@ -72,7 +72,7 @@ def SetSuspendState(hibernate, force, wakeup_events_disabled):
 
 ################################################################################
 
-_wts = ctypes.windll.wtsapi32
+_wts = ctypes.WinDLL("wtsapi32.dll")
 
 class WTS_SESSION_INFO(ctypes.Structure):
     _fields_ = (
@@ -122,7 +122,7 @@ def WTSDisconnectSession(session_id, server=None, wait=True):
 
 ################################################################################
 
-_ue = ctypes.windll.userenv
+_ue = ctypes.WinDLL("userenv.dll")
 
 _DestroyEnvironmentBlock = fun_fact(
     _ue.DestroyEnvironmentBlock, (BOOL, PVOID)

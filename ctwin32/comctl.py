@@ -74,7 +74,7 @@ def _load_comctl():
 
     # activate context, load libray and and release the context
     cookie = kernel.ActivateActCtx(ctx)
-    comctl = ctypes.windll.comctl32     # <- this calls LoadLibrary
+    comctl = ctypes.WinDLL("comctl32.dll")  # <- this calls LoadLibrary
     kernel.DeactivateActCtx(0, cookie)
     kernel.ReleaseActCtx(ctx)
 

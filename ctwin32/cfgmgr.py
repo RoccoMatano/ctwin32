@@ -31,7 +31,7 @@ from . import (
     CR_SUCCESS,
     ERROR_FLOPPY_UNKNOWN_ERROR,
     )
-_cfg = ctypes.windll.cfgmgr32
+_cfg = ctypes.WinDLL("cfgmgr32.dll")
 
 ################################################################################
 

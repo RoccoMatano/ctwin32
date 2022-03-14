@@ -37,7 +37,7 @@ from . import (
     AF_INET6,
     )
 
-_iph = ctypes.windll.iphlpapi
+_iph = ctypes.WinDLL("iphlpapi.dll")
 
 ################################################################################
 

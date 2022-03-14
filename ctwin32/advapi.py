@@ -57,7 +57,7 @@ from . import (
     )
 from .kernel import LocalFree, GetLastError, KHANDLE
 
-_adv = ctypes.windll.advapi32
+_adv = ctypes.WinDLL("advapi32.dll")
 
 ################################################################################
 

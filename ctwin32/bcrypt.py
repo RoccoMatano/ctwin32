@@ -26,7 +26,7 @@ from .wtypes import *
 from . import ref, fun_fact
 from .ntdll import raise_failed_status, STATUS_INVALID_SIGNATURE
 
-_bcr = ctypes.windll.bcrypt
+_bcr = ctypes.WinDLL("bcrypt.dll")
 
 ################################################################################
 

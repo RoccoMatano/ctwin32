@@ -40,7 +40,7 @@ from . import (
     ProcessBasicInformation,
     )
 
-_nt = ctypes.windll.ntdll
+_nt = ctypes.WinDLL("ntdll.dll")
 
 def _ntstatus(status):
     return LONG(status).value
