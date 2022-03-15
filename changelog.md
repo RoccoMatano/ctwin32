@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample extract_ico.py
 - ctwin32.raise_on_zero and wtypes.ScdToBeClosed.raise_on_invalid
 - use WinDLL("\<name>") instead of windll.\<name>
+- kernel.GlobalGetAtomName
+- user.get_prop_dict
+- user.GetClipboardFormatName
+- user.EnumClipboardFormats
 
 ### Changed
 
@@ -33,6 +37,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - keyboard handling in sample calendar.pyw
+- signature of EnumPropsEx callback function (PVOID instead of PWSTR)
 
 ## [1.7.12] - 2022-03-10
 

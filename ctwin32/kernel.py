@@ -841,6 +841,22 @@ GlobalDeleteAtom = fun_fact(_k32.GlobalDeleteAtom, (None, WORD))
 
 ################################################################################
 
+_GlobalGetAtomName = fun_fact(_k32.GlobalGetAtomNameW, (UINT, WORD, PWSTR, INT))
+
+def GlobalGetAtomName(atom):
+    size = 512
+    while True:
+        var = ctypes.create_unicode_buffer(size)
+        req = _GlobalGetAtomName(atom, var, size)
+        raise_on_zero(req)
+        if req <= size:
+            break
+        else:
+            size = req
+    return var.value
+
+################################################################################
+
 _FreeLibrary = fun_fact(_k32.FreeLibrary, (BOOL, HANDLE))
 
 def FreeLibrary(hmod):

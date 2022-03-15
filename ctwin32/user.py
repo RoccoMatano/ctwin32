@@ -1003,7 +1003,7 @@ def RemoveProp(hwnd, name):
 _EnumPropsCallback = ctypes.WINFUNCTYPE(
     BOOL,
     HWND,
-    PWSTR,
+    PVOID, #cannot use PWSTR, since it can be string or atom
     HANDLE,
     CallbackContextPtr
     )
@@ -1024,6 +1024,21 @@ _EnumPropsEx = fun_fact(
 def EnumPropsEx(hwnd, callback, context):
     cbc = CallbackContext(callback, context)
     _EnumPropsEx(hwnd, _EnumPropsCb, ref(cbc))
+
+################################################################################
+
+def get_prop_dict(hwnd):
+    props = {}
+
+    @_EnumPropsCallback
+    def collect(hwnd, name, data, not_used):
+        #      string            or                      atom
+        name = PWSTR(name).value if name >= 0x10000 else f"#{name}"
+        props[name] = data
+        return True
+
+    _EnumPropsEx(hwnd, collect, None)
+    return props
 
 ################################################################################
 
@@ -1069,6 +1084,23 @@ _CloseClipboard = fun_fact(_usr.CloseClipboard, (BOOL,))
 
 def CloseClipboard():
     raise_on_zero(_CloseClipboard())
+
+################################################################################
+
+_GetClipboardFormatName = fun_fact(
+    _usr.GetClipboardFormatNameW, (DWORD, DWORD, PWSTR, DWORD)
+    )
+
+def GetClipboardFormatName(fmt_atom):
+    bufsize = 1024
+    buf = ctypes.create_unicode_buffer(bufsize)
+    if _GetClipboardFormatName(fmt_atom, buf, bufsize) == 0:
+        raise ctypes.WinError()
+    return buf.value
+
+################################################################################
+
+EnumClipboardFormats = fun_fact(_usr.EnumClipboardFormats, (DWORD, DWORD))
 
 ################################################################################
 
