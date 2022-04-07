@@ -36,6 +36,7 @@ from . import (
     INVALID_HANDLE_VALUE,
     multi_str_from_addr,
     cmdline_from_args,
+    ns_from_struct,
     )
 
 _k32 = ctypes.WinDLL("kernel32.dll")
@@ -963,5 +964,30 @@ def get_resource_info(hmod, name, typ):
     hrsc = FindResource(hmod, name, typ)
     size = SizeofResource(hmod, hrsc)
     return LoadResource(hmod, hrsc), size
+
+################################################################################
+
+class SYSTEM_INFO(ctypes.Structure):
+    _fields_ = (
+        ("wProcessorArchitecture", WORD),
+        ("wReserved", WORD),
+        ("dwPageSize", DWORD),
+        ("lpMinimumApplicationAddress", PVOID),
+        ("lpMaximumApplicationAddress", PVOID),
+        ("dwActiveProcessorMask", ULONG_PTR),
+        ("dwNumberOfProcessors", DWORD),
+        ("dwProcessorType", DWORD),
+        ("dwAllocationGranularity", DWORD),
+        ("wProcessorLevel", WORD),
+        ("wProcessorRevision", WORD),
+        )
+PSYSTEM_INFO = ctypes.POINTER(SYSTEM_INFO)
+
+_GetSystemInfo = fun_fact(_k32.GetSystemInfo, (None, PSYSTEM_INFO))
+
+def GetSystemInfo():
+    si = SYSTEM_INFO()
+    _GetSystemInfo(ref(si))
+    return ns_from_struct(si)
 
 ################################################################################

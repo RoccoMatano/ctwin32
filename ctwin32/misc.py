@@ -22,8 +22,6 @@
 #
 ################################################################################
 
-from types import SimpleNamespace as _namespace
-
 from .wtypes import *
 from .ntdll import raise_failed_status
 from . import (
@@ -31,7 +29,9 @@ from . import (
     fun_fact,
     raise_on_zero,
     multi_str_from_addr,
+    ns_from_struct,
     SystemExecutionState,
+    ProcessorInformation,
     TOKEN_READ,
     kernel,
     advapi,
@@ -50,7 +50,7 @@ def CallNtPowerInformation(level, outsize=0, input=None):
     src, slen = (None, 0) if not input else (ref(input), ULONG(len(input)))
     dst, dlen = ctypes.create_string_buffer(outsize), ULONG(outsize)
     raise_failed_status(_CallNtPowerInformation(level, src, slen, dst, dlen))
-    return dst.value
+    return dst.raw
 
 ################################################################################
 
@@ -59,6 +59,24 @@ def get_system_execution_state():
     # result is a combination of ES_SYSTEM_REQUIRED, ES_DISPLAY_REQUIRED,
     # ES_USER_PRESENT, ES_AWAYMODE_REQUIRED and ES_CONTINUOUS
     return int.from_bytes(bts, byteorder=ENDIANNESS, signed=False)
+
+################################################################################
+
+class PROCESSOR_POWER_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("Number", ULONG),
+        ("MaxMhz", ULONG),
+        ("CurrentMhz", ULONG),
+        ("MhzLimit", ULONG),
+        ("MaxIdleState", ULONG),
+        ("CurrentIdleState", ULONG),
+        )
+
+def get_system_processor_power_info():
+    nump = kernel.GetSystemInfo().dwNumberOfProcessors
+    PPIN = PROCESSOR_POWER_INFORMATION * nump
+    bts = CallNtPowerInformation(ProcessorInformation, ctypes.sizeof(PPIN))
+    return [ns_from_struct(i) for i in PPIN.from_buffer_copy(bts)]
 
 ################################################################################
 
@@ -99,15 +117,7 @@ def WTSEnumerateSessions(server=None):
     count = DWORD()
     raise_on_zero(_WTSEnumerateSessions(server, 0, 1, ref(info), ref(count)))
     try:
-        res = tuple(
-            _namespace(
-                session_id=info[i].SessionId,
-                win_station_name=info[i].WinStationName,
-                state=info[i].State
-                )
-            for i in range(count.value)
-            )
-        return res
+        return tuple(ns_from_struct(info[i]) for i in range(count.value))
     finally:
         _WTSFreeMemory(info)
 

@@ -30,6 +30,7 @@ from . import (
     MAX_PATH,
     CR_SUCCESS,
     ERROR_FLOPPY_UNKNOWN_ERROR,
+    ERROR_CURRENT_DIRECTORY,
     )
 _cfg = ctypes.WinDLL("cfgmgr32.dll")
 
@@ -126,9 +127,11 @@ def CM_Request_Device_Eject(devinst):
         MAX_PATH,
         0
         )
-    if err != 0 or veto_type.value != 0:
+    if err != CR_SUCCESS or veto_type.value != 0:
         vv = veto_type.value
         vn = veto_name.value
-        raise OSError(16, f"device removal was vetoed ({vv}): {vn}")
+        def_err = ERROR_CURRENT_DIRECTORY
+        err = CM_MapCrToWin32Err(err, def_err) or def_err
+        raise OSError(err, f"device removal was vetoed ({vv}): {vn}")
 
 ################################################################################

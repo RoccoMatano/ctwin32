@@ -27,12 +27,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.get_prop_dict
 - user.GetClipboardFormatName
 - user.EnumClipboardFormats
+- ctwin32.ns_from_struct
+- kernel.GetSystemInfo
+- misc.get_system_processor_power_info
 
 ### Changed
 
 - replaced calls to raise_if with raise_on_zero or raise_on_invalid where
   applicable
 - move cfgmgr32.dll functionality from setupapi to new module cfgmgr
+- use ns_from_struct where appropriate
+- the namespaces returned by WTSEnumerateSessions are now using the standard
+  win32 names (camel case instead of snake case)
 
 ### Fixed
 

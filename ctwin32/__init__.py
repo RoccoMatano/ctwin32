@@ -24,6 +24,7 @@
 
 version = "1.7.12"
 
+from types import SimpleNamespace as _namespace
 from .wtypes import *
 ref = ctypes.byref
 
@@ -102,6 +103,11 @@ def cmdline_from_args(args):
             parts.extend(bs_accu)
             parts.append('"')
     return "".join(parts)
+
+################################################################################
+
+def ns_from_struct(cts):
+    return _namespace(**{f: getattr(cts, f) for f, _ in cts._fields_})
 
 ################################################################################
 

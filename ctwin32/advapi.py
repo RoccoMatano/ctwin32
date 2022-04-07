@@ -32,6 +32,7 @@ from . import (
     raise_on_zero,
     raise_on_err,
     fun_fact,
+    ns_from_struct,
     REG_DWORD,
     REG_QWORD,
     REG_BINARY,
@@ -1116,13 +1117,7 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
             essp = ENUM_SERVICE_STATUS_PROCESS.from_address(
                 buf_addr + n * esize
                 )
-            res.append(
-                _namespace(
-                    ServiceName=essp.ServiceName,
-                    DisplayName=essp.DisplayName,
-                    ServiceStatus=essp.ServiceStatusProcess
-                    )
-                )
+            res.append(ns_from_struct(essp))
 
         if suc:
             break
@@ -1168,18 +1163,7 @@ def QueryServiceConfig(svc):
     buf = ctypes.create_string_buffer(needed.value)
     pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
     raise_on_zero(_QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
-    qsc = pqsc.contents
-    return _namespace(
-        ServiceType=qsc.ServiceType,
-        StartType=qsc.StartType,
-        ErrorControl=qsc.ErrorControl,
-        BinaryPathName=qsc.BinaryPathName,
-        LoadOrderGroup=qsc.LoadOrderGroup,
-        TagId=qsc.TagId,
-        Dependencies=qsc.Dependencies,
-        ServiceStartName=qsc.ServiceStartName,
-        DisplayName=qsc.DisplayName,
-        )
+    return ns_from_struct(pqsc.contents)
 
 ################################################################################
 
@@ -1242,7 +1226,7 @@ def _ns_from_cred(cred):
             Value=ctypes.string_at(attr.Value, attr.ValueSize),
             )
     attr = tuple(a2ns(cred.Attributes[n]) for n in range(cred.AttributeCount))
-    blob = ctypes.string_at(cred.CredentialBlob,cred.CredentialBlobSize)
+    blob = ctypes.string_at(cred.CredentialBlob, cred.CredentialBlobSize)
     return _namespace(
         TargetName=cred.TargetName,
         UserName=cred.UserName,

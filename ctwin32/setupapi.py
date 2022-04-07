@@ -94,22 +94,22 @@ PSP_PROPCHANGE_PARAMS = ctypes.POINTER(SP_PROPCHANGE_PARAMS)
 ################################################################################
 
 class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
-    _fields_ = [
+    _fields_ = (
         ("cbSize", DWORD),
         ("InterfaceClassGuid", GUID),
         ("Flags", DWORD),
         ("Reserved", ULONG_PTR),
-        ]
+        )
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
 PSP_DEVICE_INTERFACE_DATA = ctypes.POINTER(SP_DEVICE_INTERFACE_DATA)
 
 class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
-    _fields_ = [
+    _fields_ = (
         ("cbSize", DWORD),
         ("DevicePath", WCHAR * 1),
-        ]
+       )
 
 ################################################################################
 
@@ -558,10 +558,10 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
 
     diff = req_size.value - ctypes.sizeof(DWORD)
     class LOCAL_SPDIDD(ctypes.Structure):
-        _fields_ = [
+        _fields_ = (
             ("cbSize", DWORD),
             ("DevicePath", BYTE * diff),
-            ]
+            )
     ifdetail = LOCAL_SPDIDD()
     ifdetail.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
     deinda = SP_DEVINFO_DATA()
