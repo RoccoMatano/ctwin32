@@ -60,7 +60,7 @@ class _STRUCTURE(ctypes.Structure):
     _fields_ = (("Length", ULONG), ("Flags", ULONG))
 
 class _UNION(ctypes.Union):
-    _fields_ = (("Alignment", ctypes.c_ulonglong), ("s", _STRUCTURE))
+    _fields_ = (("Alignment", ULONGLONG), ("s", _STRUCTURE))
     _anonymous_ = ("s",)
 
 class SOCKADDR(ctypes.Structure):

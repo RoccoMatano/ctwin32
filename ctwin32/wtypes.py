@@ -48,24 +48,20 @@ BOOLEAN = BYTE
 
 WCHAR = ctypes.c_wchar
 SHORT = ctypes.c_short
-USHORT = ctypes.c_ushort
-WORD = ctypes.c_ushort
+WORD = USHORT = ctypes.c_ushort
 
 INT = ctypes.c_int
 UINT = ctypes.c_uint
-LONG = ctypes.c_long
-ULONG = ctypes.c_ulong
-DWORD = ctypes.c_ulong
-BOOL = ctypes.c_long
-HRESULT = NTSTATUS = ctypes.c_long
+LONG = BOOL = HRESULT = NTSTATUS = ctypes.c_long
+DWORD = ULONG = ctypes.c_ulong
 
 # While the large integers are defined as a struct of low and high part, they
 # are also unions containing a long long part. That is why we can simply define
 # them as long longs without changing the aligment. For FILETIME (see below)
 # this is not the case.
 
-LARGE_INTEGER = ctypes.c_longlong
-ULARGE_INTEGER = ctypes.c_ulonglong
+LARGE_INTEGER = LONGLONG = ctypes.c_longlong
+ULARGE_INTEGER = ULONGLONG = ctypes.c_ulonglong
 
 UINT_PTR = WPARAM = SIZE_T = ULONG_PTR = ctypes.c_size_t
 INT_PTR = LPARAM = SSIZE_T = LRESULT = LONG_PTR = ctypes.c_ssize_t
@@ -81,14 +77,13 @@ DOUBLE = ctypes.c_double
 
 # handle types
 
-HANDLE = ctypes.c_void_p
-HINSTANCE = HWND = HANDLE
+HANDLE = HINSTANCE = HWND = ctypes.c_void_p
 
 ################################################################################
 
 # some structure definitions
 
-class GUID(ctypes.c_ulong * 4):         # using c_ulong for correct alignment
+class GUID(ULONG * 4):         # using ULONG for correct alignment
     def __init__(self, init=None):
         # init is None or str or GUID or UUID or something that can be
         # converted to bytes (like comtypes.GUID). If init is None we simply

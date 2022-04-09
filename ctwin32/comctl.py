@@ -33,8 +33,6 @@ from . import (
     raise_on_hr,
     fun_fact,
     S_OK,
-    ACTCTX_FLAG_RESOURCE_NAME_VALID,
-    ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID,
     )
 
 ################################################################################
