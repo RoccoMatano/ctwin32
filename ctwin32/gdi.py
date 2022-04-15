@@ -39,28 +39,6 @@ GetDeviceCaps = fun_fact(_gdi.GetDeviceCaps, (INT, HANDLE, INT))
 
 ################################################################################
 
-class LOGFONT(ctypes.Structure):
-    _fields_ = (
-        ("lfHeight", LONG),
-        ("lfWidth", LONG),
-        ("lfEscapement", LONG),
-        ("lfOrientation", LONG),
-        ("lfWeight", LONG),
-        ("lfItalic", BYTE),
-        ("lfUnderline", BYTE),
-        ("lfStrikeOut", BYTE),
-        ("lfCharSet", BYTE),
-        ("lfOutPrecision", BYTE),
-        ("lfClipPrecision", BYTE),
-        ("lfQuality", BYTE),
-        ("lfPitchAndFamily", BYTE),
-        ("lfFaceName", WCHAR * 32),
-        )
-
-PLOGFONT = ctypes.POINTER(LOGFONT)
-
-################################################################################
-
 _CreateFontIndirect = fun_fact(_gdi.CreateFontIndirectW, (HANDLE, PLOGFONT))
 
 def CreateFontIndirect(lf):

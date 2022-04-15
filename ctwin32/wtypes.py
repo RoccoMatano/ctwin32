@@ -278,6 +278,26 @@ class CallbackContext(ctypes.Structure):
 
 ################################################################################
 
+class LOGFONT(ctypes.Structure):
+    _fields_ = (
+        ("lfHeight", LONG),
+        ("lfWidth", LONG),
+        ("lfEscapement", LONG),
+        ("lfOrientation", LONG),
+        ("lfWeight", LONG),
+        ("lfItalic", BYTE),
+        ("lfUnderline", BYTE),
+        ("lfStrikeOut", BYTE),
+        ("lfCharSet", BYTE),
+        ("lfOutPrecision", BYTE),
+        ("lfClipPrecision", BYTE),
+        ("lfQuality", BYTE),
+        ("lfPitchAndFamily", BYTE),
+        ("lfFaceName", WCHAR * 32),
+        )
+
+################################################################################
+
 # pointer types
 
 PWSTR = ctypes.c_wchar_p
@@ -308,6 +328,7 @@ PUNICODE_STRING = ctypes.POINTER(UNICODE_STRING)
 PLUID = ctypes.POINTER(LUID)
 PPLUID = ctypes.POINTER(PLUID)
 CallbackContextPtr = ctypes.POINTER(CallbackContext)
+PLOGFONT = ctypes.POINTER(LOGFONT)
 
 ################################################################################
 

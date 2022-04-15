@@ -31,6 +31,7 @@ from ctwin32 import (
     gdi,
     wndcls,
     RECT,
+    LOGFONT,
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
@@ -99,7 +100,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
 
     def on_create(self):
         hdc = self.get_dc()
-        lf = gdi.LOGFONT()
+        lf = LOGFONT()
         lf.lfCharSet = DEFAULT_CHARSET
         lf.lfFaceName = "consolas"
         lf.lfHeight = 16

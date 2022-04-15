@@ -29,6 +29,7 @@ from ctwin32 import (
     wndcls,
     comctl,
     shell,
+    LOGFONT,
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
@@ -60,7 +61,7 @@ class HelloWnd(wndcls.SimpleWnd):
     def on_message(self, msg, wp, lp):
 
         if msg == WM_CREATE:
-            lf = gdi.LOGFONT()
+            lf = LOGFONT()
             lf.lfFaceName = "MS Shell Dlg"
             lf.lfHeight = -72
             self.font = gdi.CreateFontIndirect(lf)

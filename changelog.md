@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - ctwin32.ns_from_struct
 - kernel.GetSystemInfo
 - misc.get_system_processor_power_info
+- user.\_SystemParametersInfo in order to implement get/set_non_client_metrics,
+  get/set_wheel_scroll_lines and get_work_area in user
 
 ### Changed
 
@@ -39,6 +41,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - use ns_from_struct where appropriate
 - the namespaces returned by WTSEnumerateSessions are now using the standard
   win32 names (camel case instead of snake case)
+- moved definition of LOGFONT from gdi to wtypes
 
 ### Fixed
 

@@ -42,6 +42,13 @@ from . import (
     GMEM_MOVEABLE,
     CF_UNICODETEXT,
     LR_DEFAULTSIZE,
+    SPI_GETNONCLIENTMETRICS,
+    SPI_SETNONCLIENTMETRICS,
+    SPI_GETWHEELSCROLLLINES,
+    SPI_SETWHEELSCROLLLINES,
+    SPI_GETWORKAREA,
+    SPIF_UPDATEINIFILE,
+    SPIF_SENDCHANGE,
     )
 from .ntdll import proc_path_from_pid
 
@@ -1216,5 +1223,89 @@ def GetGUIThreadInfo(tid=0):
     gti = GUITHREADINFO()
     raise_on_zero(_GetGUIThreadInfo(tid, ref(gti)))
     return gti
+
+################################################################################
+
+_SystemParametersInfo = fun_fact(
+    _usr.SystemParametersInfoW, (BOOL, UINT, UINT, PVOID, UINT)
+    )
+
+################################################################################
+
+class NONCLIENTMETRICS(ctypes.Structure):
+    _fields_ = (
+        ("cbSize",             UINT),
+        ("iBorderWidth",       INT),
+        ("iScrollWidth",       INT),
+        ("iScrollHeight",      INT),
+        ("iCaptionWidth",      INT),
+        ("iCaptionHeight",     INT),
+        ("lfCaptionFont",      LOGFONT),
+        ("iSmCaptionWidth",    INT),
+        ("iSmCaptionHeight",   INT),
+        ("lfSmCaptionFont",    LOGFONT),
+        ("iMenuWidth",         INT),
+        ("iMenuHeight",        INT),
+        ("lfMenuFont",         LOGFONT),
+        ("lfStatusFont",       LOGFONT),
+        ("lfMessageFont",      LOGFONT),
+        ("iPaddedBorderWidth", INT),
+        )
+    def __init__(self):
+        self.cbSize = ctypes.sizeof(self)
+
+def get_non_client_metrics():
+    ncm = NONCLIENTMETRICS()
+    raise_on_zero(
+        _SystemParametersInfo(
+            SPI_GETNONCLIENTMETRICS,
+            ncm.cbSize,
+            ref(ncm),
+            0
+            )
+        )
+    return ncm
+
+def set_non_client_metrics(ncm, winini=SPIF_UPDATEINIFILE | SPIF_SENDCHANGE):
+    ncm.cbSize = ctypes.sizeof(ncm)
+    raise_on_zero(
+        _SystemParametersInfo(
+            SPI_SETNONCLIENTMETRICS,
+            ncm.cbSize,
+            ref(ncm),
+            winini
+            )
+        )
+
+################################################################################
+
+def get_wheel_scroll_lines():
+    lines = UINT()
+    raise_on_zero(
+        _SystemParametersInfo(
+            SPI_GETWHEELSCROLLLINES,
+            0,
+            ref(lines),
+            0
+            )
+        )
+    return lines.value
+
+def set_wheel_scroll_lines(lines, winini=SPIF_UPDATEINIFILE | SPIF_SENDCHANGE):
+    raise_on_zero(
+        _SystemParametersInfo(
+            SPI_SETWHEELSCROLLLINES,
+            lines,
+            None,
+            winini
+            )
+        )
+
+################################################################################
+
+def get_work_area():
+    wa = RECT()
+    raise_on_zero(_SystemParametersInfo(SPI_GETWORKAREA, 0, ref(wa), 0))
+    return wa
 
 ################################################################################
