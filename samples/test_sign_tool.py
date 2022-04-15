@@ -37,7 +37,7 @@ tool = "rm_sign_tool.py"
 
 def run(*args):
     cmd = [sys.executable, tool]
-    cmd.extend(args)
+    cmd.extend(map(str, args))
     subprocess.run(cmd, check=True)
 
 def unlink(pth):
@@ -53,17 +53,17 @@ fake = pathlib.Path(f"{prefix}.{tool}.fake")
 
 try:
     print("going to create keys")
-    run("create", str(private), str(public))
+    run("create", private, public)
     print("created keys\n")
 
     print("going to sign hash")
-    run("sign", "-k", str(private), "-s", str(signature), tool)
+    run("sign", "-k", private, "-s", signature, tool)
     print("created signature\n")
 
     print("going to verify hash")
     print("-> ", end="")
     sys.stdout.flush()
-    run("verify", "-k", str(public), "-s", str(signature), tool)
+    run("verify", "-k", public, "-s", signature, tool)
     print("done verification\n")
 
     print("demonstrating verification failure")
@@ -72,7 +72,7 @@ try:
     shutil.copyfile(tool, fake)
     with open(fake, "at") as f:
         f.write("\0")
-    run("verify", "-k", str(public), "-s", str(signature), fake)
+    run("verify", "-k", public, "-s", signature, fake)
     print("done demonstration\n")
 finally:
     if prefix == DEFAULT_PREFIX:
