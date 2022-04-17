@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - misc.get_system_processor_power_info
 - user.\_SystemParametersInfo in order to implement get/set_non_client_metrics,
   get/set_wheel_scroll_lines and get_work_area in user
+- module ctwin32.version_info
+- sample py_ver.py
 
 ### Changed
 
