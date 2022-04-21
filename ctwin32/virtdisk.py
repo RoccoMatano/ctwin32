@@ -83,7 +83,7 @@ class VIRTUAL_STORAGE_TYPE(ctypes.Structure):
         ("DeviceId", ULONG),
         ("VendorId", GUID),
         )
-PVIRTUAL_STORAGE_TYPE = ctypes.POINTER(VIRTUAL_STORAGE_TYPE)
+PVIRTUAL_STORAGE_TYPE = POINTER(VIRTUAL_STORAGE_TYPE)
 
 ################################################################################
 
@@ -114,7 +114,7 @@ class _OVDP_UNION(ctypes.Union):
 class OPEN_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
     _fields_ = (("Version", LONG), ("u", _OVDP_UNION))
     _anonymous_ = ("u",)
-POPEN_VIRTUAL_DISK_PARAMETERS = ctypes.POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
+POPEN_VIRTUAL_DISK_PARAMETERS = POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 
@@ -136,7 +136,7 @@ class _AVDP_UNION(ctypes.Union):
 class ATTACH_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
     _fields_ = (("Version", LONG), ("u", _AVDP_UNION))
     _anonymous_ = ("u",)
-PATTACH_VIRTUAL_DISK_PARAMETERS = ctypes.POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
+PATTACH_VIRTUAL_DISK_PARAMETERS = POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 

@@ -72,7 +72,7 @@ class NMHDR(ctypes.Structure):
         ("code", UINT),
         )
 
-PNMHDR = ctypes.POINTER(NMHDR)
+PNMHDR = POINTER(NMHDR)
 
 ################################################################################
 

@@ -93,7 +93,7 @@ class HKEY(ScdToBeClosed, HANDLE, close_func=RegCloseKey, invalid=0):
         if self.value not in _PREDEFINED_KEYS:
             super().close()
 
-PHKEY = ctypes.POINTER(HKEY)
+PHKEY = POINTER(HKEY)
 
 ################################################################################
 
@@ -617,7 +617,7 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
             ("PrivilegeCount", DWORD),
             ("Privileges", LUID_AND_ATTRIBUTES * num_la)
             )
-    PTOKEN_PRIVILEGES = ctypes.POINTER(TOKEN_PRIVILEGES)
+    PTOKEN_PRIVILEGES = POINTER(TOKEN_PRIVILEGES)
     _AdjustTokenPrivileges = fun_fact(
         _adv.AdjustTokenPrivileges, (
             BOOL,
@@ -696,8 +696,8 @@ class ACL(ctypes.Structure):
         ("AceCount", WORD),
         ("Sbz2", WORD),
         )
-PACL = ctypes.POINTER(ACL)
-PPACL = ctypes.POINTER(PACL)
+PACL = POINTER(ACL)
+PPACL = POINTER(PACL)
 
 class ACE_HEADER(ctypes.Structure):
     _fields_ = (
@@ -715,8 +715,8 @@ class ACE(ctypes.Structure):
         # contiguous memory after SidStart
         ("SidStart", DWORD),
         )
-PACE = ctypes.POINTER(ACE)
-PPACE = ctypes.POINTER(PACE)
+PACE = POINTER(ACE)
+PPACE = POINTER(PACE)
 
 class ACL_SIZE_INFORMATION(ctypes.Structure):
     _fields_ = (
@@ -1006,7 +1006,7 @@ _ControlService = fun_fact(
         BOOL,
         HANDLE,
         DWORD,
-        ctypes.POINTER(SERVICE_STATUS)
+        POINTER(SERVICE_STATUS)
         )
     )
 
@@ -1042,7 +1042,7 @@ _QueryServiceStatusEx = fun_fact(
         BOOL,
         HANDLE,
         INT,
-        ctypes.POINTER(SERVICE_STATUS_PROCESS),
+        POINTER(SERVICE_STATUS_PROCESS),
         DWORD,
         PDWORD
         )
@@ -1140,7 +1140,7 @@ class QUERY_SERVICE_CONFIG(ctypes.Structure):
         ("ServiceStartName", DWORD),
         ("DisplayName", DWORD),
         )
-PQUERY_SERVICE_CONFIG = ctypes.POINTER(QUERY_SERVICE_CONFIG)
+PQUERY_SERVICE_CONFIG = POINTER(QUERY_SERVICE_CONFIG)
 
 _QueryServiceConfig = fun_fact(
     _adv.QueryServiceConfigW, (
@@ -1174,7 +1174,7 @@ class CREDENTIAL_ATTRIBUTE(ctypes.Structure):
         ("ValueSize", DWORD),
         ("Value", PBYTE),
         )
-PCREDENTIAL_ATTRIBUTE = ctypes.POINTER(CREDENTIAL_ATTRIBUTE)
+PCREDENTIAL_ATTRIBUTE = POINTER(CREDENTIAL_ATTRIBUTE)
 
 class CREDENTIAL(ctypes.Structure):
     _fields_ = (
@@ -1191,9 +1191,9 @@ class CREDENTIAL(ctypes.Structure):
         ("TargetAlias", PWSTR),
         ("UserName", PWSTR),
         )
-PCREDENTIAL = ctypes.POINTER(CREDENTIAL)
-PPCREDENTIAL = ctypes.POINTER(PCREDENTIAL)
-PPPCREDENTIAL = ctypes.POINTER(PPCREDENTIAL)
+PCREDENTIAL = POINTER(CREDENTIAL)
+PPCREDENTIAL = POINTER(PCREDENTIAL)
+PPPCREDENTIAL = POINTER(PPCREDENTIAL)
 
 _CredRead = fun_fact(
     _adv.CredReadW, (
@@ -1364,7 +1364,7 @@ class EVENTLOGRECORD(ctypes.Structure):
         # DWORD Length;
         )
 
-PEVENTLOGRECORD = ctypes.POINTER(EVENTLOGRECORD)
+PEVENTLOGRECORD = POINTER(EVENTLOGRECORD)
 
 ################################################################################
 

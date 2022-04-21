@@ -66,7 +66,7 @@ class _UNION(ctypes.Union):
 class SOCKADDR(ctypes.Structure):
     _fields_ = (("sa_family", WORD), ("sa_data", BYTE * 14))
 
-PSOCKADDR = ctypes.POINTER(SOCKADDR)
+PSOCKADDR = POINTER(SOCKADDR)
 
 ################################################################################
 
@@ -75,13 +75,13 @@ class SOCKET_ADDRESS(ctypes.Structure):
         ("lpSockaddr", PSOCKADDR),
         ("iSockaddrLength", INT)
         )
-PSOCKET_ADDRESS = ctypes.POINTER(SOCKET_ADDRESS)
+PSOCKET_ADDRESS = POINTER(SOCKET_ADDRESS)
 
 ################################################################################
 
 class IP_ADAPTER_UNICAST_ADDRESS(ctypes.Structure):
     pass
-PIP_ADAPTER_UNICAST_ADDRESS = ctypes.POINTER(IP_ADAPTER_UNICAST_ADDRESS)
+PIP_ADAPTER_UNICAST_ADDRESS = POINTER(IP_ADAPTER_UNICAST_ADDRESS)
 
 IP_ADAPTER_UNICAST_ADDRESS._fields_ = (
     ("u", _UNION),
@@ -94,7 +94,7 @@ IP_ADAPTER_UNICAST_ADDRESS._fields_ = (
 
 class IP_ADAPTER_PREFIX(ctypes.Structure):
     pass
-PIP_ADAPTER_PREFIX = ctypes.POINTER(IP_ADAPTER_PREFIX)
+PIP_ADAPTER_PREFIX = POINTER(IP_ADAPTER_PREFIX)
 IP_ADAPTER_PREFIX._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_PREFIX),
@@ -106,7 +106,7 @@ IP_ADAPTER_PREFIX._fields_ = (
 
 class IP_ADAPTER_ADDRESSES(ctypes.Structure):
     pass
-PIP_ADAPTER_ADDRESSES = ctypes.POINTER(IP_ADAPTER_ADDRESSES)
+PIP_ADAPTER_ADDRESSES = POINTER(IP_ADAPTER_ADDRESSES)
 IP_ADAPTER_ADDRESSES._fields_ = (
     ("u", _UNION),
     ("Next", PIP_ADAPTER_ADDRESSES),
@@ -150,7 +150,7 @@ class S_UN(ctypes.Union):
         )
 class IN_ADDR(ctypes.Structure):
     _fields_ = (("S_un", S_UN),)
-PIN_ADDR = ctypes.POINTER(IN_ADDR)
+PIN_ADDR = POINTER(IN_ADDR)
 
 ################################################################################
 
@@ -161,13 +161,13 @@ class SOCKADDR_IN(ctypes.Structure):
         ("sin_addr", IN_ADDR),
         ("sin_zero", BYTE * 8)
         )
-PSOCKADDR_IN = ctypes.POINTER(SOCKADDR_IN)
+PSOCKADDR_IN = POINTER(SOCKADDR_IN)
 
 ################################################################################
 
 class IN6_ADDR(ctypes.Union):
     _fields_ = (("Byte", BYTE * 16), ("Word", WORD * 8))
-PIN6_ADDR = ctypes.POINTER(IN6_ADDR)
+PIN6_ADDR = POINTER(IN6_ADDR)
 
 ################################################################################
 
@@ -179,7 +179,7 @@ class SOCKADDR_IN6(ctypes.Structure):
         ("sin6_addr", IN6_ADDR),
         ("sin6_scope_id", ULONG),
         )
-PSOCKADDR_IN6 = ctypes.POINTER(SOCKADDR_IN6)
+PSOCKADDR_IN6 = POINTER(SOCKADDR_IN6)
 
 ################################################################################
 

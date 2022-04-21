@@ -168,7 +168,7 @@ class TASKDIALOG_BUTTON(ctypes.Structure):
         ("pszButtonText", PWSTR),
         )
 
-PTASKDIALOG_BUTTON = ctypes.POINTER(TASKDIALOG_BUTTON)
+PTASKDIALOG_BUTTON = POINTER(TASKDIALOG_BUTTON)
 
 class _TD_MAIN_ICON(ctypes.Union):
     _pack_ = 1
@@ -211,7 +211,7 @@ class TASKDIALOGCONFIG(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
-PTASKDIALOGCONFIG = ctypes.POINTER(TASKDIALOGCONFIG)
+PTASKDIALOGCONFIG = POINTER(TASKDIALOGCONFIG)
 
 ################################################################################
 

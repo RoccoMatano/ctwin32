@@ -55,7 +55,7 @@ def MsiCloseHandle(hdl):
 class MSIHANDLE(ScdToBeClosed, ULONG, close_func=MsiCloseHandle, invalid=0):
     pass
 
-PMSIHANDLE = ctypes.POINTER(MSIHANDLE)
+PMSIHANDLE = POINTER(MSIHANDLE)
 
 ################################################################################
 

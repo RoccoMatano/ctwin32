@@ -98,7 +98,7 @@ def CloseHandle(handle):
 class KHANDLE(ScdToBeClosed, HANDLE, close_func=CloseHandle, invalid=0):
     pass
 
-PKHANDLE = ctypes.POINTER(KHANDLE)
+PKHANDLE = POINTER(KHANDLE)
 
 ################################################################################
 
@@ -110,7 +110,7 @@ class FHANDLE(
     ):
     pass
 
-PFHANDLE = ctypes.POINTER(FHANDLE)
+PFHANDLE = POINTER(FHANDLE)
 
 ################################################################################
 
@@ -120,7 +120,7 @@ class SECURITY_ATTRIBUTES(ctypes.Structure):
         ("nLength", DWORD),
         ("bInheritHandle", BOOL),
     )
-PSECURITY_ATTRIBUTES = ctypes.POINTER(SECURITY_ATTRIBUTES)
+PSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 
 ################################################################################
 
@@ -176,7 +176,7 @@ class OVERLAPPED(ctypes.Structure):
         ("hEvent", HANDLE)
         )
 
-POVERLAPPED = ctypes.POINTER(OVERLAPPED)
+POVERLAPPED = POINTER(OVERLAPPED)
 
 ################################################################################
 
@@ -573,7 +573,7 @@ class PROCESS_INFORMATION(ctypes.Structure):
         self.hThread.close()
         self.hProcess.close()
 
-PPROCESS_INFORMATION = ctypes.POINTER(PROCESS_INFORMATION)
+PPROCESS_INFORMATION = POINTER(PROCESS_INFORMATION)
 
 ################################################################################
 
@@ -601,7 +601,7 @@ class STARTUPINFO(ctypes.Structure):
     def __init__(self):
         self.cb = ctypes.sizeof(STARTUPINFO)
 
-PSTARTUPINFO = ctypes.POINTER(STARTUPINFO)
+PSTARTUPINFO = POINTER(STARTUPINFO)
 
 class STARTUPINFOEX(ctypes.Structure):
     _fields_ = (
@@ -791,7 +791,7 @@ class ACTCTX(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
-PACTCTX = ctypes.POINTER(ACTCTX)
+PACTCTX = POINTER(ACTCTX)
 
 ################################################################################
 
@@ -981,7 +981,7 @@ class SYSTEM_INFO(ctypes.Structure):
         ("wProcessorLevel", WORD),
         ("wProcessorRevision", WORD),
         )
-PSYSTEM_INFO = ctypes.POINTER(SYSTEM_INFO)
+PSYSTEM_INFO = POINTER(SYSTEM_INFO)
 
 _GetSystemInfo = fun_fact(_k32.GetSystemInfo, (None, PSYSTEM_INFO))
 

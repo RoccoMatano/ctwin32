@@ -22,9 +22,9 @@
 #
 ################################################################################
 #
-# N.B.: This module is imported by 'import *'. Make sure that any global name
-# that should not be injected into the namespace of importing modules starts
-# with '_'!
+# N.B.: This module is designed to be imported by 'import *'. Make sure that
+# any global names that should not be injected into the namespace of importing
+# modules start with '_'!
 #
 ################################################################################
 
@@ -301,34 +301,35 @@ class LOGFONT(ctypes.Structure):
 # pointer types
 
 PWSTR = ctypes.c_wchar_p
-PPWSTR = ctypes.POINTER(PWSTR)
 PSTR = ctypes.c_char_p
 PVOID = ctypes.c_void_p
-PPVOID = ctypes.POINTER(PVOID)
-PBYTE = ctypes.POINTER(BYTE)
-PCHAR = ctypes.POINTER(CHAR)
-PBOOLEAN = ctypes.POINTER(BOOLEAN)
-PWCHAR = ctypes.POINTER(WCHAR)
-PSHORT = ctypes.POINTER(SHORT)
-PUSHORT = PWORD = ctypes.POINTER(USHORT)
-PINT = ctypes.POINTER(INT)
-PUINT = ctypes.POINTER(UINT)
-PLONG = PBOOL = ctypes.POINTER(LONG)
-PULONG = PDWORD = ctypes.POINTER(ULONG)
-PUINT_PTR = PWPARAM = PSIZE_T = PULONG_PTR = ctypes.POINTER(UINT_PTR)
-PLARGE_INTEGER = ctypes.POINTER(LARGE_INTEGER)
-PULARGE_INTEGER = ctypes.POINTER(ULARGE_INTEGER)
-PHANDLE = ctypes.POINTER(HANDLE)
-PGUID = ctypes.POINTER(GUID)
-PFILETIME = ctypes.POINTER(FILETIME)
-PSYSTEMTIME = ctypes.POINTER(SYSTEMTIME)
-PPOINT = ctypes.POINTER(POINT)
-PRECT = ctypes.POINTER(RECT)
-PUNICODE_STRING = ctypes.POINTER(UNICODE_STRING)
-PLUID = ctypes.POINTER(LUID)
-PPLUID = ctypes.POINTER(PLUID)
-CallbackContextPtr = ctypes.POINTER(CallbackContext)
-PLOGFONT = ctypes.POINTER(LOGFONT)
+POINTER = ctypes.POINTER
+PPWSTR = POINTER(PWSTR)
+PPVOID = POINTER(PVOID)
+PBYTE = POINTER(BYTE)
+PCHAR = POINTER(CHAR)
+PBOOLEAN = POINTER(BOOLEAN)
+PWCHAR = POINTER(WCHAR)
+PSHORT = POINTER(SHORT)
+PUSHORT = PWORD = POINTER(USHORT)
+PINT = POINTER(INT)
+PUINT = POINTER(UINT)
+PLONG = PBOOL = POINTER(LONG)
+PULONG = PDWORD = POINTER(ULONG)
+PUINT_PTR = PWPARAM = PSIZE_T = PULONG_PTR = POINTER(UINT_PTR)
+PLARGE_INTEGER = POINTER(LARGE_INTEGER)
+PULARGE_INTEGER = POINTER(ULARGE_INTEGER)
+PHANDLE = POINTER(HANDLE)
+PGUID = POINTER(GUID)
+PFILETIME = POINTER(FILETIME)
+PSYSTEMTIME = POINTER(SYSTEMTIME)
+PPOINT = POINTER(POINT)
+PRECT = POINTER(RECT)
+PUNICODE_STRING = POINTER(UNICODE_STRING)
+PLUID = POINTER(LUID)
+PPLUID = POINTER(PLUID)
+CallbackContextPtr = POINTER(CallbackContext)
+PLOGFONT = POINTER(LOGFONT)
 
 ################################################################################
 

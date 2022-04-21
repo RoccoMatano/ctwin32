@@ -425,7 +425,7 @@ class IO_STATUS_BLOCK(ctypes.Structure):
         ("anon", _DUMMY_STATUS_UNION),
         ("Information", UINT_PTR),
         )
-PIO_STATUS_BLOCK = ctypes.POINTER(IO_STATUS_BLOCK)
+PIO_STATUS_BLOCK = POINTER(IO_STATUS_BLOCK)
 
 ################################################################################
 
@@ -443,7 +443,7 @@ class FILE_DIRECTORY_INFORMATION(ctypes.Structure):
     ("FileNameLength", ULONG),
     ("FileName", WCHAR * 1),
     )
-PFILE_DIRECTORY_INFORMATION = ctypes.POINTER(FILE_DIRECTORY_INFORMATION)
+PFILE_DIRECTORY_INFORMATION = POINTER(FILE_DIRECTORY_INFORMATION)
 
 ################################################################################
 

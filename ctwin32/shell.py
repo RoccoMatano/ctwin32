@@ -140,7 +140,7 @@ class SHELLEXECUTEINFOW(ctypes.Structure):
         self.nShow = show
         self.fMask = SEE_MASK_NOCLOSEPROCESS if wait else 0
 
-PSHELLEXECUTEINFOW = ctypes.POINTER(SHELLEXECUTEINFOW)
+PSHELLEXECUTEINFOW = POINTER(SHELLEXECUTEINFOW)
 
 ################################################################################
 

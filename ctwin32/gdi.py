@@ -87,7 +87,7 @@ class TEXTMETRIC(ctypes.Structure):
         ("tmPitchAndFamily", BYTE),
         ("tmCharSet", BYTE),
         )
-PTEXTMETRIC = ctypes.POINTER(TEXTMETRIC)
+PTEXTMETRIC = POINTER(TEXTMETRIC)
 
 ################################################################################
 

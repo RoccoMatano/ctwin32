@@ -63,7 +63,7 @@ class SP_DEVINFO_DATA(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
-PSP_DEVINFO_DATA = ctypes.POINTER(SP_DEVINFO_DATA)
+PSP_DEVINFO_DATA = POINTER(SP_DEVINFO_DATA)
 
 ################################################################################
 
@@ -89,7 +89,7 @@ class SP_PROPCHANGE_PARAMS(ctypes.Structure):
         self.Scope = scope
         self.HwProfile = prof
 
-PSP_PROPCHANGE_PARAMS = ctypes.POINTER(SP_PROPCHANGE_PARAMS)
+PSP_PROPCHANGE_PARAMS = POINTER(SP_PROPCHANGE_PARAMS)
 
 ################################################################################
 
@@ -103,7 +103,7 @@ class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
-PSP_DEVICE_INTERFACE_DATA = ctypes.POINTER(SP_DEVICE_INTERFACE_DATA)
+PSP_DEVICE_INTERFACE_DATA = POINTER(SP_DEVICE_INTERFACE_DATA)
 
 class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
     _fields_ = (

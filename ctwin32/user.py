@@ -361,7 +361,7 @@ class WINDOWPLACEMENT(ctypes.Structure):
             )
         return f"{c}({l}, {f}, {s}, {mi}, {ma}, {no})"
 
-PWINDOWPLACEMENT = ctypes.POINTER(WINDOWPLACEMENT)
+PWINDOWPLACEMENT = POINTER(WINDOWPLACEMENT)
 
 ################################################################################
 
@@ -489,7 +489,7 @@ class INPUT(ctypes.Structure):
         up.ki.dwFlags |= KEYEVENTF_KEYUP
         return up
 
-PINPUT = ctypes.POINTER(INPUT)
+PINPUT = POINTER(INPUT)
 
 ################################################################################
 
@@ -559,7 +559,7 @@ class MONITORINFO(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(MONITORINFO)
 
-PMONITORINFO = ctypes.POINTER(MONITORINFO)
+PMONITORINFO = POINTER(MONITORINFO)
 
 ################################################################################
 
@@ -664,7 +664,7 @@ class WNDCLASS(ctypes.Structure):
         ("lpszClassName", PWSTR),
         )
 
-PWNDCLASS = ctypes.POINTER(WNDCLASS)
+PWNDCLASS = POINTER(WNDCLASS)
 
 ################################################################################
 
@@ -678,7 +678,7 @@ class MSG(ctypes.Structure):
         ("pt", POINT)
         )
 
-PMSG = ctypes.POINTER(MSG)
+PMSG = POINTER(MSG)
 
 ################################################################################
 
@@ -692,7 +692,7 @@ class PAINTSTRUCT(ctypes.Structure):
         ("rgbReserved", BYTE * 32),
         )
 
-PPAINTSTRUCT = ctypes.POINTER(PAINTSTRUCT)
+PPAINTSTRUCT = POINTER(PAINTSTRUCT)
 
 ################################################################################
 
@@ -1213,7 +1213,7 @@ class GUITHREADINFO(ctypes.Structure):
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
-PGUITHREADINFO = ctypes.POINTER(GUITHREADINFO)
+PGUITHREADINFO = POINTER(GUITHREADINFO)
 
 _GetGUIThreadInfo = fun_fact(
     _usr.GetGUIThreadInfo, (BOOL, DWORD, PGUITHREADINFO)

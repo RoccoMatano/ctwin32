@@ -98,8 +98,8 @@ class WTS_SESSION_INFO(ctypes.Structure):
         ("WinStationName", PWSTR),
         ("State", LONG),
         )
-P_SESSION_INFO = ctypes.POINTER(WTS_SESSION_INFO)
-PP_SESSION_INFO = ctypes.POINTER(P_SESSION_INFO)
+P_SESSION_INFO = POINTER(WTS_SESSION_INFO)
+PP_SESSION_INFO = POINTER(P_SESSION_INFO)
 
 ################################################################################
 
