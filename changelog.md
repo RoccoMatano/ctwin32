@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   get/set_wheel_scroll_lines and get_work_area in user
 - module ctwin32.version_info
 - sample py_ver.py
+- kernel.load_message_string
 
 ### Changed
 

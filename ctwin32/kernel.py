@@ -32,8 +32,10 @@ from . import (
     fun_fact,
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_RESOURCE_ENUM_USER_STOP,
+    ERROR_RESOURCE_NAME_NOT_FOUND,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
+    RT_MESSAGETABLE,
     multi_str_from_addr,
     cmdline_from_args,
     ns_from_struct,
@@ -389,6 +391,9 @@ _GetACP = fun_fact(_k32.GetACP, (DWORD,))
 
 def GetACP():
     return _GetACP()
+
+def get_ansi_encoding():
+    return f"cp{GetACP()}"
 
 ################################################################################
 
@@ -918,7 +923,7 @@ def get_resource_names(hmod, typ):
     names = []
 
     @_EnumResNameCallback
-    def collect(hmod, not_used1, name, not_used2):
+    def collect(not_used1, not_used2, name, not_used3):
         if name >= 0x10000:
             name = PWSTR(name).value
         names.append(name)
@@ -964,6 +969,61 @@ def get_resource_info(hmod, name, typ):
     hrsc = FindResource(hmod, name, typ)
     size = SizeofResource(hmod, hrsc)
     return LoadResource(hmod, hrsc), size
+
+################################################################################
+
+MESSAGE_RESOURCE_ANSI = 0
+MESSAGE_RESOURCE_UNICODE = 1
+MESSAGE_RESOURCE_UTF8 = 2
+
+class MESSAGE_RESOURCE_ENTRY(ctypes.Structure):
+    _fields_ = (
+        ("Length", WORD),
+        ("Flags", WORD),
+        ("Text", BYTE), # in fact an array of (Length - offsetof(Text)) bytes
+    )
+
+class MESSAGE_RESOURCE_BLOCK(ctypes.Structure):
+    _fields_ = (
+        ("LowId", DWORD),
+        ("HighId", DWORD),
+        ("OffsetToEntries", DWORD),
+    )
+
+class MESSAGE_RESOURCE_DATA(ctypes.Structure):
+    _fields_ = (
+        ("NumberOfBlocks", DWORD),
+        ("Blocks", MESSAGE_RESOURCE_BLOCK), # in fact an array of NumberOfBlocks
+    )
+
+def load_message_string(hmod, msg_id):
+    for name in get_resource_names(hmod, RT_MESSAGETABLE):
+        addr, _ = get_resource_info(hmod, name, RT_MESSAGETABLE)
+        nblocks = MESSAGE_RESOURCE_DATA.from_address(addr).NumberOfBlocks
+        bsize = ctypes.sizeof(MESSAGE_RESOURCE_BLOCK)
+        bbase = addr + MESSAGE_RESOURCE_DATA.Blocks.offset
+        for b in range(nblocks):
+            block = MESSAGE_RESOURCE_BLOCK.from_address(bbase + b * bsize)
+            if block.LowId <= msg_id <= block.HighId:
+                eaddr = addr + block.OffsetToEntries
+                for cur_id in range(block.LowId, block.HighId + 1):
+                    entry = MESSAGE_RESOURCE_ENTRY.from_address(eaddr)
+                    if cur_id != msg_id:
+                        eaddr += entry.Length
+                        continue
+                    toff = MESSAGE_RESOURCE_ENTRY.Text.offset
+                    taddr = eaddr + toff
+                    slen = entry.Length - toff
+                    if entry.Flags == MESSAGE_RESOURCE_UNICODE:
+                        msg = ctypes.wstring_at(taddr, slen // 2)
+                    else:
+                        msg = ctypes.string_at(taddr, slen).decode(
+                            "utf-8" if entry.Flags == MESSAGE_RESOURCE_UTF8
+                            else get_ansi_encoding()
+                            )
+                    return msg.strip('\0')
+
+    raise ctypes.WinError(ERROR_RESOURCE_NAME_NOT_FOUND)
 
 ################################################################################
 
