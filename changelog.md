@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.8.0] - 2022-05-06
+
 ### Added
 
 - sample endis_bsl_usb.py
@@ -334,6 +336,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
+[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/1.8.0...master
+[1.8.0]: https://github.com/RoccoMatano/ctwin32/compare/1.7.12...1.8.0
 [1.7.12]: https://github.com/RoccoMatano/ctwin32/compare/1.6.0...1.7.12
 [1.6.0]: https://github.com/RoccoMatano/ctwin32/compare/1.5.0...1.6.0
 [1.5.0]: https://github.com/RoccoMatano/ctwin32/compare/1.4.0...1.5.0
