@@ -249,6 +249,22 @@ def GetModuleHandle(mod_name):
 
 ################################################################################
 
+_GetModuleFileName = fun_fact(
+    _k32.GetModuleFileNameW, (DWORD, HANDLE, PWSTR, DWORD)
+    )
+
+def GetModuleFileName(hmod):
+    size = 128
+    res = size
+    while res >= size:
+        size *= 2
+        buf = ctypes.create_unicode_buffer(size)
+        res = _GetModuleFileName(hmod, buf, size)
+    raise_on_zero(res)
+    return buf.value
+
+################################################################################
+
 _WaitForSingleObject = fun_fact(
     _k32.WaitForSingleObject, (DWORD, HANDLE, DWORD)
     )
@@ -997,6 +1013,7 @@ class MESSAGE_RESOURCE_DATA(ctypes.Structure):
     )
 
 def load_message_string(hmod, msg_id):
+    msg_id = DWORD(msg_id).value
     for name in get_resource_names(hmod, RT_MESSAGETABLE):
         addr, _ = get_resource_info(hmod, name, RT_MESSAGETABLE)
         nblocks = MESSAGE_RESOURCE_DATA.from_address(addr).NumberOfBlocks

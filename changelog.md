@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- kernel.GetModuleFileName
+
+### Fixed
+
+- in kernel.load_message_string compare message ID as unsigned value
+
 ## [1.8.0] - 2022-05-06
 
 ### Added
