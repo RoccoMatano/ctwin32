@@ -35,6 +35,9 @@ from . import (
     ERROR_RESOURCE_NAME_NOT_FOUND,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
+    IMAGE_FILE_MACHINE_UNKNOWN,
+    IMAGE_FILE_MACHINE_AMD64,
+    IMAGE_FILE_MACHINE_I386,
     RT_MESSAGETABLE,
     multi_str_from_addr,
     cmdline_from_args,
@@ -1066,5 +1069,34 @@ def GetSystemInfo():
     si = SYSTEM_INFO()
     _GetSystemInfo(ref(si))
     return ns_from_struct(si)
+
+################################################################################
+
+_IsWow64Process = fun_fact(_k32.IsWow64Process,(BOOL, HANDLE, PBOOL))
+
+def IsWow64Process(hprocess):
+    res = BOOL()
+    raise_on_zero(_IsWow64Process(hprocess, ref(res)))
+    return res != 0
+
+################################################################################
+
+def get_wow64_info(hprocess):
+    mach = USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
+    proc = USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
+    try:
+        _IsWow64Process2 = fun_fact(
+            _k32.IsWow64Process2,
+            (BOOL, HANDLE, PUSHORT, PUSHORT)
+            )
+    except AttributeError:
+        # IsWow64Process2 not available
+        if IsWow64Process(hprocess):
+            mach = USHORT(IMAGE_FILE_MACHINE_AMD64)
+        else:
+            mach = USHORT(IMAGE_FILE_MACHINE_I386)
+    else:
+        raise_on_zero(_IsWow64Process2(hprocess, ref(proc), ref(mach)))
+    return mach.value, proc.value
 
 ################################################################################
