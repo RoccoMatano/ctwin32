@@ -32,7 +32,7 @@ import sys as _sys
 from datetime import datetime as _datetime
 
 # let ctypes and UUID become visible on the outside (by not giving
-# them a '_' name!
+# them a '_' name)
 import ctypes
 from uuid import UUID
 
@@ -212,7 +212,7 @@ class POINT(ctypes.Structure):
         return cls(lp & 0xffff, (lp >> 16) & 0xffff)
 
     def as_lparam(self):
-        return (pt.x & 0xffff) | ((pt.y & 0xffff) << 16)
+        return (self.x & 0xffff) | ((self.y & 0xffff) << 16)
 
     def copy(self):
         return self.__class__(self.x, self.y)

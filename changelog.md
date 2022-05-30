@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - in kernel.load_message_string compare message ID as unsigned value
+- wtypes.POINT.as_lparam
 
 ## [1.8.0] - 2022-05-06
 
