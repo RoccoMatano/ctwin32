@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - kernel.GetModuleFileName
 - kernel.IsWow64Process and kernel.get_wow64_info
+- user.center_wnd
+- user.GetDlgItemText
+- user.CheckRadioButton
+- user.GetDlgCtrlID
+- user.DialogBoxIndirectParam
+- user.CreateDialogIndirectParam
+- user.EndDialog
+- classes BaseDlg and InputDlg in wndcls
+
+### Changed
+
+- shell.ShellExecuteEx now accepts PathLike objects for its file argument
 
 ### Fixed
 

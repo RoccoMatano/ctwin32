@@ -125,7 +125,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
 
     def on_paint(self):
         hdc, ps = self.begin_paint()
-        gdi.SelectObject(hdc, self.font)
+        prev_font = gdi.SelectObject(hdc, self.font)
 
         gdi.SetBkMode(hdc, TRANSPARENT)
         gdi.TextOut(hdc, 0, 0, self.heading)
@@ -149,7 +149,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
                 )
             gdi.TextOut(hdc, 0, (self.y_lines - i) * self.char_height, line)
 
-        gdi.SelectObject(hdc, gdi.GetStockObject(SYSTEM_FONT))
+        gdi.SelectObject(hdc, prev_font)
         self.end_paint(ps)
         return 0
 

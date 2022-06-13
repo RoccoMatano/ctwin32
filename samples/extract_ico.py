@@ -32,13 +32,12 @@
 ################################################################################
 
 import sys
-import lzma
-import base64
 from types import SimpleNamespace
 from ctwin32 import (
     ctypes,
     kernel,
     user,
+    wndcls,
     LOAD_LIBRARY_AS_IMAGE_RESOURCE,
     LOAD_LIBRARY_AS_DATAFILE,
     RT_GROUP_ICON,
@@ -89,7 +88,7 @@ class GRPICONDIRENTRY(ctypes.Structure):
 ################################################################################
 
 def print_lzma_b85(data):
-    b85 = base64.b85encode(lzma.compress(data))
+    b85 = wndcls.to_lzb85(data)
     llen = 72
     while len(b85) > llen:
         print(b85[:llen])

@@ -30,6 +30,7 @@ from . import (
     kernel,
     raise_if,
     raise_on_zero,
+    raise_on_err,
     fun_fact,
     WAIT_FAILED,
     GWL_STYLE,
@@ -549,42 +550,56 @@ def MonitorFromWindow(hwnd, flags=MONITOR_DEFAULTTOPRIMARY):
 
 ################################################################################
 
-class MONITORINFO(ctypes.Structure):
+class MONITORINFOEX(ctypes.Structure):
     _fields_ = (
         ("cbSize", DWORD),
         ("rcMonitor", RECT),
         ("rcWork", RECT),
         ("dwFlags", DWORD),
+        ("szDevice", WCHAR * 32),
         )
     def __init__(self):
-        self.cbSize = ctypes.sizeof(MONITORINFO)
+        self.cbSize = ctypes.sizeof(self)
 
-PMONITORINFO = POINTER(MONITORINFO)
+PMONITORINFOEX = POINTER(MONITORINFOEX)
 
 ################################################################################
 
-_GetMonitorInfo = fun_fact(_usr.GetMonitorInfoW, (BOOL, HANDLE, PMONITORINFO))
+_GetMonitorInfo = fun_fact(_usr.GetMonitorInfoW, (BOOL, HANDLE, PMONITORINFOEX))
 
 def GetMonitorInfo(hmon):
-    mi = MONITORINFO()
+    mi = MONITORINFOEX()
     raise_on_zero(_GetMonitorInfo(hmon, ref(mi)))
     return mi
 
 ################################################################################
 
+def get_wnd_center(hwnd=None):
+    if hwnd is None:
+        return GetMonitorInfo(MonitorFromWindow(None)).rcMonitor.center
+    else:
+        return GetWindowRect(hwnd).center
+
+################################################################################
+
+def center_wnd(to_be_centered, center_on=None):
+    center_x, center_y = get_wnd_center(center_on)
+    rc = GetWindowRect(to_be_centered)
+    SetWindowPos(
+        to_be_centered,
+        None,
+        rc.left + center_x - (rc.left + rc.right) // 2,
+        rc.top + center_y - (rc.top + rc.bottom) // 2,
+        0,
+        0,
+        SWP_NOSIZE | SWP_NOZORDER
+        )
+
+################################################################################
+
 def start_centered(arglist):
     def center_wnd_cb(hwnd, _):
-        wa = GetMonitorInfo(MonitorFromWindow(hwnd)).rcWork
-        rc = GetWindowRect(hwnd)
-        SetWindowPos(
-            hwnd,
-            None,
-            (wa.width - rc.width) // 2,
-            (wa.height - rc.height) // 2,
-            0,
-            0,
-            SWP_NOSIZE | SWP_NOZORDER
-            )
+        center_wnd(hwnd)
         return True
 
     with kernel.create_process(arglist) as pi:
@@ -835,6 +850,41 @@ _SetDlgItemText = fun_fact(
 
 def SetDlgItemText(dlg, id, txt):
     raise_on_zero(_SetDlgItemText(dlg, id, txt))
+
+################################################################################
+
+_GetDlgItemText = fun_fact(
+    _usr.GetDlgItemTextW, (UINT, HWND, INT, PWSTR, INT)
+    )
+
+def GetDlgItemText(dlg, id):
+    length = 128
+    res = length
+    while res >= length:
+        length *= 2
+        buf = ctypes.create_unicode_buffer(length)
+        kernel.SetLastError(0)
+        res = _GetDlgItemText(dlg, id, buf, length)
+        raise_on_err(kernel.GetLastError())
+    return buf.value
+
+################################################################################
+
+_CheckRadioButton = fun_fact(
+    _usr.CheckRadioButton, (BOOL, HWND, INT, INT, INT)
+    )
+
+def CheckRadioButton(dlg, first, last, check):
+    raise_on_zero(_CheckRadioButton(dlg, first, last, check))
+
+################################################################################
+
+_GetDlgCtrlID = fun_fact(_usr.GetDlgCtrlID, (INT, HWND))
+
+def GetDlgCtrlID(hwnd):
+    res = _GetDlgCtrlID(hwnd)
+    raise_on_zero(res)
+    return res
 
 ################################################################################
 
@@ -1111,7 +1161,7 @@ EnumClipboardFormats = fun_fact(_usr.EnumClipboardFormats, (DWORD, DWORD))
 
 ################################################################################
 
-def txt_to_clip(txt, wnd=None):
+def txt_to_clip(txt, hwnd=None):
     buf = ctypes.create_unicode_buffer(txt)
     size = ctypes.sizeof(buf)
     copied = False
@@ -1119,7 +1169,7 @@ def txt_to_clip(txt, wnd=None):
     try:
         ctypes.memmove(kernel.GlobalLock(hcopy), buf, size)
         kernel.GlobalUnlock(hcopy)
-        OpenClipboard(wnd)
+        OpenClipboard(hwnd)
         EmptyClipboard()
         SetClipboardData(CF_UNICODETEXT, hcopy)
         copied = True
@@ -1130,10 +1180,10 @@ def txt_to_clip(txt, wnd=None):
 
 ################################################################################
 
-def txt_from_clip(wnd=None):
+def txt_from_clip(hwnd=None):
     if not IsClipboardFormatAvailable(CF_UNICODETEXT):
         raise EnvironmentError("no clipboard text available")
-    OpenClipboard(wnd)
+    OpenClipboard(hwnd)
     hmem = GetClipboardData(CF_UNICODETEXT)
     txt = ctypes.wstring_at(kernel.GlobalLock(hmem))
     kernel.GlobalUnlock(hmem)
@@ -1307,5 +1357,116 @@ def get_work_area():
     wa = RECT()
     raise_on_zero(_SystemParametersInfo(SPI_GETWORKAREA, 0, ref(wa), 0))
     return wa
+
+################################################################################
+
+class DLGTEMPLATE(ctypes.Structure):
+    _pack_ = 2 # for correct length
+    _fields_ = (
+        ("style", DWORD),
+        ("dwExtendedStyle", DWORD),
+        ("cdit", WORD),
+        ("x", SHORT),
+        ("y", SHORT),
+        ("cx", SHORT),
+        ("cy", SHORT),
+        )
+
+################################################################################
+
+class DLGTEMPLATEEX(ctypes.Structure):
+    _pack_ = 2 # for correct length
+    _fields_ = (
+        ("dlgVer", WORD),
+        ("signature", WORD),
+        ("helpID", DWORD),
+        ("exStyle", DWORD),
+        ("style", DWORD),
+        ("cDlgItems", WORD),
+        ("x", WORD),
+        ("y", WORD),
+        ("cx", WORD),
+        ("cy", WORD),
+        )
+
+################################################################################
+
+class DLGITEMTEMPLATE(ctypes.Structure):
+    _pack_ = 2 # for correct length
+    _fields_ = (
+        ("style",DWORD),
+        ("exstyle", DWORD),
+        ("x", SHORT),
+        ("y", SHORT),
+        ("cx", SHORT),
+        ("cy", SHORT),
+        ("id", WORD ),
+        )
+
+################################################################################
+
+class NMHDR(ctypes.Structure):
+    _fields_ = (
+        ("hwndFrom", HWND),
+        ("idFrom", UINT_PTR),
+        ("code", UINT),
+        )
+PNMHDR = POINTER(NMHDR)
+
+
+MSDN_FIRST = 0xf060       # ModelesS Dialog
+MSDN_LAST  = MSDN_FIRST + 50
+
+MSDN_ACTIVATE = MSDN_FIRST + 1
+class NM_MSD_ACTIVATE(ctypes.Structure):
+    _fields_ = (
+        ("hdr", NMHDR),
+        ("is_active", BOOL),
+        )
+
+MSDN_DESTROY = MSDN_FIRST + 2
+NM_MSD_DESTROY = NMHDR
+
+################################################################################
+
+DLGPROC = ctypes.WINFUNCTYPE(
+    INT_PTR,
+    HWND,
+    UINT,
+    WPARAM,
+    LPARAM
+    )
+
+################################################################################
+
+_DialogBoxIndirectParam = fun_fact(
+    _usr.DialogBoxIndirectParamW, (INT_PTR, HANDLE, PVOID, HWND, DLGPROC, PVOID)
+    )
+
+def DialogBoxIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
+    kernel.SetLastError(0)
+    res = _DialogBoxIndirectParam(hinst, templ, parent, dlg_func, init_param)
+    raise_on_err(kernel.GetLastError())
+    return res
+
+################################################################################
+
+_CreateDialogIndirectParam = fun_fact(
+    _usr.CreateDialogIndirectParamW, (
+        HWND, HANDLE, PVOID, HWND, DLGPROC, PVOID
+        )
+    )
+
+def CreateDialogIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
+    res = _CreateDialogIndirectParam(hinst, templ, parent, dlg_func, init_param)
+    raise_on_zero(res)
+    return res
+
+################################################################################
+
+_EndDialog = fun_fact(_usr.EndDialog, (BOOL, HWND, INT_PTR))
+
+def EndDialog(hdlg, result):
+    raise_on_zero(_EndDialog(hdlg, result))
 
 ################################################################################

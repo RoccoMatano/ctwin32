@@ -34,45 +34,56 @@ from . import (
     kernel,
     user,
     gdi,
-    WM_NOTIFY,
-    SW_SHOW,
-    HWND_TOP,
-    HWND_TOPMOST,
-    SWP_NOSIZE,
-    SWP_NOMOVE,
-    SWP_NOACTIVATE,
-    HORZRES,
-    HORZSIZE,
-    GWL_STYLE,
-    GWL_EXSTYLE,
-    GWLP_HINSTANCE,
     BST_CHECKED,
     BST_UNCHECKED,
+    BS_DEFPUSHBUTTON,
     COLOR_WINDOW,
-    IDC_ARROW,
-    CW_USEDEFAULT,
-    WS_OVERLAPPEDWINDOW,
+    CS_DBLCLKS,
     CS_HREDRAW,
     CS_VREDRAW,
-    CS_DBLCLKS,
-    WM_NCCREATE,
+    CW_USEDEFAULT,
+    DS_MODALFRAME,
+    DS_SETFONT,
+    EM_SETPASSWORDCHAR,
+    ES_AUTOHSCROLL,
+    ES_LEFT,
+    GWLP_HINSTANCE,
     GWLP_USERDATA,
-    WM_NCDESTROY,
-    SW_SHOW,
-    MB_OK,
+    GWL_EXSTYLE,
+    GWL_STYLE,
+    HORZRES,
+    HORZSIZE,
+    HWND_TOP,
+    HWND_TOPMOST,
+    IDCANCEL,
+    IDC_ARROW,
+    IDOK,
     MB_ICONERROR,
+    MB_OK,
+    SS_CENTER,
+    SWP_FRAMECHANGED,
+    SWP_NOACTIVATE,
+    SWP_NOMOVE,
+    SWP_NOSIZE,
+    SWP_NOZORDER,
+    SW_SHOW,
+    SW_SHOW,
+    WM_ACTIVATE,
+    WM_COMMAND,
+    WM_INITDIALOG,
+    WM_NCCREATE,
+    WM_NCDESTROY,
+    WM_NOTIFY,
+    WS_BORDER,
+    WS_CAPTION,
+    WS_CHILD,
+    WS_GROUP,
+    WS_OVERLAPPEDWINDOW,
+    WS_POPUP,
+    WS_SYSMENU,
+    WS_TABSTOP,
+    WS_VISIBLE,
     )
-
-################################################################################
-
-class NMHDR(ctypes.Structure):
-    _fields_ = (
-        ("hwndFrom", HWND),
-        ("idFrom", UINT_PTR),
-        ("code", UINT),
-        )
-
-PNMHDR = POINTER(NMHDR)
 
 ################################################################################
 
@@ -88,7 +99,7 @@ class BaseWnd:
         return bool(user.IsWindow(self.hwnd))
 
     def get_dlg_item(self, id):
-        return self.__class__(user.GetDlgItem(self.hwnd, id))
+        return BaseWnd(user.GetDlgItem(self.hwnd, id))
 
     def send_msg(self, msg, wp, lp):
         return user.SendMessage(self.hwnd, msg, wp, lp)
@@ -102,6 +113,9 @@ class BaseWnd:
     def set_dlg_item_text(self, id , txt):
         user.SetDlgItemText(self.hwnd, id, txt)
 
+    def get_dlg_item_text(self, id):
+        return user.GetDlgItemText(self.hwnd, id)
+
     def send_notify(self, nmhdr):
         return user.SendMessage(
             self.hwnd,
@@ -111,8 +125,9 @@ class BaseWnd:
             )
 
     def destroy(self):
-        user.DestroyWindow(self.hwnd)
-        self.hwnd = None
+        if self.is_window():
+            user.DestroyWindow(self.hwnd)
+            self.hwnd = None
 
     def show(self, how=SW_SHOW):
         user.ShowWindow(self.hwnd, how)
@@ -133,7 +148,7 @@ class BaseWnd:
         user.SetForegroundWindow(self.hwnd)
 
     def set_focus(self):
-        return self.__class__(user.SetFocus(self.hwnd))
+        return BaseWnd(user.SetFocus(self.hwnd))
 
     def invalidate_rect(self, rc=None, erase=False):
         user.InvalidateRect(self.hwnd, rc, erase)
@@ -142,7 +157,7 @@ class BaseWnd:
         user.UpdateWindow(self.hwnd)
 
     def get_parent(self):
-        return self.__class__(user.GetParent(self.hwnd))
+        return BaseWnd(user.GetParent(self.hwnd))
 
     def move(self, rc, repaint=True):
         user.MoveWindow(
@@ -165,9 +180,12 @@ class BaseWnd:
             flags
             )
 
+    def center(self, center_on=None):
+        user.center_wnd(self.hwnd, center_on.hwnd if center_on else None)
+
     def set_topmost(self):
         self.set_pos(
-            self.__class__(HWND_TOPMOST),
+            BaseWnd(HWND_TOPMOST),
             0,
             0,
             0,
@@ -177,7 +195,7 @@ class BaseWnd:
 
     def set_non_topmost(self):
         self.set_pos(
-            self.__class__(HWND_TOP),
+            BaseWnd(HWND_TOP),
             0,
             0,
             0,
@@ -207,7 +225,7 @@ class BaseWnd:
             self.map_window_point if isinstance(pt_or_rc, POINT)
             else self.map_window_rect
             )
-        return meth(self.__class__(), pt_or_rc)
+        return meth(BaseWnd(), pt_or_rc)
 
     def window_rect(self):
         return user.GetWindowRect(self.hwnd)
@@ -273,7 +291,7 @@ class BaseWnd:
             user.SetWindowLong(self.hwnd, idx, new_style)
             if flags:
                 flags |= SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER;
-                self.SetPos(None, 0, 0, 0, 0, flags);
+                self.set_pos(None, 0, 0, 0, 0, flags);
 
     def modify_exstyle(self, remove, add, flags=0):
         self.modify_style(remove, add, flags, GWL_EXSTYLE)
@@ -305,6 +323,9 @@ class BaseWnd:
 
     def is_dlg_button_checked(self, id):
         return (user.IsDlgButtonChecked(self.hwnd, id) == BST_CHECKED)
+
+    def check_radio_button(first, last, check):
+        user.CheckRadioButton(self.hwnd, first, last, check)
 
     def begin_paint(self):
         return user.BeginPaint(self.hwnd)
@@ -343,6 +364,34 @@ class WndCreateParams:
 
 ################################################################################
 
+def _exception_in_callback(err_info):
+    # During a callback from C code into python code (through ctypes) an
+    # exception occured in that python code - described by the string 'err_info'.
+    # Since there is no possibility to propagate this exception to the python
+    # interpreter, we have to terminate the process. Before we do that, we try
+    # to inform the user.
+
+    if sys.stderr is None or not hasattr(sys.stderr, 'mode'):
+        user.txt_to_clip(err_info)
+        err_info += '\nThe above text has been copied to the clipboard.'
+        user.MessageBox(
+            None,
+            err_info,
+            "Terminating program",
+            MB_OK | MB_ICONERROR
+            )
+    else:
+        sys.stderr.write(err_info)
+
+    # Calling sys.exit() here won't help, since it depends on exception
+    # propagation. We could hope that this thread is pumping messages
+    # while watching for WM_QUIT messages and post such a message.
+    # Since this possibility seems too vague, we play it safe
+    # and call:
+    kernel.ExitProcess(1)
+
+################################################################################
+
 _PROP_SELF = kernel.global_add_atom("ctwin32:SimpleWnd:self")
 
 class SimpleWnd(BaseWnd):
@@ -355,15 +404,18 @@ class SimpleWnd(BaseWnd):
 
     ############################################################################
 
+    def parent_hwnd(self):
+        return self.parent.hwnd if self.parent else None
+
+    ############################################################################
+
     @user.WNDPROC
     @staticmethod
     def _wnd_proc_(hwnd, msg, wp, lp):
         # Since this is a python callback that ctypes calls when requested
         # by foreign C code, ctypes has no way of propagating any exception
-        # that might get raised back to the python interpreter - that exception
-        # would simply be ignored. Therefore we have to catch all unhandled
-        # exceptions here. In such a case we try to inform the user and
-        # terminate the program.
+        # back to the python interpreter - those would simply be ignored.
+        # Therefore we have to catch all unhandled exceptions here.
         try:
             if msg != WM_NCCREATE:
                 self_prop = user.get_prop_def(hwnd, _PROP_SELF)
@@ -387,25 +439,7 @@ class SimpleWnd(BaseWnd):
             else:
                 raise TypeError("not derived from SimpleWnd")
         except BaseException:
-            err_info = traceback.format_exc()
-            if sys.stderr is None or not hasattr(sys.stderr, 'mode'):
-                user.txt_to_clip(err_info)
-                err_info += '\nThe above text has been copied to the clipboard.'
-                user.MessageBox(
-                    None,
-                    err_info,
-                    "Terminating program",
-                    MB_OK | MB_ICONERROR
-                    )
-            else:
-                sys.stderr.write(err_info)
-
-            # Calling sys.exit() here won't help, since it depends on exception
-            # propagation. We could hope that this thread is pumping messages
-            # while watching for WM_QUIT messages and post such a message.
-            # Since this possibility seems too vague, we play it safe
-            # and call:
-            kernel.ExitProcess(1)
+            _exception_in_callback(traceback.format_exc())
 
     ############################################################################
 
@@ -416,10 +450,8 @@ class SimpleWnd(BaseWnd):
         wcp.cls.lpfnWndProc = self._wnd_proc_
 
         if wcp.cls.lpszClassName is None:
-            # calc hash over wcp.cls and in case it is negative convert it
-            # to its two's complement.
-            h = hash(bytes(wcp.cls))
-            h = h & (2 ** (h.bit_length() + 1) - 1)
+            # calc hash over wcp.cls and cast it to unsigned
+            h = hash(bytes(wcp.cls)) & (2 ** sys.hash_info.width - 1)
             wcp.cls.lpszClassName = f"ctwin32:{h:x}"
 
         try:
@@ -439,13 +471,7 @@ class SimpleWnd(BaseWnd):
             wcp.parent,
             wcp.menu,
             wcp.cls.hInstance,
-            # PVOID (or more precisely ctypes.c_void_p) has a flaw: neither can
-            # PVOID.from_param() process a py_object, nor does ctypes.cast()
-            # allow to convert a py_object to a PVOID (
-            # ctypes.cast(ctypes.py_object(self), PVOID) fails).
-            # Therefore we need this odd way of converting a python object
-            # pointer to PVOID.
-            PVOID.from_buffer(ctypes.py_object(self))
+            pvoid_from_obj(self)
             )
 
     ############################################################################
@@ -461,9 +487,18 @@ class SimpleWnd(BaseWnd):
 
 ################################################################################
 
-def load_ico_lzma_b85(lzma_b85_data):
-    data = lzma.decompress(base64.b85decode(lzma_b85_data))
-    return user.CreateIconFromResourceEx(data)
+def to_lzb85(raw_data):
+    return base64.b85encode(lzma.compress(raw_data))
+
+################################################################################
+
+def from_lzb85(lzb85_data):
+    return lzma.decompress(base64.b85decode(lzb85_data))
+
+################################################################################
+
+def load_ico_lz_b85(lz_b85_data):
+    return user.CreateIconFromResourceEx(from_lzb85(lz_b85_data))
 
 ################################################################################
 
@@ -499,7 +534,7 @@ _py_icon = (
     )
 
 def load_py_ico():
-    return load_ico_lzma_b85(_py_icon)
+    return load_ico_lz_b85(_py_icon)
 
 ################################################################################
 
@@ -530,6 +565,277 @@ _ctwin32_icon = (
     )
 
 def load_ctwin32_ico():
-    return load_ico_lzma_b85(_ctwin32_icon)
+    return load_ico_lz_b85(_ctwin32_icon)
+
+################################################################################
+
+class BaseDlg(BaseWnd):
+
+    def __init__(self, parent=None):
+        super().__init__()
+        self.parent = parent
+
+    ############################################################################
+
+    def parent_hwnd(self):
+        return self.parent.hwnd if self.parent else None
+
+    ############################################################################
+
+    @user.DLGPROC
+    @staticmethod
+    def _dlg_proc_(hwnd, msg, wp, lp):
+        # Since this is a python callback that ctypes calls when requested
+        # by foreign C code, ctypes has no way of propagating any exception
+        # back to the python interpreter - those would simply be ignored.
+        # Therefore we have to catch all unhandled exceptions here.
+        try:
+            if msg != WM_INITDIALOG:
+                self_prop = user.get_prop_def(hwnd, _PROP_SELF)
+                if self_prop:
+                    self = ctypes.cast(self_prop, ctypes.py_object).value
+                    if msg == WM_COMMAND:
+                        return self.on_command(
+                            LOWORD(wp),
+                            HIWORD(wp),
+                            HWND(lp)
+                            )
+                    elif msg == WM_NOTIFY:
+                        return self.on_notify(
+                            UINT(wp).value,
+                            ctypes.cast(lp, user.PNMHDR)
+                            )
+                    else:
+                        if msg == WM_ACTIVATE and self.parent:
+                            hdr = NMHDR(
+                                hwnd,
+                                user.GetDlgCtrlID(hwnd),
+                                MSDN_ACTIVATE
+                                )
+                            ma = NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
+                            self.parent.send_notify(ref(ma.hdr))
+                        res = self.on_message(msg, wp, lp)
+                        if (msg == WM_NCDESTROY):
+                            self.hwnd = None
+                        return res
+                else:
+                    return False
+            else:
+                self = ctypes.cast(lp, ctypes.py_object).value
+                if isinstance(self, BaseDlg):
+                    self.hwnd = hwnd
+                    self.set_prop(_PROP_SELF, lp)
+                    return self.on_init_dialog();
+                else:
+                    raise TypeError("not derived from BaseDlg")
+        except BaseException:
+            _exception_in_callback(traceback.format_exc())
+
+    ############################################################################
+
+    def create_modeless(self, template):
+        return user.CreateDialogIndirectParam(
+            template,
+            self.parent,
+            self._dlg_proc_,
+            pvoid_from_obj(self)
+            )
+
+    ############################################################################
+
+    def do_modal(self, template):
+        return user.DialogBoxIndirectParam(
+            template,
+            self.parent,
+            self._dlg_proc_,
+            pvoid_from_obj(self)
+            )
+
+    ############################################################################
+
+    def on_message(self, msg, wp, lp):
+        return False
+
+    def on_init_dialog(self):
+        return True
+
+    def on_command(self, cmd_id, notification, ctrl):
+        user.EndDialog(self.hwnd, IDCANCEL)
+        return True
+
+    def on_notify(self, ctrl_id, pnmhdr):
+        return False
+
+    def __del__(self):
+        self.destroy()
+
+    def get_item(self, id):
+        return self.get_dlg_item(id)
+
+    def set_item_text(self, id, txt):
+        return self.set_dlg_item_text(id, txt)
+
+    def get_item_text(self, id):
+        return self.get_dlg_item_text(id)
+
+    def is_button_checked(self, id):
+        return self.is_dlg_button_checked(id)
+
+    def check_button(self, id, check):
+        self.check_dlg_button(id, check)
+
+    def send_destroy_request(self):
+        if self.parent:
+            md = NM_MSD_DESTROY(
+                m_hWnd,
+                user.GetDlgCtrlID(self.hwnd),
+                MSDN_DESTROY
+                )
+            self.parent.send_notify(ref(md))
+        else:
+            self.destroy()
+
+    def set_msg_result(self, result):
+        user.SetWindowLongPtr(self.hwnd, DWLP_MSGRESULT, result)
+
+################################################################################
+
+_std_classes = {
+    "button":    b"\xff\xff" + bytes(WORD(0x80)),
+    "edit":      b"\xff\xff" + bytes(WORD(0x81)),
+    "static":    b"\xff\xff" + bytes(WORD(0x82)),
+    "listbox":   b"\xff\xff" + bytes(WORD(0x83)),
+    "scrollbar": b"\xff\xff" + bytes(WORD(0x84)),
+    "combobox":  b"\xff\xff" + bytes(WORD(0x85)),
+    }
+
+################################################################################
+
+def dlg_item_bytes(
+        style,
+        x,
+        y,
+        cx,
+        cy,
+        id,
+        cls,
+        title,
+        cdata=None
+        ):
+    style |= WS_VISIBLE | WS_CHILD
+    # bytes = template + class + title + creation data
+    cls = (
+        _std_classes.get(cls.lower(), None) or
+        bytes(ctypes.create_unicode_buffer(cls))
+        )
+    cdata = (
+        bytes(WORD(0)) if cdata is None
+        else bytes(WORD(len(cdata))) + cdata
+        )
+    bts = (
+        bytes(user.DLGITEMTEMPLATE(style, 0, x, y, cx, cy, id)) +
+        cls +
+        bytes(ctypes.create_unicode_buffer(title)) +
+        cdata
+        )
+    # align to DWORD for the following items
+    bts += (-len(bts) % 4) * b"\0"
+    assert len(bts) % 4 == 0
+    return bts
+
+################################################################################
+
+def dlg_bytes(
+        items,
+        style,
+        x,
+        y,
+        cx,
+        cy,
+        title,
+        typeface,
+        pointsize = 8,
+        ):
+    # bytes = template + menu + class + title + pointsize + typeface + items
+    style |= DS_SETFONT # always set font
+    tmpl = user.DLGTEMPLATE(style, 0, len(items), x, y, cx, cy)
+    bts = (
+        bytes(tmpl) +
+        bytes(WORD(0)) +    # no menu
+        bytes(WORD(0)) +    # default class
+        bytes(ctypes.create_unicode_buffer(title)) +
+        bytes(WORD(pointsize)) +
+        bytes(ctypes.create_unicode_buffer(typeface))
+        )
+    # align to DWORD for the following items
+    bts += (-len(bts) % 4) * b"\0"
+    for item in items:
+        bts += dlg_item_bytes(*item)
+    return bts
+
+################################################################################
+
+class InputDlg(BaseDlg):
+
+    QUESTION_ID = 100
+    ANSWER_ID   = 101
+    ED_STYLE = ES_AUTOHSCROLL | ES_LEFT | WS_BORDER | WS_TABSTOP
+    DLG_ITEMS = (
+        (SS_CENTER | WS_GROUP, 7, 7, 201, 18, QUESTION_ID, "static", ""),
+        (ED_STYLE, 7, 31, 201, 13, ANSWER_ID, "edit", ""),
+        (BS_DEFPUSHBUTTON | WS_TABSTOP, 104, 51, 50, 14, IDOK, "button", "OK"),
+        (WS_TABSTOP, 158, 51, 50, 14, IDCANCEL, "button", "Cancel"),
+        )
+
+    ############################################################################
+
+    def __init__(self, fontsize=8, parent=None):
+        self.fontsize = fontsize
+        self.question = None
+        self.answer = None
+        self.password = False
+        super().__init__(parent)
+
+    ############################################################################
+
+    def on_init_dialog(self):
+        if self.password:
+            # black circle -> U+25cf -> 9679
+            self.get_item(self.ANSWER_ID).send_msg(EM_SETPASSWORDCHAR, 9679, 0)
+
+        if self.question is not None:
+            self.set_item_text(self.QUESTION_ID, self.question)
+
+        self.center(self.parent)
+        return True
+
+    ############################################################################
+
+    def on_command(self, cmd_id, notification, ctrl):
+        if cmd_id == IDOK or cmd_id == IDCANCEL:
+            if cmd_id == IDOK:
+                self.answer = self.get_item_text(self.ANSWER_ID)
+            user.EndDialog(self.hwnd, cmd_id)
+        return True
+
+    ############################################################################
+
+    def ask(self, question, caption="", password=False):
+        self.question = question
+        self.password = password
+        template = dlg_bytes(
+            self.DLG_ITEMS,
+            DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU,
+            0,
+            0,
+            215,
+            72,
+            caption,
+            "MS Shell Dlg",
+            (self.fontsize * self.get_dpi_scale_100() + 50) // 100
+            )
+
+        if self.do_modal(template) == IDOK:
+            return self.answer
 
 ################################################################################

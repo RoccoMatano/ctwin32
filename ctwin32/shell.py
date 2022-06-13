@@ -156,7 +156,7 @@ def ShellExecuteEx(
     wait=False,
     show=SW_SHOW
     ):
-    sei = SHELLEXECUTEINFOW(file, verb, param, direc, wait, show)
+    sei = SHELLEXECUTEINFOW(str(file), verb, param, direc, wait, show)
 
     raise_on_zero(_ShellExecuteExW(ref(sei)))
 
