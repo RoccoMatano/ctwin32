@@ -253,7 +253,7 @@ def _adapter_addresses_to_interfaces(p_adresses, include_loopback):
                 plen = _best_prefix_len(ip, prefixes)
                 result[adptr_name].append(_iaddr.ip_interface(f"{ip}/{plen}"))
 
-    return dict(result) # no more default values
+    return dict(result)  # no more default values
 
 ################################################################################
 
@@ -261,7 +261,7 @@ def get_host_interfaces(version=4, include_loopback=False):
     "returns the list of the ip interfaces of the local network adapters"
 
     fam = AF_INET
-    if version != 4 and  version != 6:
+    if version != 4 and version != 6:
         fam = AF_UNSPEC
     elif version == 6:
         fam = AF_INET6

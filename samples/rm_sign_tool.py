@@ -22,7 +22,6 @@
 #
 ################################################################################
 
-import sys
 import argparse
 from ctwin32.bcrypt import (
     BCRYPT_ECDSA_P256_ALGORITHM,

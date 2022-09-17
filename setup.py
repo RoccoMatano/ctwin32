@@ -7,12 +7,13 @@ from ctwin32 import version
 #   - platform tag can be set from the outside
 #   - temporaries are kept to be able to build several wheels
 from wheel.bdist_wheel import bdist_wheel
+
 class hacked_bdist_wheel(bdist_wheel):
     def get_tag(self):
         # get pristine tags
         impl, abi_tag, plat_name = bdist_wheel.get_tag(self)
 
-        #overwrite platform tag from global
+        # overwrite platform tag from global
         plat_name = global_platform_tag
         # keep temporaries, so we can build another wheel from them
         self.keep_temp = True
@@ -24,18 +25,18 @@ class hacked_bdist_wheel(bdist_wheel):
 github_url = "https://github.com/RoccoMatano/ctwin32"
 params = {
     "cmdclass": {'bdist_wheel': hacked_bdist_wheel},
-    "name" : "ctwin32",
-    "version" : version,
-    "description" : "Access selected win32 APIs through ctypes.",
+    "name": "ctwin32",
+    "version": version,
+    "description": "Access selected win32 APIs through ctypes.",
     "long_description_content_type": "text/markdown",
-    "author" : "Rocco Matano",
-    "license" : "MIT License",
+    "author": "Rocco Matano",
+    "license": "MIT License",
     "packages": ["ctwin32"],
-    "install_requires" : [],
+    "install_requires": [],
     "author_email": " ",
     "platforms": ["win32"],
     "url": github_url,
-    "project_urls": {"Changelog": f"{github_url}/blob/master/changelog.md",},
+    "project_urls": {"Changelog": f"{github_url}/blob/master/changelog.md"},
     "python_requires": ">=3.6",
     "classifiers": [
         "License :: OSI Approved :: MIT License",

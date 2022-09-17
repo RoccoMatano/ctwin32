@@ -40,8 +40,8 @@ MSIDBOPEN_CREATE       = PWSTR(3)
 MSIDBOPEN_CREATEDIRECT = PWSTR(4)
 MSIDBOPEN_PATCHFILE    = PWSTR(32 // 2)
 
-BIN_NAME_IDX = 1 # field index of binary name
-BIN_DATA_IDX = 2 # field index of binary data
+BIN_NAME_IDX = 1  # field index of binary name
+BIN_DATA_IDX = 2  # field index of binary data
 
 ################################################################################
 

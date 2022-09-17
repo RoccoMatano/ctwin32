@@ -350,17 +350,17 @@ class WINDOWPLACEMENT(ctypes.Structure):
         self.NormalPosition = no
 
     def __repr__(self):
-        c = self.__class__.__name__
-        l = self.length
-        f = self.flags
-        s = self.showCmd
+        cl = self.__class__.__name__
+        ln = self.length
+        fl = self.flags
+        sc = self.showCmd
         mi = f"({self.MinPosition.x}, {self.MinPosition.y})"
         ma = f"({self.MaxPosition.x}, {self.MaxPosition.y})"
         no = (
             f"({self.NormalPosition.left}, {self.NormalPosition.top}, " +
             f"{self.NormalPosition.right}, {self.NormalPosition.bottom})"
             )
-        return f"{c}({l}, {f}, {s}, {mi}, {ma}, {no})"
+        return f"{cl}({ln}, {fl}, {sc}, {mi}, {ma}, {no})"
 
 PWINDOWPLACEMENT = POINTER(WINDOWPLACEMENT)
 
@@ -558,6 +558,7 @@ class MONITORINFOEX(ctypes.Structure):
         ("dwFlags", DWORD),
         ("szDevice", WCHAR * 32),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -748,19 +749,19 @@ _CreateWindowEx = fun_fact(
     )
 
 def CreateWindowEx(
-    ex_style,
-    class_name,
-    wnd_name,
-    style,
-    x,
-    y,
-    width,
-    height,
-    parent,
-    menu,
-    hinst,
-    create_param
-    ):
+        ex_style,
+        class_name,
+        wnd_name,
+        style,
+        x,
+        y,
+        width,
+        height,
+        parent,
+        menu,
+        hinst,
+        create_param
+        ):
     hwnd = _CreateWindowEx(
         ex_style,
         class_name,
@@ -1060,7 +1061,7 @@ def RemoveProp(hwnd, name):
 _EnumPropsCallback = ctypes.WINFUNCTYPE(
     BOOL,
     HWND,
-    PVOID, #cannot use PWSTR, since it can be string or atom
+    PVOID,  # cannot use PWSTR, since it can be string or atom
     HANDLE,
     CallbackContextPtr
     )
@@ -1187,7 +1188,7 @@ def txt_from_clip(hwnd=None):
     hmem = GetClipboardData(CF_UNICODETEXT)
     txt = ctypes.wstring_at(kernel.GlobalLock(hmem))
     kernel.GlobalUnlock(hmem)
-    CloseClipboard();
+    CloseClipboard()
     return txt
 
 ################################################################################
@@ -1227,13 +1228,12 @@ _CreateIconFromResourceEx = fun_fact(
     )
 
 def CreateIconFromResourceEx(
-    data,
-    cx=0,
-    cy=0,
-    is_icon=True,
-    default_size=False
-    ):
-
+        data,
+        cx=0,
+        cy=0,
+        is_icon=True,
+        default_size=False
+        ):
     res = _CreateIconFromResourceEx(
         data,
         len(data),
@@ -1260,6 +1260,7 @@ class GUITHREADINFO(ctypes.Structure):
         ("hwndCaret",     HWND),
         ("rcCaret",       RECT),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -1301,6 +1302,7 @@ class NONCLIENTMETRICS(ctypes.Structure):
         ("lfMessageFont",      LOGFONT),
         ("iPaddedBorderWidth", INT),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -1361,7 +1363,7 @@ def get_work_area():
 ################################################################################
 
 class DLGTEMPLATE(ctypes.Structure):
-    _pack_ = 2 # for correct length
+    _pack_ = 2  # for correct length
     _fields_ = (
         ("style", DWORD),
         ("dwExtendedStyle", DWORD),
@@ -1375,7 +1377,7 @@ class DLGTEMPLATE(ctypes.Structure):
 ################################################################################
 
 class DLGTEMPLATEEX(ctypes.Structure):
-    _pack_ = 2 # for correct length
+    _pack_ = 2  # for correct length
     _fields_ = (
         ("dlgVer", WORD),
         ("signature", WORD),
@@ -1392,15 +1394,15 @@ class DLGTEMPLATEEX(ctypes.Structure):
 ################################################################################
 
 class DLGITEMTEMPLATE(ctypes.Structure):
-    _pack_ = 2 # for correct length
+    _pack_ = 2  # for correct length
     _fields_ = (
-        ("style",DWORD),
+        ("style", DWORD),
         ("exstyle", DWORD),
         ("x", SHORT),
         ("y", SHORT),
         ("cx", SHORT),
         ("cy", SHORT),
-        ("id", WORD ),
+        ("id", WORD),
         )
 
 ################################################################################
@@ -1415,7 +1417,7 @@ PNMHDR = POINTER(NMHDR)
 
 
 MSDN_FIRST = 0xf060       # ModelesS Dialog
-MSDN_LAST  = MSDN_FIRST + 50
+MSDN_LAST = MSDN_FIRST + 50
 
 MSDN_ACTIVATE = MSDN_FIRST + 1
 class NM_MSD_ACTIVATE(ctypes.Structure):

@@ -22,11 +22,13 @@
 #
 ################################################################################
 
+import sys
 import argparse
 from ctwin32 import (
     ctypes,
     user,
     advapi,
+    shell,
     HWND_BROADCAST,
     WM_SETTINGCHANGE,
     SMTO_NORMAL,
@@ -136,10 +138,9 @@ def parse_args():
 
 ################################################################################
 
-def main():
-    args = parse_args()
-    persist_env_var(args.name, args.value, args.system, True)
-    if args.verbose:
+def main(name, value, system, verbose):
+    persist_env_var(name, value, system, True)
+    if verbose:
         print(f"variables for {'system' if args.system else 'user'}:")
         for name, value in get_env_block(args.system).items():
             print(f"    {name} = {value}")
@@ -147,6 +148,12 @@ def main():
 ################################################################################
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+
+    # Setting system variables requires administrative privileges.
+    if args.system and not advapi.running_as_admin():
+        shell.elevate(sys.executable, *sys.argv)
+    else:
+        main(args.name, args.value, args.system, args.verbose)
 
 ################################################################################

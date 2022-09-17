@@ -35,7 +35,6 @@ from . import (
     ns_from_struct,
     REG_DWORD,
     REG_QWORD,
-    REG_BINARY,
     REG_SZ,
     REG_EXPAND_SZ,
     REG_MULTI_SZ,
@@ -121,7 +120,7 @@ def registry_to_py(reg_type, data):
             result = data.decode("utf-16").strip("\0")
             if reg_type == REG_MULTI_SZ:
                 result = result.split("\0")
-    elif reg_type in (REG_DWORD, REG_QWORD) :
+    elif reg_type in (REG_DWORD, REG_QWORD):
         result = int.from_bytes(data, byteorder=ENDIANNESS, signed=False)
     else:
         result = data
@@ -846,14 +845,14 @@ _SetNamedSecurityInfo = fun_fact(
     )
 
 def SetNamedSecurityInfo(
-    name,
-    otype,
-    *,
-    owner=None,
-    group=None,
-    dacl=None,
-    sacl=None
-    ):
+        name,
+        otype,
+        *,
+        owner=None,
+        group=None,
+        dacl=None,
+        sacl=None
+        ):
     set_info = 0
     if owner is not None:
         set_info |= OWNER_SECURITY_INFORMATION
@@ -884,7 +883,12 @@ def CloseServiceHandle(handle):
 
 ################################################################################
 
-class SC_HANDLE(ScdToBeClosed, HANDLE, close_func=CloseServiceHandle, invalid=0):
+class SC_HANDLE(
+        ScdToBeClosed,
+        HANDLE,
+        close_func=CloseServiceHandle,
+        invalid=0
+        ):
     pass
 
 ################################################################################
@@ -931,19 +935,19 @@ _CreateService = fun_fact(
     )
 
 def CreateService(
-    scm,
-    service_name,
-    display_name,
-    desired_acc,
-    service_type,
-    start_type,
-    error_control,
-    binary_path_name,
-    load_order_group,
-    dependencies,
-    service_start_name,
-    password
-    ):
+        scm,
+        service_name,
+        display_name,
+        desired_acc,
+        service_type,
+        start_type,
+        error_control,
+        binary_path_name,
+        load_order_group,
+        dependencies,
+        service_start_name,
+        password
+        ):
     res = SC_HANDLE(
         _CreateService(
             scm,
@@ -1384,7 +1388,7 @@ def _evt_from_void_p(vpelr):
             ctypes.string_at(vpelr.value + elr.UserSidOffset)
             )
     data = ctypes.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
-    p_str = vpelr.value + ctypes.sizeof(EVENTLOGRECORD);
+    p_str = vpelr.value + ctypes.sizeof(EVENTLOGRECORD)
     src_name = ctypes.wstring_at(p_str)
     p_str += (len(src_name) + 1) * ctypes.sizeof(WCHAR)
     computer_name = ctypes.wstring_at(p_str)

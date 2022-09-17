@@ -36,7 +36,6 @@ from types import SimpleNamespace
 from ctwin32 import (
     ctypes,
     kernel,
-    user,
     wndcls,
     LOAD_LIBRARY_AS_IMAGE_RESOURCE,
     LOAD_LIBRARY_AS_DATAFILE,
@@ -114,7 +113,7 @@ def get_ico_file_info(filename):
                 )
             for e in entries
             ]
-        return [(0, image_info),]
+        return [(0, image_info)]
 
 ################################################################################
 
@@ -180,7 +179,7 @@ def main():
     flags = LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE
     try:
         hmod = kernel.LoadLibraryEx(filename, flags)
-    except OSError as e:
+    except OSError:
         hmod = None
 
     if hmod is None:

@@ -26,7 +26,7 @@
 
 from ctwin32.iphlpapi import get_host_interfaces
 
-for name, ifaces in get_host_interfaces(None).items():
+for name, ifaces in get_host_interfaces(None, True).items():
     print(f"\nAdapter: {name}")
     for nif in ifaces:
         print(f"    {nif!r}")

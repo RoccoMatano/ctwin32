@@ -22,11 +22,13 @@
 #
 ################################################################################
 
-version = "1.9.0"
-
 from types import SimpleNamespace as _namespace
 from .wtypes import *
 ref = ctypes.byref
+
+################################################################################
+
+version = "1.9.0"
 
 ################################################################################
 
@@ -7559,7 +7561,7 @@ MAXIMUM_RESERVED_MANIFEST_RESOURCE_ID = PWSTR(16)
 
 IMAGE_FILE_MACHINE_UNKNOWN = 0
 IMAGE_FILE_MACHINE_TARGET_HOST = 0x0001
-IMAGE_FILE_MACHINE_I386= 0x014c
+IMAGE_FILE_MACHINE_I386 = 0x014c
 IMAGE_FILE_MACHINE_R3000 = 0x0162
 IMAGE_FILE_MACHINE_R4000 = 0x0166
 IMAGE_FILE_MACHINE_R10000 = 0x0168
@@ -7723,5 +7725,3 @@ DS_CENTER = 0x0800
 DS_CENTERMOUSE = 0x1000
 DS_CONTEXTHELP = 0x2000
 DS_SHELLFONT = (DS_SETFONT | DS_FIXEDSYS)
-
-

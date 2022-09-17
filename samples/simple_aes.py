@@ -44,7 +44,7 @@ def simple_py_aes_encrypt(data, key):
     blen = CRYPT_BLOCK_LEN
     rng = range(0, len(data), blen)
     aes = pyaes.AESModeOfOperationCBC(key, None)
-    return b"".join(aes.encrypt(data[i : i + blen]) for i in rng)
+    return b"".join(aes.encrypt(data[i:i + blen]) for i in rng)
 
 ################################################################################
 
@@ -52,7 +52,7 @@ def simple_py_aes_decrypt(data, key):
     blen = CRYPT_BLOCK_LEN
     rng = range(0, len(data), blen)
     aes = pyaes.AESModeOfOperationCBC(key, None)
-    return b"".join(aes.decrypt(data[i : i + blen]) for i in rng)
+    return b"".join(aes.decrypt(data[i:i + blen]) for i in rng)
 
 ################################################################################
 
@@ -83,7 +83,7 @@ def hex_dump(data, bytes_per_line=16):
     offset = 0
     while offset < length:
         chunk_len = min(length - offset, bytes_per_line)
-        chunk = data[offset : offset + chunk_len]
+        chunk = data[offset:offset + chunk_len]
         ascii = chunk.translate(_ascii_trans).decode('ascii')
         hexa = " ".join([f"{c:02x}" for c in chunk]).ljust(hex_chars)
         lines.append(f"{offset:08x} | {hexa} | {ascii}")

@@ -118,6 +118,7 @@ class FILETIME(ctypes.Structure):
         ("LowDateTime", DWORD),
         ("HighDateTime", DWORD),
         )
+
     def __init__(self, i64=0):
         self.LowDateTime = i64 & 0xffffffff
         self.HighDateTime = i64 >> 32
@@ -265,6 +266,7 @@ class LUID(ctypes.Structure):
         ("LowPart", DWORD),
         ("HighPart", LONG)
         )
+
     def __int__(self):
         return self.LowPart | (self.HighPart << 32)
 

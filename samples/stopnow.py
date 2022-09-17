@@ -52,7 +52,6 @@ def parse_args():
 ################################################################################
 
 def disconnect_rdp():
-    prefix = "RDP-Tcp"
     for info in misc.WTSEnumerateSessions():
         if info.State == WTSActive:
             if info.WinStationName.startswith("RDP-Tcp"):

@@ -23,7 +23,8 @@
 ################################################################################
 
 # This sample demonstrates how to get the version information from the resource
-# section of a PE file. It simply takes the python executuble as its test object.
+# resource section of a PE file. It simply takes the python executuble as its
+# test object.
 
 import sys
 import collections

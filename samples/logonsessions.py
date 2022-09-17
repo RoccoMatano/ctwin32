@@ -22,7 +22,8 @@
 #
 ################################################################################
 
-# inspired by https://docs.microsoft.com/en-us/sysinternals/downloads/logonsessions
+# inspired by
+# https://docs.microsoft.com/en-us/sysinternals/downloads/logonsessions
 
 import sys
 from ctwin32.advapi import running_as_admin

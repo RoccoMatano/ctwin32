@@ -158,11 +158,11 @@ def BCryptCloseAlgorithmProvider(balg):
     raise_failed_status(_BCryptCloseAlgorithmProvider(balg, 0))
 
 class BCRYPT_ALG(
-    ScdToBeClosed,
-    HANDLE,
-    close_func=BCryptCloseAlgorithmProvider,
-    invalid=0
-    ):
+        ScdToBeClosed,
+        HANDLE,
+        close_func=BCryptCloseAlgorithmProvider,
+        invalid=0
+        ):
     pass
 
 ################################################################################

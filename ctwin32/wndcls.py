@@ -30,7 +30,6 @@ import base64
 from .wtypes import *
 from . import (
     ref,
-    fun_fact,
     kernel,
     user,
     gdi,
@@ -48,7 +47,6 @@ from . import (
     ES_AUTOHSCROLL,
     ES_LEFT,
     GWLP_HINSTANCE,
-    GWLP_USERDATA,
     GWL_EXSTYLE,
     GWL_STYLE,
     HORZRES,
@@ -61,12 +59,10 @@ from . import (
     MB_ICONERROR,
     MB_OK,
     SS_CENTER,
-    SWP_FRAMECHANGED,
     SWP_NOACTIVATE,
     SWP_NOMOVE,
     SWP_NOSIZE,
     SWP_NOZORDER,
-    SW_SHOW,
     SW_SHOW,
     WM_ACTIVATE,
     WM_COMMAND,
@@ -107,10 +103,10 @@ class BaseWnd:
     def post_msg(self, msg, wp, lp):
         user.PostMessage(self.hwnd, msg, wp, lp)
 
-    def send_dlg_item_msg(self, id , msg, wp, lp):
+    def send_dlg_item_msg(self, id, msg, wp, lp):
         return user.SendDlgItemMessage(self.hwnd, id, msg, wp, lp)
 
-    def set_dlg_item_text(self, id , txt):
+    def set_dlg_item_text(self, id, txt):
         user.SetDlgItemText(self.hwnd, id, txt)
 
     def get_dlg_item_text(self, id):
@@ -248,7 +244,7 @@ class BaseWnd:
     def get_cursor_pos(self):
         pt = user.GetCursorPos()
         user.MapWindowPoints(None, self.hwnd, ref(pt), 1)
-        return pt;
+        return pt
 
     def get_nc_cursor_pos(self):
         pt = user.GetCursorPos()
@@ -290,8 +286,8 @@ class BaseWnd:
         if new_style != style:
             user.SetWindowLong(self.hwnd, idx, new_style)
             if flags:
-                flags |= SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER;
-                self.set_pos(None, 0, 0, 0, 0, flags);
+                flags |= SWP_NOSIZE | SWP_NOMOVE | SWP_NOZORDER
+                self.set_pos(None, 0, 0, 0, 0, flags)
 
     def modify_exstyle(self, remove, add, flags=0):
         self.modify_style(remove, add, flags, GWL_EXSTYLE)
@@ -366,10 +362,10 @@ class WndCreateParams:
 
 def _exception_in_callback(err_info):
     # During a callback from C code into python code (through ctypes) an
-    # exception occured in that python code - described by the string 'err_info'.
-    # Since there is no possibility to propagate this exception to the python
-    # interpreter, we have to terminate the process. Before we do that, we try
-    # to inform the user.
+    # exception occured in that python code - described by the string
+    # 'err_info'. Since there is no possibility to propagate this exception
+    # to the python interpreter, we have to terminate the process. Before we
+    # do that, we try to inform the user.
 
     if sys.stderr is None or not hasattr(sys.stderr, 'mode'):
         user.txt_to_clip(err_info)
@@ -625,7 +621,7 @@ class BaseDlg(BaseWnd):
                 if isinstance(self, BaseDlg):
                     self.hwnd = hwnd
                     self.set_prop(_PROP_SELF, lp)
-                    return self.on_init_dialog();
+                    return self.on_init_dialog()
                 else:
                     raise TypeError("not derived from BaseDlg")
         except BaseException:
@@ -754,10 +750,10 @@ def dlg_bytes(
         cy,
         title,
         typeface,
-        pointsize = 8,
+        pointsize=8,
         ):
     # bytes = template + menu + class + title + pointsize + typeface + items
-    style |= DS_SETFONT # always set font
+    style |= DS_SETFONT  # always set font
     tmpl = user.DLGTEMPLATE(style, 0, len(items), x, y, cx, cy)
     bts = (
         bytes(tmpl) +

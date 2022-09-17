@@ -208,6 +208,7 @@ class TASKDIALOGCONFIG(ctypes.Structure):
         ("lpCallbackData", CallbackContextPtr),
         ("cxWidth", UINT),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -243,7 +244,7 @@ def TaskDialogIndirect(tsk_dlg_cfg):
 
 def tsk_dlg_callback(tsk_dlg_cfg, callback, context=None):
     ctxt = CallbackContext(callback, context)
-    tsk_dlg_cfg.pfCallback  = _TskDlgCb
+    tsk_dlg_cfg.pfCallback = _TskDlgCb
     tsk_dlg_cfg.lpCallbackData = ctypes.pointer(ctxt)
     return TaskDialogIndirect(tsk_dlg_cfg)
 

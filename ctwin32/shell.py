@@ -41,8 +41,6 @@ from . import (
     ref,
     )
 
-from .kernel import WaitForSingleObject, CloseHandle, LocalFree
-
 _sh = ctypes.WinDLL("shell32.dll")
 
 ################################################################################
@@ -131,6 +129,7 @@ class SHELLEXECUTEINFOW(ctypes.Structure):
         ("hMonitor", HANDLE),
         ("hProcess", HANDLE),
         )
+
     def __init__(self, file, verb, param, direc, wait, show):
         self.cbSize = ctypes.sizeof(self)
         self.lpVerb = verb
@@ -149,20 +148,20 @@ _ShellExecuteExW = fun_fact(_sh.ShellExecuteExW, (BOOL, PSHELLEXECUTEINFOW))
 ################################################################################
 
 def ShellExecuteEx(
-    file,
-    verb=None,
-    param=None,
-    direc=None,
-    wait=False,
-    show=SW_SHOW
-    ):
+        file,
+        verb=None,
+        param=None,
+        direc=None,
+        wait=False,
+        show=SW_SHOW
+        ):
     sei = SHELLEXECUTEINFOW(str(file), verb, param, direc, wait, show)
 
     raise_on_zero(_ShellExecuteExW(ref(sei)))
 
     if sei.hProcess is not None:
-        kernel.WaitForSingleObject(sei.hProcess, INFINITE);
-        kernel.CloseHandle(sei.hProcess);
+        kernel.WaitForSingleObject(sei.hProcess, INFINITE)
+        kernel.CloseHandle(sei.hProcess)
 
 ################################################################################
 
@@ -181,7 +180,7 @@ def relegate(*args, wait=False):
             cflags = CREATE_NEW_CONSOLE | EXTENDED_STARTUPINFO_PRESENT
             with kernel.create_process(args, cflags, si) as pi:
                 if wait:
-                    kernel.WaitForSingleObject(pi.hProcess, INFINITE);
+                    kernel.WaitForSingleObject(pi.hProcess, INFINITE)
 
 ################################################################################
 
@@ -199,7 +198,7 @@ def CommandLineToArgv(cmdline):
     try:
         return [pargs[i] for i in range(argc.value)]
     finally:
-        LocalFree(pargs)
+        kernel.LocalFree(pargs)
 
 ################################################################################
 

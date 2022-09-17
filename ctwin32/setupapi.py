@@ -43,8 +43,6 @@ from .cfgmgr import (
     CM_Get_Device_ID,
     CM_Get_DevNode_Status,
     CM_Enumerate_Enumerators,
-    CM_Get_Parent,
-    CM_Request_Device_Eject,
     CM_Enumerate_Classes,
     )
 from .advapi import registry_to_py
@@ -60,6 +58,7 @@ class SP_DEVINFO_DATA(ctypes.Structure):
         ("DevInst", DWORD),
         ("Reserved", ULONG_PTR),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -82,6 +81,7 @@ class SP_PROPCHANGE_PARAMS(ctypes.Structure):
         ("Scope", DWORD),
         ("HwProfile", DWORD),
         )
+
     def __init__(self, func, change, scope=DICS_FLAG_CONFIGSPECIFIC, prof=0):
         self.ClassInstallHeader.cbSize = ctypes.sizeof(self.ClassInstallHeader)
         self.ClassInstallHeader.InstallFunction = func
@@ -100,6 +100,7 @@ class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
         ("Flags", DWORD),
         ("Reserved", ULONG_PTR),
         )
+
     def __init__(self):
         self.cbSize = ctypes.sizeof(self)
 
@@ -123,11 +124,11 @@ def SetupDiDestroyDeviceInfoList(info_set):
 ################################################################################
 
 class HDEVINFO(
-    ScdToBeClosed,
-    HANDLE,
-    close_func=SetupDiDestroyDeviceInfoList,
-    invalid=INVALID_HANDLE_VALUE
-    ):
+        ScdToBeClosed,
+        HANDLE,
+        close_func=SetupDiDestroyDeviceInfoList,
+        invalid=INVALID_HANDLE_VALUE
+        ):
     pass
 
 ################################################################################
@@ -138,13 +139,13 @@ _SetupDiGetClassDevs = fun_fact(
     )
 
 def SetupDiGetClassDevs(
-    guid=None,
-    enumerator=None,
-    flags=DIGCF_PRESENT | DIGCF_ALLCLASSES,
-    hwnd=None
-    ):
+        guid=None,
+        enumerator=None,
+        flags=DIGCF_PRESENT | DIGCF_ALLCLASSES,
+        hwnd=None
+        ):
     if guid is not None:
-        guid = ref(GUID(guid)) # need ctypes instance
+        guid = ref(GUID(guid))  # need ctypes instance
         flags &= ~ DIGCF_ALLCLASSES
     res = HDEVINFO(_SetupDiGetClassDevs(guid, enumerator, hwnd, flags))
     res.raise_on_invalid()
@@ -169,7 +170,7 @@ def get_device_enumerators():
         try:
             res.append(CM_Enumerate_Enumerators(idx))
             idx += 1
-        except OSError as e:
+        except OSError:
             break
     return res
 
@@ -182,7 +183,7 @@ def get_device_classes(flags=0):
         try:
             res.append(CM_Enumerate_Classes(idx, flags))
             idx += 1
-        except OSError as e:
+        except OSError:
             break
     return res
 
@@ -194,7 +195,7 @@ _SetupDiClassNameFromGuid = fun_fact(
     )
 
 def SetupDiClassNameFromGuid(guid):
-    guid = GUID(guid) # need ctypes instance
+    guid = GUID(guid)  # need ctypes instance
     req_size = DWORD(0)
     _SetupDiClassNameFromGuid(ref(guid), None, 0, ref(req_size))
     name = ctypes.create_unicode_buffer(req_size.value)
@@ -225,10 +226,10 @@ _SetupDiCreateDeviceInfoList = fun_fact(
 
 def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
     if guid is not None:
-        guid = ref(GUID(guid)) # need ctypes instance
+        guid = ref(GUID(guid))  # need ctypes instance
     res = HDEVINFO(_SetupDiCreateDeviceInfoList(guid, hwnd))
     res.raise_on_invalid()
-    return res;
+    return res
 
 ################################################################################
 
@@ -356,7 +357,10 @@ def get_non_present_info_set():
             try:
                 CM_Get_DevNode_Status(deinda.DevInst)
             except OSError:
-                SetupDiOpenDeviceInfo(non_present, CM_Get_Device_ID(deinda.DevInst))
+                SetupDiOpenDeviceInfo(
+                    non_present,
+                    CM_Get_Device_ID(deinda.DevInst)
+                    )
             idx += 1
     return non_present
 
@@ -409,12 +413,12 @@ def SetupDiCallClassInstaller(func, info_set, deinda):
 ################################################################################
 
 def _prop_change(
-    info_set,
-    deinda,
-    change,
-    scope=DICS_FLAG_CONFIGSPECIFIC,
-    prof=0
-    ):
+        info_set,
+        deinda,
+        change,
+        scope=DICS_FLAG_CONFIGSPECIFIC,
+        prof=0
+        ):
     params = SP_PROPCHANGE_PARAMS(DIF_PROPERTYCHANGE, change, scope, prof)
     SetupDiSetClassInstallParams(info_set, deinda, ref(params))
     SetupDiCallClassInstaller(DIF_PROPERTYCHANGE, info_set, deinda)
@@ -508,7 +512,7 @@ def SetupDiEnumDeviceInterfaces(info_set, guid, idx):
         _SetupDiEnumDeviceInterfaces(
             info_set,
             None,
-            ref(GUID(guid)), # need ctypes instance
+            ref(GUID(guid)),  # need ctypes instance
             idx,
             ref(did)
             )
@@ -557,11 +561,13 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
         )
 
     diff = req_size.value - ctypes.sizeof(DWORD)
+
     class LOCAL_SPDIDD(ctypes.Structure):
         _fields_ = (
             ("cbSize", DWORD),
             ("DevicePath", BYTE * diff),
             )
+
     ifdetail = LOCAL_SPDIDD()
     ifdetail.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
     deinda = SP_DEVINFO_DATA()

@@ -81,7 +81,8 @@ def LsaFreeReturnBuffer(ptr):
 ################################################################################
 
 _LsaGetLogonSessionData = fun_fact(
-    _sec.LsaGetLogonSessionData, (NTSTATUS, PLUID, PPSECURITY_LOGON_SESSION_DATA)
+    _sec.LsaGetLogonSessionData,
+    (NTSTATUS, PLUID, PPSECURITY_LOGON_SESSION_DATA)
     )
 
 def LsaGetLogonSessionData(luid):
@@ -90,11 +91,13 @@ def LsaGetLogonSessionData(luid):
     try:
         lsd = ptr.contents
         lli = lsd.LastLogonInfo
+
         def us2s(us):
             return ctypes.wstring_at(
                 us.Buffer,
                 us.Length // ctypes.sizeof(WCHAR)
                 )
+
         def la2dt(la):
             st = FileTimeToSystemTime(FILETIME(la))
             if st.Year > 9999:
@@ -103,6 +106,7 @@ def LsaGetLogonSessionData(luid):
             else:
                 st = FileTimeToSystemTime(FileTimeToLocalFileTime(FILETIME(la)))
             return st.to_datetime()
+
         return _namespace(
             LogonId=int(lsd.LogonId),
             UserName=us2s(lsd.UserName),

@@ -51,7 +51,7 @@ def get_zombies(verbose):
             pass
         else:
             if (pebi.Flags & is_deleting) != 0:
-                path = ntdll.proc_path_from_handle(h);
+                path = ntdll.proc_path_from_handle(h)
                 zombies[h.value] = path
                 close_me = None
                 if verbose:
@@ -97,9 +97,9 @@ def main():
 
     zombies = get_zombie_object_addresses(verbose)
     if len(zombies):
-        print(f"Found {cnt2str(len(zombies))}.");
+        print(f"Found {cnt2str(len(zombies))}.")
     else:
-        print("No zombies found.");
+        print("No zombies found.")
 
     pids_and_paths = []
     gh = ntdll.get_grouped_handles()
@@ -123,9 +123,9 @@ def main():
             print(f"    {cnt2str(cnt)} of {path}")
 
     if zombies:
-        print("\nFound no owner for:");
+        print("\nFound no owner for:")
         for z in zombies.values():
-            print(f"    {z}");
+            print(f"    {z}")
 
 ################################################################################
 

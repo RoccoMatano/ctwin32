@@ -47,7 +47,6 @@ from ctwin32 import (
     FILE_DEVICE_CD_ROM,
     FILE_DEVICE_DVD,
     FILE_DEVICE_DISK,
-    SPDRP_REMOVAL_POLICY,
     INT,
     ULONG,
     GUID
@@ -59,10 +58,11 @@ from ctwin32 import (
 
 class STORAGE_DEVICE_NUMBER(ctypes.Structure):
     _fields_ = (
-    ("DeviceType", INT),
-    ("DeviceNumber", ULONG),
-    ("PartitionNumber", ULONG),
-    )
+        ("DeviceType", INT),
+        ("DeviceNumber", ULONG),
+        ("PartitionNumber", ULONG),
+        )
+
 IOCTL_STORAGE_GET_DEVICE_NUMBER = 0x002d1080
 GUID_IFACE_DISK = GUID("53f56307-b6bf-11d0-94f2-00a0c91efb8b")
 GUID_IFACE_CDROM = GUID("53f56308-b6bf-11d0-94f2-00a0c91efb8b")
@@ -71,14 +71,14 @@ GUID_IFACE_CDROM = GUID("53f56308-b6bf-11d0-94f2-00a0c91efb8b")
 
 def get_drive_type_number(file_name):
     with kernel.CreateFile(
-        file_name,
-        0,
-        FILE_SHARE_READ | FILE_SHARE_WRITE,
-        None,
-        OPEN_EXISTING,
-        0,
-        None
-        ) as vol:
+            file_name,
+            0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            None,
+            OPEN_EXISTING,
+            0,
+            None
+            ) as vol:
         sdn = kernel.DeviceIoControl(
             vol,
             IOCTL_STORAGE_GET_DEVICE_NUMBER,

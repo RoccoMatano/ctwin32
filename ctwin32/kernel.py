@@ -108,11 +108,11 @@ PKHANDLE = POINTER(KHANDLE)
 ################################################################################
 
 class FHANDLE(
-    ScdToBeClosed,
-    HANDLE,
-    close_func=CloseHandle,
-    invalid=INVALID_HANDLE_VALUE
-    ):
+        ScdToBeClosed,
+        HANDLE,
+        close_func=CloseHandle,
+        invalid=INVALID_HANDLE_VALUE
+        ):
     pass
 
 PFHANDLE = POINTER(FHANDLE)
@@ -125,6 +125,7 @@ class SECURITY_ATTRIBUTES(ctypes.Structure):
         ("nLength", DWORD),
         ("bInheritHandle", BOOL),
     )
+
 PSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 
 ################################################################################
@@ -622,6 +623,7 @@ class STARTUPINFO(ctypes.Structure):
         ("hStdOutput", HANDLE),
         ("hStdError", HANDLE),
         )
+
     def __init__(self):
         self.cb = ctypes.sizeof(STARTUPINFO)
 
@@ -632,6 +634,7 @@ class STARTUPINFOEX(ctypes.Structure):
         ("StartupInfo", STARTUPINFO),
         ("lpAttributeList", PVOID),
         )
+
     def __init__(self, attr_lst=None):
         self.StartupInfo.cb = ctypes.sizeof(STARTUPINFOEX)
         self.lpAttributeList = attr_lst
@@ -657,7 +660,6 @@ _UpdateProcThreadAttribute = fun_fact(
     )
 
 def UpdateProcThreadAttribute(alst, flags, id, attr):
-    size = SIZE_T(ctypes.sizeof(attr))
     raise_on_zero(
         _UpdateProcThreadAttribute(
             alst,
@@ -725,16 +727,16 @@ _CreateProcess = fun_fact(
     )
 
 def CreateProcess(
-    app_name,
-    cmd_line,
-    proc_attr,
-    thread_attr,
-    inherit,
-    cflags,
-    env,
-    curdir,
-    startup_info,
-    ):
+        app_name,
+        cmd_line,
+        proc_attr,
+        thread_attr,
+        inherit,
+        cflags,
+        env,
+        curdir,
+        startup_info,
+        ):
     proc_info = PROCESS_INFORMATION()
     if isinstance(startup_info, STARTUPINFOEX):
         psi = ref(startup_info.StartupInfo)
@@ -759,15 +761,15 @@ def CreateProcess(
 ################################################################################
 
 def create_process(
-    arglist,
-    cflags=0,
-    startup_info=None,
-    inherit=False,
-    env=None,
-    curdir=None,
-    proc_attr=None,
-    thread_attr=None,
-    ):
+        arglist,
+        cflags=0,
+        startup_info=None,
+        inherit=False,
+        env=None,
+        curdir=None,
+        proc_attr=None,
+        thread_attr=None,
+        ):
     if startup_info is None:
         startup_info = STARTUPINFO()
     return CreateProcess(
@@ -999,7 +1001,7 @@ class MESSAGE_RESOURCE_ENTRY(ctypes.Structure):
     _fields_ = (
         ("Length", WORD),
         ("Flags", WORD),
-        ("Text", BYTE), # in fact an array of (Length - offsetof(Text)) bytes
+        ("Text", BYTE),  # an array of (Length - offsetof(Text)) bytes
     )
 
 class MESSAGE_RESOURCE_BLOCK(ctypes.Structure):
@@ -1012,7 +1014,7 @@ class MESSAGE_RESOURCE_BLOCK(ctypes.Structure):
 class MESSAGE_RESOURCE_DATA(ctypes.Structure):
     _fields_ = (
         ("NumberOfBlocks", DWORD),
-        ("Blocks", MESSAGE_RESOURCE_BLOCK), # in fact an array of NumberOfBlocks
+        ("Blocks", MESSAGE_RESOURCE_BLOCK),  # an array of NumberOfBlocks
     )
 
 def load_message_string(hmod, msg_id):
@@ -1072,7 +1074,7 @@ def GetSystemInfo():
 
 ################################################################################
 
-_IsWow64Process = fun_fact(_k32.IsWow64Process,(BOOL, HANDLE, PBOOL))
+_IsWow64Process = fun_fact(_k32.IsWow64Process, (BOOL, HANDLE, PBOOL))
 
 def IsWow64Process(hprocess):
     res = BOOL()

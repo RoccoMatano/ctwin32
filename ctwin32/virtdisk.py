@@ -172,11 +172,11 @@ _AttachVirtualDisk = fun_fact(
     _vdisk.AttachVirtualDisk, (
         DWORD,
         KHANDLE,
-        PVOID, # no interest in supplying a security descriptor
+        PVOID,  # no interest in supplying a security descriptor
         LONG,
         ULONG,
         PATTACH_VIRTUAL_DISK_PARAMETERS,
-        PVOID, # no interest in supplying an overlapped
+        PVOID,  # no interest in supplying an overlapped
         )
     )
 

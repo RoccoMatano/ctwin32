@@ -152,7 +152,10 @@ def _env_block_from_token(token):
 
 def CreateEnvironmentBlock(token=None):
     if token is None:
-        with advapi.OpenProcessToken(kernel.GetCurrentProcess(), TOKEN_READ) as t:
+        with advapi.OpenProcessToken(
+                kernel.GetCurrentProcess(),
+                TOKEN_READ
+                ) as t:
             return _env_block_from_token(t)
     else:
         return _env_block_from_token(token)

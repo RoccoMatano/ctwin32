@@ -79,23 +79,23 @@ class SYSTEM_PROCESS_ID_INFORMATION(ctypes.Structure):
 class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
     "this is just a partial definition"
     _fields_ = (
-    ("NextEntryOffset", ULONG),
-    ("NumberOfThreads", ULONG),
-    ("WorkingSetPrivateSize", LARGE_INTEGER),
-    ("HardFaultCount", ULONG),
-    ("NumberOfThreadsHighWatermark", ULONG),
-    ("CycleTime", ULARGE_INTEGER),
-    ("CreateTime", LARGE_INTEGER),
-    ("UserTime", LARGE_INTEGER),
-    ("KernelTime", LARGE_INTEGER),
-    ("ImageName", UNICODE_STRING), # file name only, no path
-    ("BasePriority", LONG),
-    ("UniqueProcessId", HANDLE),
-    ("InheritedFromUniqueProcessId", HANDLE),
-    ("HandleCount", ULONG),
-    ("SessionId", ULONG),
-    ("UniqueProcessKey", UINT_PTR),
-    )
+        ("NextEntryOffset", ULONG),
+        ("NumberOfThreads", ULONG),
+        ("WorkingSetPrivateSize", LARGE_INTEGER),
+        ("HardFaultCount", ULONG),
+        ("NumberOfThreadsHighWatermark", ULONG),
+        ("CycleTime", ULARGE_INTEGER),
+        ("CreateTime", LARGE_INTEGER),
+        ("UserTime", LARGE_INTEGER),
+        ("KernelTime", LARGE_INTEGER),
+        ("ImageName", UNICODE_STRING),  # file name only, no path
+        ("BasePriority", LONG),
+        ("UniqueProcessId", HANDLE),
+        ("InheritedFromUniqueProcessId", HANDLE),
+        ("HandleCount", ULONG),
+        ("SessionId", ULONG),
+        ("UniqueProcessKey", UINT_PTR),
+        )
 
 ################################################################################
 
@@ -139,6 +139,7 @@ class PROCESS_EXTENDED_BASIC_INFORMATION(ctypes.Structure):
         ("BasicInfo", PROCESS_BASIC_INFORMATION),
         ("Flags", INT)
         )
+
     def __init__(self):
         self.Size = ctypes.sizeof(self)
 
@@ -431,18 +432,19 @@ PIO_STATUS_BLOCK = POINTER(IO_STATUS_BLOCK)
 
 class FILE_DIRECTORY_INFORMATION(ctypes.Structure):
     _fields_ = (
-    ("NextEntryOffset", ULONG),
-    ("FileIndex", ULONG),
-    ("CreationTime", LARGE_INTEGER),
-    ("LastAccessTime", LARGE_INTEGER),
-    ("LastWriteTime", LARGE_INTEGER),
-    ("ChangeTime", LARGE_INTEGER),
-    ("EndOfFile", LARGE_INTEGER),
-    ("AllocationSize", LARGE_INTEGER),
-    ("FileAttributes", ULONG),
-    ("FileNameLength", ULONG),
-    ("FileName", WCHAR * 1),
-    )
+        ("NextEntryOffset", ULONG),
+        ("FileIndex", ULONG),
+        ("CreationTime", LARGE_INTEGER),
+        ("LastAccessTime", LARGE_INTEGER),
+        ("LastWriteTime", LARGE_INTEGER),
+        ("ChangeTime", LARGE_INTEGER),
+        ("EndOfFile", LARGE_INTEGER),
+        ("AllocationSize", LARGE_INTEGER),
+        ("FileAttributes", ULONG),
+        ("FileNameLength", ULONG),
+        ("FileName", WCHAR * 1),
+        )
+
 PFILE_DIRECTORY_INFORMATION = POINTER(FILE_DIRECTORY_INFORMATION)
 
 ################################################################################
@@ -452,7 +454,7 @@ _NtQueryDirectoryFile = fun_fact(
         NTSTATUS,
         HANDLE,
         HANDLE,
-        PVOID, # PIO_APC_ROUTINE
+        PVOID,  # PIO_APC_ROUTINE
         PVOID,
         PIO_STATUS_BLOCK,
         PVOID,
@@ -479,7 +481,7 @@ def get_directory_info(hdir, restart_scan):
             ref(iosb),
             buf,
             bsize,
-            1, # FileDirectoryInformation
+            1,  # FileDirectoryInformation
             False,
             None,
             restart_scan
