@@ -22,7 +22,18 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    BYTE,
+    HANDLE,
+    INT,
+    LONG,
+    PLOGFONT,
+    POINTER,
+    PWSTR,
+    WCHAR,
+    )
 from . import (
     ref,
     raise_if,

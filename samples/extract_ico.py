@@ -41,10 +41,8 @@ from ctwin32 import (
     LOAD_LIBRARY_AS_DATAFILE,
     RT_GROUP_ICON,
     RT_ICON,
-    BYTE,
-    WORD,
-    DWORD,
     )
+from ctwin32.wtypes import BYTE, WORD, DWORD
 
 ################################################################################
 
@@ -163,7 +161,7 @@ def print_info(infos):
             h = fmt.height
             c = fmt.colors
             c = str(c) if c < 1_000_000 else f"{c >> 20}M"
-            print(f"{indent}format {n:2}: {w}.{w}.{c}")
+            print(f"{indent}format {n:2}: {w}.{h}.{c}")
     print()
 
 ################################################################################
@@ -174,7 +172,7 @@ def main():
         return 1
     filename = sys.argv[1]
 
-    ################ gather info #################
+    # ============== gather info =================
 
     flags = LOAD_LIBRARY_AS_IMAGE_RESOURCE | LOAD_LIBRARY_AS_DATAFILE
     try:
@@ -187,13 +185,13 @@ def main():
     else:
         infos = get_executable_file_info(hmod)
 
-    ##### print info if no further arguments #####
+    # === print info if no further arguments =====
 
     if len(sys.argv) == 2:
         print_info(infos)
         return 0
 
-    ########## process further arguments #########
+    # ======== process further arguments =========
 
     if len(infos) > 1:
         if len(sys.argv) == 3:
@@ -209,7 +207,7 @@ def main():
         ico_id = infos[0][0]
         fmt_id = int(sys.argv[2])
 
-    ############### try to extract ###############
+    # ============= try to extract ===============
 
     for iid, fmts in infos:
         if iid == ico_id:

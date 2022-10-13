@@ -22,7 +22,21 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    BOOLEAN,
+    DWORD,
+    ENDIANNESS,
+    HANDLE,
+    LONG,
+    PDWORD,
+    POINTER,
+    PPVOID,
+    PVOID,
+    PWSTR,
+    ULONG,
+    )
 from .ntdll import raise_failed_status
 from . import (
     ref,

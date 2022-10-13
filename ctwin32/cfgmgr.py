@@ -22,7 +22,18 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    DWORD,
+    GUID,
+    INT,
+    PDWORD,
+    PGUID,
+    PINT,
+    PWSTR,
+    PULONG,
+    ULONG,
+    )
 from . import (
     ref,
     fun_fact,

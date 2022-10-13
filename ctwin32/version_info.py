@@ -22,7 +22,18 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    DWORD,
+    PDWORD,
+    PPVOID,
+    PUINT,
+    PVOID,
+    PWSTR,
+    UINT,
+    WORD,
+    )
 from . import (
     ref,
     raise_on_zero,

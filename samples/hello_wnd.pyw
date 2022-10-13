@@ -29,7 +29,6 @@ from ctwin32 import (
     wndcls,
     comctl,
     shell,
-    LOGFONT,
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
@@ -47,6 +46,7 @@ from ctwin32 import (
     TDCBF_CLOSE_BUTTON,
     TD_INFORMATION_ICON,
     )
+from ctwin32.wtypes import LOGFONT
 
 ################################################################################
 

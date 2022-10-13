@@ -24,8 +24,33 @@
 
 from types import SimpleNamespace as _namespace
 from datetime import datetime as _dt
+import ctypes
 
-from .wtypes import *
+from .wtypes import (
+    BOOL,
+    BYTE,
+    DWORD,
+    ENDIANNESS,
+    FILETIME,
+    HANDLE,
+    INT,
+    LONG,
+    LUID,
+    PBOOL,
+    PBYTE,
+    PDWORD,
+    PFILETIME,
+    PHANDLE,
+    PLUID,
+    POINTER,
+    PPWSTR,
+    PPVOID,
+    PVOID,
+    PWSTR,
+    ScdToBeClosed,
+    WCHAR,
+    WORD,
+    )
 from . import (
     ref,
     raise_if,
@@ -99,9 +124,10 @@ PHKEY = POINTER(HKEY)
 # predefined keys as instances of HKEY
 globals().update((n, HKEY(v)) for v, n in _PREDEFINED_KEYS.items())
 
-HKCR = HKEY_CLASSES_ROOT
-HKCU = HKEY_CURRENT_USER
-HKLM = HKEY_LOCAL_MACHINE
+# linters won't recognize 'globals().update()' -> noqa
+HKCR = HKEY_CLASSES_ROOT    # noqa: F821
+HKCU = HKEY_CURRENT_USER    # noqa: F821
+HKLM = HKEY_LOCAL_MACHINE   # noqa: F821
 
 ################################################################################
 
@@ -235,7 +261,7 @@ def RegDeleteKeyEx(parent, name, access=KEY_WOW64_64KEY):
         _RegDeleteKeyEx(
             parent,
             name,
-            assess,
+            access,
             0
             )
         )
@@ -1269,7 +1295,7 @@ def CredEnumerate(Filter=None, Flags=0):
 
 def CredWrite(Credential, Flags=0):
 
-    ################################ std fields ################################
+    # ============================== std fields ================================
 
     std_fields = (
         "Flags",
@@ -1287,14 +1313,14 @@ def CredWrite(Credential, Flags=0):
         if val is not None:
             setattr(cred, f, val)
 
-    ################################### blob ###################################
+    # ================================= blob ===================================
 
     val = getattr(Credential, "CredentialBlob", None)
     if val is not None:
         cred.CredentialBlobSize = len(val)
         cred.CredentialBlob = (BYTE * len(val))(*tuple(map(int, val)))
 
-    ################################ attributes ################################
+    # ============================== attributes ================================
 
     ns_attr = getattr(Credential, "Attributes", None)
     if ns_attr:

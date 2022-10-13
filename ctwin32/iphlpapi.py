@@ -25,7 +25,19 @@
 import ipaddress as _iaddr
 from collections import defaultdict as _defdict
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BYTE,
+    INT,
+    PCHAR,
+    POINTER,
+    PULONG,
+    PVOID,
+    PWSTR,
+    ULONG,
+    ULONGLONG,
+    WORD,
+    )
 from . import (
     ref,
     fun_fact,

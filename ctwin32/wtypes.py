@@ -21,26 +21,17 @@
 # DEALINGS IN THE SOFTWARE.
 #
 ################################################################################
-#
-# N.B.: This module is designed to be imported by 'import *'. Make sure that
-# any global names that should not be injected into the namespace of importing
-# modules start with '_'!
-#
-################################################################################
 
-import sys as _sys
-from datetime import datetime as _datetime
-
-# let ctypes and UUID become visible on the outside (by not giving
-# them a '_' name)
+import sys
 import ctypes
 from uuid import UUID
+from datetime import datetime
 
 ################################################################################
 
 # integral types
 
-ENDIANNESS = _sys.byteorder
+ENDIANNESS = sys.byteorder
 
 BYTE = ctypes.c_ubyte
 CHAR = ctypes.c_char
@@ -152,7 +143,7 @@ class SYSTEMTIME(ctypes.Structure):
     ############################################################################
 
     def to_datetime(self):
-        return _datetime(
+        return datetime(
             self.Year,
             self.Month,
             self.Day,

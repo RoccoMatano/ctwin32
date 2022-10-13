@@ -25,7 +25,26 @@
 import tempfile
 import pathlib
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    CallbackContext,
+    CallbackContextPtr,
+    DWORD,
+    HINSTANCE,
+    HRESULT,
+    LONG,
+    LPARAM,
+    HANDLE,
+    HWND,
+    INT,
+    PBOOL,
+    PINT,
+    POINTER,
+    PWSTR,
+    UINT,
+    WPARAM,
+    )
 from . import (
     ref,
     kernel,
@@ -33,6 +52,7 @@ from . import (
     raise_on_hr,
     fun_fact,
     S_OK,
+    TDF_POSITION_RELATIVE_TO_WINDOW,
     )
 
 ################################################################################

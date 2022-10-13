@@ -23,7 +23,24 @@
 ################################################################################
 
 import re
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    BYTE,
+    DWORD,
+    GUID,
+    HANDLE,
+    HWND,
+    PBYTE,
+    PDWORD,
+    PGUID,
+    POINTER,
+    PVOID,
+    PWSTR,
+    ScdToBeClosed,
+    ULONG_PTR,
+    WCHAR,
+    )
 from . import (
     ref,
     raise_on_zero,

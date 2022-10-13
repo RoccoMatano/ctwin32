@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- prettify code
+- do not use 'from .wtypes import \*' anymore
+
+### Fixed
+
+- several missing imports and misspellings
+
 ## [1.9.0] - 2022-07-30
 
 ### Added

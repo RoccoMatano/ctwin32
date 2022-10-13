@@ -22,7 +22,17 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    DWORD,
+    PCHAR,
+    PDWORD,
+    POINTER,
+    PWSTR,
+    ScdToBeClosed,
+    UINT,
+    ULONG,
+    )
 from . import (
     ref,
     raise_on_err,

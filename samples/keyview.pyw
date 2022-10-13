@@ -30,8 +30,6 @@ from ctwin32 import (
     user,
     gdi,
     wndcls,
-    RECT,
-    LOGFONT,
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
@@ -51,6 +49,7 @@ from ctwin32 import (
     SM_CYMAXIMIZED,
     TRANSPARENT,
     )
+from ctwin32.wtypes import RECT, LOGFONT
 
 ################################################################################
 

@@ -23,7 +23,22 @@
 ################################################################################
 
 from types import SimpleNamespace as _namespace
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    FILETIME,
+    LARGE_INTEGER,
+    LUID,
+    NTSTATUS,
+    PLUID,
+    POINTER,
+    PPLUID,
+    PVOID,
+    PULONG,
+    SYSTEMTIME,
+    UNICODE_STRING,
+    ULONG,
+    WCHAR,
+    )
 from . import ref, fun_fact
 from .ntdll import raise_failed_status
 from .kernel import FileTimeToLocalFileTime, FileTimeToSystemTime

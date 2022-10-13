@@ -23,7 +23,13 @@
 ################################################################################
 
 from types import SimpleNamespace as _namespace
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    HANDLE,
+    PWSTR,
+    UINT,
+    WCHAR,
+    )
 ref = ctypes.byref
 
 ################################################################################
@@ -6105,6 +6111,8 @@ GWLP_HINSTANCE = -6
 GWLP_HWNDPARENT = -8
 GWLP_USERDATA = -21
 GWLP_ID = -12
+
+DWLP_MSGRESULT = 0
 
 GCL_MENUNAME = -8
 GCL_HBRBACKGROUND = -10

@@ -22,7 +22,21 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    DWORD,
+    HANDLE,
+    HINSTANCE,
+    HRESULT,
+    HWND,
+    INT,
+    PINT,
+    POINTER,
+    PPWSTR,
+    PVOID,
+    PWSTR,
+    )
 from . import (
     INFINITE,
     SW_SHOW,

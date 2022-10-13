@@ -24,7 +24,38 @@
 
 from types import SimpleNamespace as _namespace
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    BYTE,
+    CallbackContext,
+    CallbackContextPtr,
+    DWORD,
+    HANDLE,
+    HINSTANCE,
+    HWND,
+    INT,
+    INT_PTR,
+    LOGFONT,
+    LONG,
+    LONG_PTR,
+    LPARAM,
+    LRESULT,
+    PDWORD,
+    POINT,
+    POINTER,
+    PPOINT,
+    PRECT,
+    PVOID,
+    PWSTR,
+    SHORT,
+    RECT,
+    UINT,
+    UINT_PTR,
+    WCHAR,
+    WPARAM,
+    WORD,
+    )
 from . import (
     ref,
     kernel,

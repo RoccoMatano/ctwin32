@@ -22,7 +22,18 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    DWORD,
+    GUID,
+    LONG,
+    POINTER,
+    PVOID,
+    PWSTR,
+    ULARGE_INTEGER,
+    ULONG,
+    )
 from . import ref, fun_fact, raise_on_err
 
 from .kernel import KHANDLE, PKHANDLE

@@ -47,10 +47,8 @@ from ctwin32 import (
     FILE_DEVICE_CD_ROM,
     FILE_DEVICE_DVD,
     FILE_DEVICE_DISK,
-    INT,
-    ULONG,
-    GUID
     )
+from ctwin32.wtypes import INT, ULONG, GUID
 
 ################################################################################
 

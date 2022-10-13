@@ -26,7 +26,29 @@ from enum import IntFlag as _int_flag
 from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOLEAN,
+    FILETIME,
+    HANDLE,
+    LARGE_INTEGER,
+    LONG,
+    LONG_PTR,
+    INT,
+    NTSTATUS,
+    PBOOLEAN,
+    POINTER,
+    PULONG,
+    PUNICODE_STRING,
+    PVOID,
+    UINT,
+    UINT_PTR,
+    ULARGE_INTEGER,
+    ULONG,
+    UNICODE_STRING,
+    WCHAR,
+    WORD,
+    )
 from . import (
     ref,
     kernel,

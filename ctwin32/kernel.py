@@ -24,7 +24,35 @@
 
 import collections as _collections
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    BOOL,
+    BYTE,
+    CallbackContext,
+    CallbackContextPtr,
+    DWORD,
+    FILETIME,
+    HANDLE,
+    INT,
+    PBOOL,
+    PBYTE,
+    PDWORD,
+    POINTER,
+    PSIZE_T,
+    PULONG_PTR,
+    PUSHORT,
+    PVOID,
+    PWSTR,
+    ScdToBeClosed,
+    SIZE_T,
+    SYSTEMTIME,
+    UINT,
+    UINT_PTR,
+    ULONG,
+    ULONG_PTR,
+    USHORT,
+    WORD,
+    )
 from . import (
     ref,
     raise_if,
@@ -39,6 +67,7 @@ from . import (
     IMAGE_FILE_MACHINE_AMD64,
     IMAGE_FILE_MACHINE_I386,
     RT_MESSAGETABLE,
+    WAIT_FAILED,
     multi_str_from_addr,
     cmdline_from_args,
     ns_from_struct,

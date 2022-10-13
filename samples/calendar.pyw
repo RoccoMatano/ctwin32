@@ -27,7 +27,6 @@ from ctwin32 import (
     comctl,     # for initialization of common controls
     user,
     wndcls,
-    RECT,
     WM_CREATE,
     WM_SETFOCUS,
     WM_DESTROY,
@@ -42,6 +41,7 @@ from ctwin32 import (
     SWP_NOMOVE,
     SWP_NOZORDER,
     )
+from ctwin32.wtypes import RECT
 
 MONTHCAL_CLASS = "SysMonthCal32"
 MCS_WEEKNUMBERS = 4

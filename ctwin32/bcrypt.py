@@ -22,7 +22,19 @@
 #
 ################################################################################
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    ENDIANNESS,
+    HANDLE,
+    NTSTATUS,
+    PCHAR,
+    PHANDLE,
+    PULONG,
+    PVOID,
+    PWSTR,
+    ScdToBeClosed,
+    ULONG,
+    )
 from . import ref, fun_fact
 from .ntdll import raise_failed_status, STATUS_INVALID_SIGNATURE
 
@@ -145,7 +157,12 @@ _BCryptDestroyHash = fun_fact(
 def BCryptDestroyHash(hash):
     raise_failed_status(_BCryptDestroyHash(hash))
 
-class BCRYPT_HASH(ScdToBeClosed, HANDLE, close_func=BCryptDestroyHash, invalid=0):
+class BCRYPT_HASH(
+        ScdToBeClosed,
+        HANDLE,
+        close_func=BCryptDestroyHash,
+        invalid=0
+        ):
     pass
 
 ################################################################################

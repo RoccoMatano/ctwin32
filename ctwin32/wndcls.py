@@ -27,7 +27,20 @@ import traceback
 import lzma
 import base64
 
-from .wtypes import *
+import ctypes
+from .wtypes import (
+    HANDLE,
+    HIWORD,
+    HWND,
+    LOWORD,
+    LPARAM,
+    POINT,
+    PPOINT,
+    PVOID,
+    pvoid_from_obj,
+    UINT,
+    WORD,
+    )
 from . import (
     ref,
     kernel,
@@ -41,6 +54,7 @@ from . import (
     CS_HREDRAW,
     CS_VREDRAW,
     CW_USEDEFAULT,
+    DWLP_MSGRESULT,
     DS_MODALFRAME,
     DS_SETFONT,
     EM_SETPASSWORDCHAR,
@@ -64,8 +78,11 @@ from . import (
     SWP_NOSIZE,
     SWP_NOZORDER,
     SW_SHOW,
+    SW_HIDE,
+    WA_INACTIVE,
     WM_ACTIVATE,
     WM_COMMAND,
+    WM_GETFONT,
     WM_INITDIALOG,
     WM_NCCREATE,
     WM_NCDESTROY,
@@ -310,7 +327,7 @@ class BaseWnd:
     def get_font(self):
         return HANDLE(self.send_msg(WM_GETFONT, 0, 0))
 
-    def check_dlg_button(id, checked):
+    def check_dlg_button(self, id, checked):
         user.CheckDlgButton(
             self.hwnd,
             id,
@@ -320,7 +337,7 @@ class BaseWnd:
     def is_dlg_button_checked(self, id):
         return (user.IsDlgButtonChecked(self.hwnd, id) == BST_CHECKED)
 
-    def check_radio_button(first, last, check):
+    def check_radio_button(self, first, last, check):
         user.CheckRadioButton(self.hwnd, first, last, check)
 
     def begin_paint(self):
@@ -603,12 +620,12 @@ class BaseDlg(BaseWnd):
                             )
                     else:
                         if msg == WM_ACTIVATE and self.parent:
-                            hdr = NMHDR(
+                            hdr = user.NMHDR(
                                 hwnd,
                                 user.GetDlgCtrlID(hwnd),
-                                MSDN_ACTIVATE
+                                user.MSDN_ACTIVATE
                                 )
-                            ma = NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
+                            ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
                             self.parent.send_notify(ref(ma.hdr))
                         res = self.on_message(msg, wp, lp)
                         if (msg == WM_NCDESTROY):
@@ -682,10 +699,10 @@ class BaseDlg(BaseWnd):
 
     def send_destroy_request(self):
         if self.parent:
-            md = NM_MSD_DESTROY(
-                m_hWnd,
+            md = user.NM_MSD_DESTROY(
+                self.hwnd,
                 user.GetDlgCtrlID(self.hwnd),
-                MSDN_DESTROY
+                user.MSDN_DESTROY
                 )
             self.parent.send_notify(ref(md))
         else:
