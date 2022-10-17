@@ -44,6 +44,7 @@ from .wtypes import (
     PVOID,
     PWSTR,
     ScdToBeClosed,
+    SHORT,
     SIZE_T,
     SYSTEMTIME,
     UINT,
@@ -51,6 +52,7 @@ from .wtypes import (
     ULONG,
     ULONG_PTR,
     USHORT,
+    WCHAR,
     WORD,
     )
 from . import (
@@ -61,12 +63,16 @@ from . import (
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_RESOURCE_ENUM_USER_STOP,
     ERROR_RESOURCE_NAME_NOT_FOUND,
+    ERROR_SUCCESS,
+    FILE_TYPE_CHAR,
+    FILE_TYPE_UNKNOWN,
     INVALID_FILE_ATTRIBUTES,
     INVALID_HANDLE_VALUE,
     IMAGE_FILE_MACHINE_UNKNOWN,
     IMAGE_FILE_MACHINE_AMD64,
     IMAGE_FILE_MACHINE_I386,
     RT_MESSAGETABLE,
+    STD_OUTPUT_HANDLE,
     WAIT_FAILED,
     multi_str_from_addr,
     cmdline_from_args,
@@ -1129,5 +1135,132 @@ def get_wow64_info(hprocess):
     else:
         raise_on_zero(_IsWow64Process2(hprocess, ref(proc), ref(mach)))
     return mach.value, proc.value
+
+################################################################################
+
+_GetStdHandle = fun_fact(_k32.GetStdHandle, (HANDLE, DWORD))
+
+def GetStdHandle(nhdl):
+    res = _GetStdHandle(nhdl)
+    raise_if(res == INVALID_HANDLE_VALUE)
+    return res
+
+################################################################################
+
+_GetFileType = fun_fact(_k32.GetFileType, (DWORD, HANDLE))
+
+def GetFileType(hdl):
+    res = _GetFileType(hdl)
+    if res == FILE_TYPE_UNKNOWN:
+        err = GetLastError()
+        if err != ERROR_SUCCESS:
+            raise ctypes.WinError(err)
+    return res
+
+################################################################################
+
+_SetConsoleTextAttribute = fun_fact(
+    _k32.SetConsoleTextAttribute,
+    (BOOL, HANDLE, WORD)
+    )
+
+def SetConsoleTextAttribute(hcon, attr):
+    raise_on_zero(_SetConsoleTextAttribute(hcon, attr))
+
+################################################################################
+
+class COORD(ctypes.Structure):
+    _fields_ = (
+        ("X", SHORT),
+        ("Y", SHORT),
+        )
+
+class SMALL_RECT(ctypes.Structure):
+    _fields_ = (
+        ("Left", SHORT),
+        ("Top", SHORT),
+        ("Right", SHORT),
+        ("Bottom", SHORT),
+        )
+
+class CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
+    _fields_ = (
+        ("dwSize", COORD),
+        ("dwCursorPosition", COORD),
+        ("wAttributes", WORD),
+        ("srWindow", SMALL_RECT),
+        ("dwMaximumWindowSize", COORD),
+        )
+PCONSOLE_SCREEN_BUFFER_INFO = POINTER(CONSOLE_SCREEN_BUFFER_INFO)
+
+################################################################################
+
+_GetConsoleScreenBufferInfo = fun_fact(
+    _k32.GetConsoleScreenBufferInfo,
+    (BOOL, HANDLE, PCONSOLE_SCREEN_BUFFER_INFO)
+    )
+
+def GetConsoleScreenBufferInfo(hcon):
+    info = CONSOLE_SCREEN_BUFFER_INFO()
+    raise_on_zero(_GetConsoleScreenBufferInfo(hcon, ref(info)))
+    return info
+
+################################################################################
+
+_FillConsoleOutputCharacter = fun_fact(
+    _k32.FillConsoleOutputCharacterW,
+    (BOOL, HANDLE, WCHAR, DWORD, COORD, PDWORD)
+    )
+
+def FillConsoleOutputCharacter(hdl, char, length, coord):
+    num_written = DWORD()
+    raise_on_zero(
+        _FillConsoleOutputCharacter(hdl, char, length, coord, ref(num_written))
+        )
+    return num_written
+
+################################################################################
+
+_FillConsoleOutputAttribute = fun_fact(
+    _k32.FillConsoleOutputCharacterW,
+    (BOOL, HANDLE, WORD, DWORD, COORD, PDWORD)
+    )
+
+def FillConsoleOutputAttribute(hdl, attr, length, coord):
+    num_written = DWORD()
+    raise_on_zero(
+        _FillConsoleOutputCharacter(hdl, attr, length, coord, ref(num_written))
+        )
+    return num_written
+
+################################################################################
+
+_SetConsoleCursorPosition = fun_fact(
+    _k32.SetConsoleCursorPosition, (BOOL, HANDLE, COORD)
+    )
+
+def SetConsoleCursorPosition(hdl, coord):
+    raise_on_zero(_SetConsoleCursorPosition(hdl, coord))
+
+################################################################################
+
+def clear_screen(hdl):
+    info = GetConsoleScreenBufferInfo(hdl)
+    size = info.dwMaximumWindowSize
+    length = size.X * size.Y
+    attr = info.wAttributes
+    coord = COORD(0, 0)
+    FillConsoleOutputAttribute(hdl, attr, length, coord)
+    FillConsoleOutputCharacter(hdl, ord(" "), length, coord)
+    SetConsoleCursorPosition(hdl, coord)
+
+################################################################################
+
+def cls(hdl=None):
+    if hdl is None:
+        hdl = GetStdHandle(STD_OUTPUT_HANDLE)
+        if GetFileType(hdl) != FILE_TYPE_CHAR:
+            return
+    clear_screen(hdl)
 
 ################################################################################

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- kernel.GetStdHandle
+- kernel.GetFileType
+- kernel.SetConsoleTextAttribute
+- kernel.GetConsoleScreenBufferInfo
+- kernel.FillConsoleOutputCharacter
+- kernel.FillConsoleOutputAttribute
+- kernel.SetConsoleCursorPosition
+- kernel.clear_screen
+- kernel.cls
+
+
 ### Changed
 
 - prettify code
