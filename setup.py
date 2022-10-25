@@ -1,23 +1,21 @@
+from pathlib import Path
 from setuptools import setup
 from ctwin32 import version
 
 ################################################################################
 
-# hack to ensure two things:
-#   - platform tag can be set from the outside
-#   - temporaries are kept to be able to build several wheels
+# hack to ensure platform tag can be set from the outside
 from wheel.bdist_wheel import bdist_wheel
 
 class hacked_bdist_wheel(bdist_wheel):
     def get_tag(self):
-        # get pristine tags
         impl, abi_tag, plat_name = bdist_wheel.get_tag(self)
-
-        # overwrite platform tag from global
-        plat_name = global_platform_tag
-        # keep temporaries, so we can build another wheel from them
-        self.keep_temp = True
-
+        platform_file = Path(__file__).parent / "build" / "platform.tag"
+        try:
+            with open(platform_file, "rt") as f:
+                plat_name = f.read().strip()
+        except Exception:
+            pass
         return (impl, abi_tag, plat_name)
 
 ################################################################################
@@ -56,16 +54,6 @@ params = {
 with open("README.md", "rt") as readme:
     params["long_description"] = readme.read()
 
-# Apply Windows platform tags to make clear, that ctwin32 can only be used on
-# Windows.
-
-global_platform_tag = "win_amd64"
-setup(**params)
-
-global_platform_tag = "win32"
-setup(**params)
-
-global_platform_tag = "win_arm64"
 setup(**params)
 
 ################################################################################
