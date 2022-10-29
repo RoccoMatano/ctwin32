@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- kernel.GetConsoleMode
+- kernel.SetConsoleMode
+- kernel.enable_virt_term
+- sample virt_term_seq.py
+- kernel.SetErrorMode
+- kernel.SetThreadErrorMode
+
 ## [1.10.0] - 2022-10-26
 
 ### Added

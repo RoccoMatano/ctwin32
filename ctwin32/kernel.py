@@ -74,6 +74,7 @@ from . import (
     RT_MESSAGETABLE,
     STD_OUTPUT_HANDLE,
     WAIT_FAILED,
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     multi_str_from_addr,
     cmdline_from_args,
     ns_from_struct,
@@ -1262,5 +1263,48 @@ def cls(hdl=None):
         if GetFileType(hdl) != FILE_TYPE_CHAR:
             return
     clear_screen(hdl)
+
+################################################################################
+
+_GetConsoleMode = fun_fact(
+    _k32.GetConsoleMode, (BOOL, HANDLE, PDWORD)
+    )
+
+def GetConsoleMode(hdl):
+    mode = DWORD()
+    raise_on_zero(_GetConsoleMode(hdl, ref(mode)))
+    return mode.value
+
+################################################################################
+
+_SetConsoleMode = fun_fact(
+    _k32.SetConsoleMode, (BOOL, HANDLE, DWORD)
+    )
+
+def SetConsoleMode(hdl, mode):
+    raise_on_zero(_SetConsoleMode(hdl, mode))
+
+################################################################################
+
+def enable_virt_term(hdl=None):
+    if hdl is None:
+        hdl = GetStdHandle(STD_OUTPUT_HANDLE)
+        if GetFileType(hdl) != FILE_TYPE_CHAR:
+            return
+    mode = GetConsoleMode(hdl) | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+    SetConsoleMode(hdl, mode)
+
+################################################################################
+
+SetErrorMode = fun_fact(_k32.SetErrorMode, (UINT, UINT))
+
+################################################################################
+
+_SetThreadErrorMode = fun_fact(_k32.SetThreadErrorMode, (BOOL, DWORD, PDWORD))
+
+def SetThreadErrorMode(mode):
+    old = DWORD()
+    raise_on_zero(_SetThreadErrorMode(mode, ref(old)))
+    return old.value
 
 ################################################################################
