@@ -68,7 +68,7 @@ DOUBLE = ctypes.c_double
 
 # handle types
 
-HANDLE = HINSTANCE = HWND = ctypes.c_void_p
+HANDLE = HINSTANCE = HMODULE = HWND = ctypes.c_void_p
 
 ################################################################################
 

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample virt_term_seq.py
 - kernel.SetErrorMode
 - kernel.SetThreadErrorMode
+- module psapi with EnumProcesses, EnumProcessModules, EnumProcessModulesEx,
+  GetMappedFileName, GetModuleFileNameEx and GetModuleInformation
 
 ## [1.10.0] - 2022-10-26
 
