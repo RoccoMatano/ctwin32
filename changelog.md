@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.SetThreadErrorMode
 - module psapi with EnumProcesses, EnumProcessModules, EnumProcessModulesEx,
   GetMappedFileName, GetModuleFileNameEx and GetModuleInformation
+- user.build_wnd_list
 
 ## [1.10.0] - 2022-10-26
 

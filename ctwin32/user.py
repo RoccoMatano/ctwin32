@@ -41,10 +41,12 @@ from .wtypes import (
     LONG_PTR,
     LPARAM,
     LRESULT,
+    NTSTATUS,
     PDWORD,
     POINT,
     POINTER,
     PPOINT,
+    PPVOID,
     PRECT,
     PVOID,
     PWSTR,
@@ -82,7 +84,11 @@ from . import (
     SPIF_UPDATEINIFILE,
     SPIF_SENDCHANGE,
     )
-from .ntdll import proc_path_from_pid
+from .ntdll import (
+    RtlNtStatusToDosError,
+    proc_path_from_pid,
+    STATUS_BUFFER_TOO_SMALL,
+    )
 
 _usr = ctypes.WinDLL("user32.dll")
 
@@ -567,10 +573,11 @@ def LockWorkStation():
 
 ################################################################################
 
-_GetShellWindow = fun_fact(_usr.GetShellWindow, (HWND,))
+GetDesktopWindow = fun_fact(_usr.GetDesktopWindow, (HWND,))
 
-def GetShellWindow():
-    return _GetShellWindow()
+################################################################################
+
+GetShellWindow = fun_fact(_usr.GetShellWindow, (HWND,))
 
 ################################################################################
 
@@ -1501,5 +1508,59 @@ _EndDialog = fun_fact(_usr.EndDialog, (BOOL, HWND, INT_PTR))
 
 def EndDialog(hdlg, result):
     raise_on_zero(_EndDialog(hdlg, result))
+
+################################################################################
+
+try:
+    _w32 = ctypes.WinDLL("win32u.dll")
+    _NtUserBuildHwndList = fun_fact(
+        _w32.NtUserBuildHwndList, (
+            NTSTATUS,
+            HANDLE,
+            HWND,
+            BOOL,
+            BOOL,
+            DWORD,
+            DWORD,
+            PPVOID,
+            PDWORD
+            )
+        )
+
+    # build_wnd_list(0, 0) -> EnumWindows(...)
+    # build_wnd_list(parent, 0) -> EnumChildWindows(parent, ...)
+    # build_wnd_list(0, tid) -> EnumThreadWindows(tid, ...)
+
+    def build_wnd_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
+        enum_children = bool(parent_wnd)
+        allocated = 512
+        while True:
+            array = (allocated * PVOID)()
+            received = DWORD()
+            status = _NtUserBuildHwndList(
+                hdesk,
+                parent_wnd,
+                enum_children,
+                hide_immersive,
+                thread_id,
+                allocated,
+                array,
+                ref(received)
+                )
+            received = received.value
+            if status == 0:
+                break
+
+            if status == STATUS_BUFFER_TOO_SMALL:
+                # avoid under-allocating due to newly added windows -> + 32
+                allocated = received + 32
+            else:
+                raise ctypes.WinError(RtlNtStatusToDosError(status))
+
+        return array[:received - 1]
+
+except (FileNotFoundError, AttributeError):
+    def build_wnd_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
+        raise NotImplementedError
 
 ################################################################################
