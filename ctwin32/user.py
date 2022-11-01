@@ -83,6 +83,7 @@ from . import (
     SPI_GETWORKAREA,
     SPIF_UPDATEINIFILE,
     SPIF_SENDCHANGE,
+    WM_QUIT,
     )
 from .ntdll import (
     RtlNtStatusToDosError,
@@ -731,6 +732,9 @@ class MSG(ctypes.Structure):
         ("time", DWORD),
         ("pt", POINT)
         )
+
+    def __bool__(self):
+        return self.message != WM_QUIT
 
 PMSG = POINTER(MSG)
 
