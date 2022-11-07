@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - module psapi with EnumProcesses, EnumProcessModules, EnumProcessModulesEx,
   GetMappedFileName, GetModuleFileNameEx and GetModuleInformation
 - user.build_wnd_list
+- kernel.create_file
 
 ### Fixed
 

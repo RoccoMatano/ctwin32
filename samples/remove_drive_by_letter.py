@@ -42,9 +42,6 @@ from ctwin32 import (
     kernel,
     cfgmgr,
     setupapi,
-    FILE_SHARE_READ,
-    FILE_SHARE_WRITE,
-    OPEN_EXISTING,
     FILE_DEVICE_CD_ROM,
     FILE_DEVICE_DVD,
     FILE_DEVICE_DISK,
@@ -69,15 +66,7 @@ GUID_IFACE_CDROM = GUID("53f56308-b6bf-11d0-94f2-00a0c91efb8b")
 ################################################################################
 
 def get_drive_type_number(file_name):
-    with kernel.CreateFile(
-            file_name,
-            0,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            None,
-            OPEN_EXISTING,
-            0,
-            None
-            ) as vol:
+    with kernel.create_file(file_name, 0) as vol:
         sdn = kernel.DeviceIoControl(
             vol,
             IOCTL_STORAGE_GET_DEVICE_NUMBER,

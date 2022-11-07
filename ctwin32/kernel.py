@@ -75,6 +75,12 @@ from . import (
     STD_OUTPUT_HANDLE,
     WAIT_FAILED,
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+    GENERIC_READ,
+    GENERIC_WRITE,
+    FILE_SHARE_READ,
+    FILE_SHARE_WRITE,
+    FILE_ATTRIBUTE_NORMAL,
+    OPEN_EXISTING,
     multi_str_from_addr,
     cmdline_from_args,
     ns_from_struct,
@@ -193,6 +199,25 @@ def CreateFile(file_name, access, share_mode, sec_attr, dispo, flags, template):
         )
     hdl.raise_on_invalid()
     return hdl
+
+def create_file(
+        file_name,
+        access=GENERIC_READ | GENERIC_WRITE,
+        share_mode=FILE_SHARE_READ | FILE_SHARE_WRITE,
+        flags=FILE_ATTRIBUTE_NORMAL,
+        dispo=OPEN_EXISTING,
+        sec_attr=None,
+        template=None
+        ):
+    return CreateFile(
+        file_name,
+        access,
+        share_mode,
+        sec_attr,
+        dispo,
+        flags,
+        template
+        )
 
 ################################################################################
 

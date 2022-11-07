@@ -24,20 +24,12 @@
 
 # inspired by https://docs.microsoft.com/en-us/sysinternals/downloads/pipelist
 
-from ctwin32 import ntdll, kernel, GENERIC_READ, OPEN_EXISTING
+from ctwin32 import ntdll, kernel
 
 ################################################################################
 
 def list_pipes():
-    with kernel.CreateFile(
-            "\\\\.\\Pipe\\",
-            GENERIC_READ,
-            0,
-            None,
-            OPEN_EXISTING,
-            0,
-            None
-            ) as pipes:
+    with kernel.create_file("\\\\.\\Pipe\\") as pipes:
         print("Inst  Max  Pipe Name")
         print("----  ---  ---------")
         for info in ntdll.enum_directory_info(pipes):
