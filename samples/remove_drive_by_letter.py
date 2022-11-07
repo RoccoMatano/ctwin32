@@ -36,11 +36,12 @@
 
 import sys
 import time
+import ctypes
 
 from ctwin32 import (
     kernel,
+    cfgmgr,
     setupapi,
-    ctypes,
     FILE_SHARE_READ,
     FILE_SHARE_WRITE,
     OPEN_EXISTING,
@@ -118,12 +119,12 @@ def remove_drive_by_letter(letter):
 
     drv_type, drv_num = get_drive_type_number(f"\\\\.\\{letter}:")
     devinst = get_drive_devinst(drv_type, drv_num)
-    parent = setupapi.CM_Get_Parent(devinst)
+    parent = cfgmgr.CM_Get_Parent(devinst)
 
     MAX_TRIES = 3
     for i in range(MAX_TRIES):
         try:
-            setupapi.CM_Request_Device_Eject(parent)
+            cfgmgr.CM_Request_Device_Eject(parent)
             err = None
             break
         except OSError as e:

@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   GetMappedFileName, GetModuleFileNameEx and GetModuleInformation
 - user.build_wnd_list
 
+### Fixed
+
+- in example remove_drive_by_letter.py the move of the CM_* functions to cfgmgr
+  was not yet implemented
+
+
 ## [1.10.0] - 2022-10-26
 
 ### Added
