@@ -1,6 +1,13 @@
+import sys
 from pathlib import Path
 from setuptools import setup
 from ctwin32 import version
+
+################################################################################
+
+# trying to build on non Windows OS is useless
+if sys.platform != "win32":
+    raise OSError("building ctwin32 on non Windows OS is futile")
 
 ################################################################################
 
