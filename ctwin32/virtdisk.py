@@ -102,12 +102,14 @@ class _OVDP_VERSION1(ctypes.Structure):
     _fields_ = (
         ("RWDepth", ULONG),
         )
+
 class _OVDP_VERSION2(ctypes.Structure):
     _fields_ = (
         ("GetInfoOnly", BOOL),
         ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         )
+
 class _OVDP_VERSION3(ctypes.Structure):
     _fields_ = (
         ("GetInfoOnly", BOOL),
@@ -115,6 +117,7 @@ class _OVDP_VERSION3(ctypes.Structure):
         ("ResiliencyGuid", GUID),
         ("SnapshotId", GUID),
         )
+
 class _OVDP_UNION(ctypes.Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),
@@ -133,11 +136,13 @@ class _AVDP_VERSION1(ctypes.Structure):
     _fields_ = (
         ("Reserved", ULONG),
         )
+
 class _AVDP_VERSION2(ctypes.Structure):
     _fields_ = (
         ("RestrictedOffset", ULARGE_INTEGER),
         ("RestrictedLength", ULARGE_INTEGER),
         )
+
 class _AVDP_UNION(ctypes.Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),

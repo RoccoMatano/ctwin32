@@ -198,7 +198,6 @@ class _TD_FOOTER_ICON(ctypes.Union):
     _pack_ = 1
     _fields_ = (("hFooterIcon", HANDLE), ("pszFooterIcon", PWSTR))
 
-
 class TASKDIALOGCONFIG(ctypes.Structure):
     _pack_ = 1
     _anonymous_ = ("_main_icon", "_footer_icon")

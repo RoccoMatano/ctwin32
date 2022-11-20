@@ -1457,11 +1457,11 @@ class NMHDR(ctypes.Structure):
         )
 PNMHDR = POINTER(NMHDR)
 
-
 MSDN_FIRST = 0xf060       # ModelesS Dialog
 MSDN_LAST = MSDN_FIRST + 50
 
 MSDN_ACTIVATE = MSDN_FIRST + 1
+
 class NM_MSD_ACTIVATE(ctypes.Structure):
     _fields_ = (
         ("hdr", NMHDR),

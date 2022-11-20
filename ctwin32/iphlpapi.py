@@ -152,14 +152,17 @@ class S_UN_B(ctypes.Structure):
         ("s_b3", BYTE),
         ("s_b4", BYTE)
         )
+
 class S_UN_W(ctypes.Structure):
     _fields_ = (("s_w1", WORD), ("s_w2", WORD))
+
 class S_UN(ctypes.Union):
     _fields_ = (
         ("S_un_b", S_UN_B),
         ("S_un_w", S_UN_W),
         ("S_addr", ULONG.__ctype_be__)
         )
+
 class IN_ADDR(ctypes.Structure):
     _fields_ = (("S_un", S_UN),)
 PIN_ADDR = POINTER(IN_ADDR)
