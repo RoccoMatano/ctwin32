@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.ProcessIdToSessionId
 - kernel.GetCurrentDirectory
 - kernel.SetCurrentDirectory
+- argc_argv_from_args
 
 ### Fixed
 
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   was not yet implemented
 - kernel.SECURITY_ATTRIBUTES
 - kernel.GetSystemDirectory
+- handling of service arguments in advapi.StartService
 
 ## [1.10.0] - 2022-10-26
 

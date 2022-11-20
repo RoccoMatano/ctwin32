@@ -58,6 +58,7 @@ from . import (
     raise_on_err,
     fun_fact,
     ns_from_struct,
+    argc_argv_from_args,
     REG_DWORD,
     REG_QWORD,
     REG_SZ,
@@ -969,11 +970,13 @@ def CreateService(
         start_type,
         error_control,
         binary_path_name,
-        load_order_group,
-        dependencies,
-        service_start_name,
-        password
+        load_order_group=None,
+        dependencies=None,
+        service_start_name=None,
+        password=None
         ):
+    if dependencies is not None:
+        dependencies = ctypes.create_unicode_buffer("\x00".join(dependencies))
     res = SC_HANDLE(
         _CreateService(
             scm,
@@ -986,7 +989,7 @@ def CreateService(
             binary_path_name,
             load_order_group,
             None,
-            ctypes.create_unicode_buffer("\x00".join(dependencies)),
+            dependencies,
             service_start_name,
             password
             )
@@ -1001,22 +1004,13 @@ _StartService = fun_fact(
         BOOL,
         HANDLE,
         DWORD,
-        PPWSTR
+        PVOID
         )
     )
 
-def StartService(handle, args):
-    if args:
-        alen = len(args)
-        argv = (PWSTR * alen)()
-        for n, a in enumerate(args):
-            argv[n] = a
-        pargv = ref(argv)
-    else:
-        alen = 0
-        pargv = None
-
-    raise_on_zero(_StartService(handle, alen, pargv))
+def StartService(handle, arglist):
+    argc, argv, _ = argc_argv_from_args(arglist)
+    raise_on_zero(_StartService(handle, argc, argv))
 
 ################################################################################
 
@@ -1030,13 +1024,14 @@ class SERVICE_STATUS(ctypes.Structure):
         ("CheckPoint", DWORD),
         ("WaitHint", DWORD),
         )
+PSERVICE_STATUS = POINTER(SERVICE_STATUS)
 
 _ControlService = fun_fact(
     _adv.ControlService, (
         BOOL,
         HANDLE,
         DWORD,
-        POINTER(SERVICE_STATUS)
+        PSERVICE_STATUS
         )
     )
 
