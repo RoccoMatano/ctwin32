@@ -163,10 +163,13 @@ PFHANDLE = POINTER(FHANDLE)
 
 class SECURITY_ATTRIBUTES(ctypes.Structure):
     _fields_ = (
-        ("lpSecurityDescriptor", PVOID),
         ("nLength", DWORD),
+        ("lpSecurityDescriptor", PVOID),
         ("bInheritHandle", BOOL),
-    )
+        )
+
+    def __init__(self):
+        self.nLength = ctypes.sizeof(self)
 
 PSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 
@@ -291,17 +294,22 @@ def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
 
 ################################################################################
 
-_GetCurrentProcess = fun_fact(_k32.GetCurrentProcess, (HANDLE,))
-
-def GetCurrentProcess():
-    return _GetCurrentProcess()
+GetCurrentProcess = fun_fact(_k32.GetCurrentProcess, (HANDLE,))
 
 ################################################################################
 
-_GetCurrentProcessId = fun_fact(_k32.GetCurrentProcessId, (DWORD,))
+GetCurrentProcessId = fun_fact(_k32.GetCurrentProcessId, (DWORD,))
 
-def GetCurrentProcessId():
-    return _GetCurrentProcessId()
+################################################################################
+
+_ProcessIdToSessionId = fun_fact(
+    _k32.ProcessIdToSessionId, (BOOL, DWORD, PDWORD)
+    )
+
+def ProcessIdToSessionId(pid):
+    session = DWORD()
+    raise_on_zero(_ProcessIdToSessionId(pid, ref(session)))
+    return session.value
 
 ################################################################################
 
@@ -847,18 +855,38 @@ def create_process(
 
 ################################################################################
 
+def _get_dir(func, order):
+    buf_size = 256
+    while True:
+        buf = ctypes.create_unicode_buffer(buf_size)
+        req_size = func(*((buf, buf_size) if order else (buf_size, buf)))
+        if req_size <= buf_size:
+            return buf.value
+        buf_size = req_size
+
+################################################################################
+
 _GetSystemDirectory = fun_fact(_k32.GetSystemDirectoryW, (UINT, PWSTR, UINT))
 
 def GetSystemDirectory():
-    buf_size = 256
-    buf = ctypes.create_unicode_buffer(buf_size)
-    req_size = _GetSystemDirectory(buf, buf_size)
-    if req_size <= buf_size:
-        return buf.value
-    buf = ctypes.create_unicode_buffer(req_size)
-    req_size = _GetSystemDirectory(buf, buf_size)
-    raise_if(req_size > buf_size)
-    return buf.value
+    return _get_dir(_GetSystemDirectory, 1)
+
+################################################################################
+
+_GetCurrentDirectory = fun_fact(
+    _k32.GetCurrentDirectoryW,
+    (DWORD, DWORD, PWSTR)
+    )
+
+def GetCurrentDirectory():
+    return _get_dir(_GetCurrentDirectory, 0)
+
+################################################################################
+
+_SetCurrentDirectory = fun_fact(_k32.SetCurrentDirectoryW, (BOOL, PWSTR))
+
+def SetCurrentDirectory(path):
+    raise_on_zero(_SetCurrentDirectory(path))
 
 ################################################################################
 
@@ -985,7 +1013,6 @@ def _EnumResNameCb(hmod, typ, name, ctxt):
     res = cbc.callback(hmod, typ, name, cbc.context)
     # keep on enumerating if the callback fails to return a value
     return res if res is not None else True
-
 
 _EnumResourceNames = fun_fact(
     _k32.EnumResourceNamesW,
