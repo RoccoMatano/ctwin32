@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.GetCurrentDirectory
 - kernel.SetCurrentDirectory
 - argc_argv_from_args
+- iphlpapi.GetIpNetTable2 and sample arp_table.py
 
 ### Fixed
 

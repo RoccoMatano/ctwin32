@@ -23,14 +23,17 @@
 ################################################################################
 
 import ipaddress as _iaddr
+from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
 
 import ctypes
 from .wtypes import (
     BYTE,
+    DWORD,
     INT,
     PCHAR,
     POINTER,
+    PPVOID,
     PULONG,
     PVOID,
     PWSTR,
@@ -198,6 +201,23 @@ PSOCKADDR_IN6 = POINTER(SOCKADDR_IN6)
 
 ################################################################################
 
+class SOCKADDR_INET(ctypes.Union):
+    _fields_ = (
+        ("Ipv4", SOCKADDR_IN),
+        ("Ipv6", SOCKADDR_IN6),
+        ("si_family", WORD),
+        )
+    def get_ipaddr(self):
+        fam = self.Ipv4.sin_family
+        if fam == AF_INET:
+            return _iaddr.IPv4Address(self.Ipv4.sin_addr.S_un.S_addr)
+        elif fam == AF_INET6:
+            return _iaddr.IPv6Address(bytes(self.Ipv6.sin6_addr.Byte))
+        else:
+            raise ValueError(f"unsupported address family: {fam}")
+
+################################################################################
+
 def _sock_addr_to_ip_addr(p_sock_addr):
     fam = p_sock_addr.contents.sa_family
     if fam == AF_INET:
@@ -272,15 +292,14 @@ def _adapter_addresses_to_interfaces(p_adresses, include_loopback):
 
 ################################################################################
 
+def _ver_to_fam(ver):
+    return AF_INET if ver == 4 else (AF_INET6 if ver == 6 else AF_UNSPEC)
+
+################################################################################
+
 def get_host_interfaces(version=4, include_loopback=False):
     "returns the list of the ip interfaces of the local network adapters"
-
-    fam = AF_INET
-    if version != 4 and version != 6:
-        fam = AF_UNSPEC
-    elif version == 6:
-        fam = AF_INET6
-
+    fam = _ver_to_fam(version)
     flags = (
         GAA_FLAG_INCLUDE_PREFIX |
         GAA_FLAG_SKIP_ANYCAST |
@@ -295,5 +314,58 @@ def get_host_interfaces(version=4, include_loopback=False):
     raise_on_err(error)
 
     return _adapter_addresses_to_interfaces(p_addr, include_loopback)
+
+################################################################################
+
+IF_MAX_PHYS_ADDRESS_LENGTH = 32
+
+class MIB_IPNET_ROW2(ctypes.Structure):
+    _fields_ = (
+        ("Address", SOCKADDR_INET),
+        ("InterfaceIndex", ULONG),
+        ("InterfaceLuid", ULONGLONG),
+        ("PhysicalAddress", BYTE * IF_MAX_PHYS_ADDRESS_LENGTH),
+        ("PhysicalAddressLength", DWORD),
+        ("State", DWORD),
+        ("Flags", BYTE),
+        ("ReachabilityTime", ULONG),
+        )
+
+################################################################################
+
+FreeMibTable = fun_fact(_iph.FreeMibTable, (None, PVOID))
+
+################################################################################
+
+_GetIpNetTable2 = fun_fact(_iph.GetIpNetTable2, (DWORD, WORD, PPVOID))
+
+def GetIpNetTable2(version=0):
+    ptr = PVOID()
+    raise_on_err(_GetIpNetTable2(_ver_to_fam(version), ref(ptr)))
+    try:
+        num = ctypes.cast(ptr, PULONG).contents.value
+
+        class MIB_IPNETTABLE2(ctypes.Structure):
+            _fields_ = (
+                ("NumEntries", ULONG),
+                ("Table", MIB_IPNET_ROW2 * num),
+                )
+
+        return [
+            _namespace(
+                index=e.InterfaceIndex,
+                luid=e.InterfaceLuid,
+                if_type=e.InterfaceLuid >> 48,
+                phys_addr=e.PhysicalAddress[:e.PhysicalAddressLength],
+                addr=e.Address.get_ipaddr(),
+                state=e.State,
+                flags=e.Flags,
+                reach_time=e.ReachabilityTime
+                )
+            for e in MIB_IPNETTABLE2.from_address(ptr.value).Table
+            ]
+
+    finally:
+        FreeMibTable(ptr)
 
 ################################################################################
