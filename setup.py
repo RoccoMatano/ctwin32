@@ -1,4 +1,5 @@
 import sys
+import argparse
 from pathlib import Path
 from setuptools import setup
 from ctwin32 import version
@@ -11,18 +12,23 @@ if sys.platform != "win32":
 
 ################################################################################
 
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument("-p", "--plat-name", default="", help="platform name")
+args, remain = parser.parse_known_args()
+remain.insert(0, sys.argv[0])
+sys.argv = remain
+platform_name = args.plat_name
+
+################################################################################
+
 # hack to ensure platform tag can be set from the outside
 from wheel.bdist_wheel import bdist_wheel
 
 class hacked_bdist_wheel(bdist_wheel):
     def get_tag(self):
         impl, abi_tag, plat_name = bdist_wheel.get_tag(self)
-        platform_file = Path(__file__).parent / "build" / "platform.tag"
-        try:
-            with open(platform_file, "rt") as f:
-                plat_name = f.read().strip()
-        except Exception:
-            pass
+        if platform_name:
+            plat_name = platform_name
         return (impl, abi_tag, plat_name)
 
 ################################################################################
