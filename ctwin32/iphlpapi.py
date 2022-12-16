@@ -30,13 +30,17 @@ import ctypes
 from .wtypes import (
     BYTE,
     DWORD,
+    GUID,
     INT,
     PCHAR,
+    PGUID,
     POINTER,
     PPVOID,
     PULONG,
+    PULONGLONG,
     PVOID,
     PWSTR,
+    SIZE_T,
     ULONG,
     ULONGLONG,
     WORD,
@@ -367,5 +371,60 @@ def GetIpNetTable2(version=0):
 
     finally:
         FreeMibTable(ptr)
+
+################################################################################
+
+_ConvertInterfaceGuidToLuid = fun_fact(
+    _iph.ConvertInterfaceGuidToLuid,
+    (DWORD, PGUID, PULONGLONG)
+    )
+
+def ConvertInterfaceGuidToLuid(guid):
+    guid = GUID(guid)
+    luid = ULONGLONG()
+    raise_on_err(_ConvertInterfaceGuidToLuid(ref(guid), ref(luid)))
+    return luid.value
+
+################################################################################
+
+_ConvertInterfaceIndexToLuid = fun_fact(
+    _iph.ConvertInterfaceIndexToLuid,
+    (DWORD, ULONG, PULONGLONG)
+    )
+
+def ConvertInterfaceIndexToLuid(idx):
+    luid = ULONGLONG()
+    raise_on_err(_ConvertInterfaceIndexToLuid(idx, ref(luid)))
+    return luid.value
+
+################################################################################
+
+_ConvertInterfaceLuidToAlias = fun_fact(
+    _iph.ConvertInterfaceLuidToAlias,
+    (DWORD, PULONGLONG, PWSTR, SIZE_T)
+    )
+
+IF_MAX_STRING_SIZE = 256
+
+def ConvertInterfaceLuidToAlias(luid):
+    luid = ULONGLONG(luid)
+    size = SIZE_T(IF_MAX_STRING_SIZE + 1)
+    alias = ctypes.create_unicode_buffer(size.value)
+    raise_on_err(_ConvertInterfaceLuidToAlias(ref(luid), alias, size))
+    return alias.value
+
+################################################################################
+
+_ConvertInterfaceLuidToName = fun_fact(
+    _iph.ConvertInterfaceLuidToNameW,
+    (DWORD, PULONGLONG, PWSTR, SIZE_T)
+    )
+
+def ConvertInterfaceLuidToName(luid):
+    luid = ULONGLONG(luid)
+    size = SIZE_T(IF_MAX_STRING_SIZE + 1)
+    name = ctypes.create_unicode_buffer(size.value)
+    raise_on_err(_ConvertInterfaceLuidToName(ref(luid), name, size))
+    return name.value
 
 ################################################################################

@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.SetCurrentDirectory
 - argc_argv_from_args
 - iphlpapi.GetIpNetTable2 and sample arp_table.py
+- iphlpapi.ConvertInterfaceGuidToLuid, iphlpapi.ConvertInterfaceIndexToLuid,
+  iphlpapi.ConvertInterfaceLuidToAlias and iphlpapi.ConvertInterfaceLuidToName
+
+### Changed
+
+- use new convert functions in sample netifaces.py
 
 ### Fixed
 
