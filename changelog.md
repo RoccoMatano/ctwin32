@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- special method `__str__` for UNICODE_STRING
+
 ## [1.11.0] - 2022-12-16
 
 ### Added
@@ -59,7 +63,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - prettify code
-- do not use 'from .wtypes import \*' anymore
+- do not use `from .wtypes import \*` anymore
 
 ### Fixed
 
@@ -200,14 +204,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - secure.LsaEnumerateLogonSessions
 - sample logonsessions.py
 - user.AdjustWindowRectEx
-- methods 'copy' and '\_\_repr\_\_' for POINT and RECT
+- methods `copy` and `__repr__` for POINT and RECT
 - sample calendar.pyw
 
 ### Changed
 
 - mostly internal refactorings, but with a small impact on the samples (ctypes
   is now included in ctwin32's namespace)
-- improved handling of 'None' in ScdToBeClosed
+- improved handling of `None` in ScdToBeClosed
 - extend list of SE_\*_NAME constants
 - let advapi.OpenProcessToken return a context manager object
 - moved definition of LUID and UNICODE_STRING to wtypes

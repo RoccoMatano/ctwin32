@@ -37,7 +37,6 @@ from .wtypes import (
     SYSTEMTIME,
     UNICODE_STRING,
     ULONG,
-    WCHAR,
     )
 from . import ref, fun_fact
 from .ntdll import raise_failed_status
@@ -107,12 +106,6 @@ def LsaGetLogonSessionData(luid):
         lsd = ptr.contents
         lli = lsd.LastLogonInfo
 
-        def us2s(us):
-            return ctypes.wstring_at(
-                us.Buffer,
-                us.Length // ctypes.sizeof(WCHAR)
-                )
-
         def la2dt(la):
             st = FileTimeToSystemTime(FILETIME(la))
             if st.Year > 9999:
@@ -124,18 +117,18 @@ def LsaGetLogonSessionData(luid):
 
         return _namespace(
             LogonId=int(lsd.LogonId),
-            UserName=us2s(lsd.UserName),
-            LogonDomain=us2s(lsd.LogonDomain),
-            AuthenticationPackage=us2s(lsd.AuthenticationPackage),
+            UserName=str(lsd.UserName),
+            LogonDomain=str(lsd.LogonDomain),
+            AuthenticationPackage=str(lsd.AuthenticationPackage),
             LogonType=lsd.LogonType,
             Session=lsd.Session,
             Sid=ConvertSidToStringSid(
                 ctypes.string_at(lsd.Sid, GetLengthSid(lsd.Sid))
                 ) if lsd.Sid else None,
             LogonTime=la2dt(lsd.LogonTime),
-            LogonServer=us2s(lsd.LogonServer),
-            DnsDomainName=us2s(lsd.DnsDomainName),
-            Upn=us2s(lsd.Upn),
+            LogonServer=str(lsd.LogonServer),
+            DnsDomainName=str(lsd.DnsDomainName),
+            Upn=str(lsd.Upn),
             UserFlags=lsd.UserFlags,
             LastLogonInfo=_namespace(
                 LastSuccessfulLogon=la2dt(lli.LastSuccessfulLogon),
@@ -144,10 +137,10 @@ def LsaGetLogonSessionData(luid):
                     lli.FailedAttemptCountSinceLastSuccessfulLogon
                     )
                 ),
-            LogonScript=us2s(lsd.LogonScript),
-            ProfilePath=us2s(lsd.ProfilePath),
-            HomeDirectory=us2s(lsd.HomeDirectory),
-            HomeDirectoryDrive=us2s(lsd.HomeDirectoryDrive),
+            LogonScript=str(lsd.LogonScript),
+            ProfilePath=str(lsd.ProfilePath),
+            HomeDirectory=str(lsd.HomeDirectory),
+            HomeDirectoryDrive=str(lsd.HomeDirectoryDrive),
             LogoffTime=la2dt(lsd.LogoffTime),
             KickOffTime=la2dt(lsd.KickOffTime),
             PasswordLastSet=la2dt(lsd.PasswordLastSet),

@@ -250,6 +250,12 @@ class UNICODE_STRING(ctypes.Structure):
         ("Buffer", ctypes.c_wchar_p),
         )
 
+    def __str__(self):
+        return ctypes.wstring_at(
+            self.Buffer,
+            self.Length // ctypes.sizeof(WCHAR)
+            )
+
 ################################################################################
 
 class LUID(ctypes.Structure):

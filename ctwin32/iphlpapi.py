@@ -211,6 +211,7 @@ class SOCKADDR_INET(ctypes.Union):
         ("Ipv6", SOCKADDR_IN6),
         ("si_family", WORD),
         )
+
     def get_ipaddr(self):
         fam = self.Ipv4.sin_family
         if fam == AF_INET:

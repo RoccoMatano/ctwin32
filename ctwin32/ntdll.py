@@ -278,8 +278,7 @@ def enum_processes():
     def _name_pid(pi):
         pid = pi.UniqueProcessId if pi.UniqueProcessId else 0
         name = (
-            ctypes.wstring_at(pi.ImageName.Buffer, pi.ImageName.Length // 2)
-            if pi.ImageName.Buffer else
+            str(pi.ImageName) if pi.ImageName.Buffer else
             ("idle" if pid == 0 else "system")
             )
         return _namespace(name=name, pid=pid)
@@ -360,7 +359,7 @@ def proc_path_from_pid(pid):
         spii.ImageName.Buffer = ctypes.addressof(buf)
 
     raise_failed_status(status)
-    return _resolve_device_prefix(buf.value)
+    return _resolve_device_prefix(str(spii.ImageName))
 
 ################################################################################
 
@@ -368,12 +367,11 @@ def proc_path_from_handle(handle):
     info = ProcessImageFileName
     rlen = required_proc_info_size(handle, info)
     buf = ctypes.create_string_buffer(rlen.value)
+    addr = ctypes.addressof(buf)
     raise_failed_status(
-        NtQueryInformationProcess(handle, info, ref(buf), rlen, ref(rlen))
+        NtQueryInformationProcess(handle, info, addr, rlen, ref(rlen))
         )
-    return _resolve_device_prefix(
-        ctypes.wstring_at(ctypes.addressof(buf) + ctypes.sizeof(UNICODE_STRING))
-        )
+    return _resolve_device_prefix(str(UNICODE_STRING.from_address(addr)))
 
 ################################################################################
 

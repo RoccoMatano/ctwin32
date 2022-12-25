@@ -129,10 +129,10 @@ def argc_argv_from_args(args):
 
     buffer = ArgumentBuffer(strings=chain)
     argv = ctypes.addressof(buffer)
-    addr = argv + ctypes.sizeof(buffer.pointers)
+    str_addr = argv + ArgumentBuffer.strings.offset
     for i, arg in enumerate(args):
-        buffer.pointers[i] = addr
-        addr += ctypes.sizeof(WCHAR) * (len(arg) + 1)
+        buffer.pointers[i] = str_addr
+        str_addr += ctypes.sizeof(WCHAR) * (len(arg) + 1)
     return argc, argv, buffer
 
 ################################################################################
