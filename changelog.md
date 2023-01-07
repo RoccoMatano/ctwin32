@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - special method `__str__` for UNICODE_STRING
 
+### Changed
+
+- building ctwin32 is now based on pyproject.toml and setuptools.build_meta
+
 ## [1.11.0] - 2022-12-16
 
 ### Added
