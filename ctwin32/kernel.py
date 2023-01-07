@@ -1,6 +1,6 @@
 ################################################################################
 #
-# Copyright 2021-2022 Rocco Matano
+# Copyright 2021-2023 Rocco Matano
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -556,8 +556,8 @@ def WritePrivateProfileSection(secname, secdata, filename):
             secdata = "\0".join(lines)
         else:
             secdata = "\0\0"
-    # quote from https://bugs.python.org/issue32745 concerning CPython versions
-    # up to 3.9:
+    # quote from https://github.com/python/cpython/issues/76926 concerning
+    # CPython versions up to 3.9:
     #   "PyUnicode_AsWideCharString was updated to raise ValueError for
     #    embedded nulls if the 'size' output parameter is NULL."
     # That's why we need to detour 'secdata' through a unicode buffer. Since
