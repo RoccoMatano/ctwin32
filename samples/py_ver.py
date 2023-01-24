@@ -28,7 +28,7 @@
 
 import sys
 import collections
-from ctwin32 import version_info
+import ctwin32.version
 
 ################################################################################
 
@@ -58,7 +58,7 @@ def extract_py_ver(fver_ms, fver_ls):
 if __name__ == "__main__":
 
     # get binary version info from the executable file
-    bin_info = version_info.get_binary_info(sys.executable)
+    bin_info = ctwin32.version.get_binary_info(sys.executable)
 
     # extract the interesting values
     extr_ver_info, extr_api_ver = extract_py_ver(
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # just print the string infos
     print()
-    str_info = version_info.get_string_info(sys.executable)
+    str_info = ctwin32.version.get_string_info(sys.executable)
     for i in sorted(str_info):
         print(f"{i:16} : {str_info[i]}")
 

@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 - building ctwin32 is now based on pyproject.toml and setuptools.build_meta
+- renamed `ctwin32.version` to `ctwin32.__version__` and `ctwin32.version_info`
+  to `ctwin32.version` (**_not_** backwards compatible)
 
 ## [1.11.0] - 2022-12-16
 

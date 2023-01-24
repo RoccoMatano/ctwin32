@@ -33,7 +33,7 @@ if len(sys.argv) >= 2:
     prefix = sys.argv[1]
 else:
     prefix = DEFAULT_PREFIX
-tool = "rm_sign_tool.py"
+tool = pathlib.Path(__file__).resolve().parent / "rm_sign_tool.py"
 
 def run(*args):
     cmd = [sys.executable, tool]
@@ -48,8 +48,8 @@ def unlink(pth):
 
 private = pathlib.Path(f"{prefix}.private.key")
 public = pathlib.Path(f"{prefix}.public.key")
-signature = pathlib.Path(f"{prefix}.{tool}.sig")
-fake = pathlib.Path(f"{prefix}.{tool}.fake")
+signature = pathlib.Path(f"{prefix}.{tool.name}.sig")
+fake = pathlib.Path(f"{prefix}.{tool.name}.fake")
 
 try:
     print("going to create keys")
