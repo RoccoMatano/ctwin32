@@ -144,7 +144,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
                 "yes" if 0x01000000 & then.lp else "no",
                 "yes" if 0x20000000 & then.lp else "no",
                 "down" if 0x40000000 & then.lp else "up",
-                "down" if 0x80000000 & then.lp else "up",
+                "up" if 0x80000000 & then.lp else "down",
                 )
             gdi.TextOut(hdc, 0, (self.y_lines - i) * self.char_height, line)
 
@@ -197,10 +197,8 @@ if __name__ == "__main__":
     wnd = KeyViewWnd(wcp)
     wnd.show()
 
-    msg = user.GetMessage()
-    while msg.message != WM_QUIT:
+    while msg := user.GetMessage():
         user.TranslateMessage(msg)
         user.DispatchMessage(msg)
-        msg = user.GetMessage()
 
 ################################################################################

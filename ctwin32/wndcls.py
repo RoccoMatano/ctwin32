@@ -431,8 +431,7 @@ class SimpleWnd(BaseWnd):
         # Therefore we have to catch all unhandled exceptions here.
         try:
             if msg != WM_NCCREATE:
-                self_prop = user.get_prop_def(hwnd, _PROP_SELF)
-                if self_prop:
+                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
                     res = self.on_message(msg, wp, lp)
                     if msg == WM_NCDESTROY:
@@ -604,8 +603,7 @@ class BaseDlg(BaseWnd):
         # Therefore we have to catch all unhandled exceptions here.
         try:
             if msg != WM_INITDIALOG:
-                self_prop = user.get_prop_def(hwnd, _PROP_SELF)
-                if self_prop:
+                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
                     if msg == WM_COMMAND:
                         return self.on_command(

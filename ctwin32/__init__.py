@@ -74,8 +74,7 @@ def multi_str_from_addr(addr):
     WCHAR_SIZE = ctypes.sizeof(WCHAR)
     end = addr
     while True:
-        slen = len(ctypes.cast(end, PWSTR).value)
-        if slen:
+        if slen := len(ctypes.cast(end, PWSTR).value):
             end += (slen + 1) * WCHAR_SIZE
         else:
             # +WCHAR_SIZE for final null
@@ -91,8 +90,7 @@ def cmdline_from_args(args):
         bs_accu = []
         if parts:
             parts.append(" ")
-        need_qmark = (" " in arg) or ("\t" in arg) or not arg
-        if need_qmark:
+        if need_qmark := (" " in arg) or ("\t" in arg) or not arg:
             parts.append('"')
         for c in arg:
             if c == BS:

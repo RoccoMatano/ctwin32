@@ -300,8 +300,7 @@ def enum_processes():
     res.append(_name_pid(pi))
 
     while True:
-        offs = pi.NextEntryOffset
-        if offs == 0:
+        if (offs := pi.NextEntryOffset) == 0:
             break
         pi = SYSTEM_PROCESS_INFORMATION.from_address(
             ctypes.addressof(pi) + offs

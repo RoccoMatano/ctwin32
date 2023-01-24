@@ -116,10 +116,8 @@ if __name__ == "__main__":
     wnd = HelloWnd(wcp)
     wnd.show()
 
-    msg = user.GetMessage()
-    while msg.message != WM_QUIT:
+    while msg := user.GetMessage():
         user.TranslateMessage(msg)
         user.DispatchMessage(msg)
-        msg = user.GetMessage()
 
 ################################################################################

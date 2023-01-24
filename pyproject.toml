@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "ctwin32"
 description = "Access selected win32 APIs through ctypes"
 authors = [{name = "Rocco Matano"}]
-requires-python = ">=3.6"
+requires-python = ">=3.8"
 license = {text = "MIT License"}
 classifiers = [
     "License :: OSI Approved :: MIT License",
@@ -14,8 +14,6 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "Environment :: Win32 (MS Windows)",
     "Intended Audience :: Developers",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",

@@ -58,10 +58,8 @@ def hash_file(file_name):
     with BCryptHash(HASH_ALGORITHM) as hash:
         chunk = 0x10000
         with open(file_name, "rb") as f:
-            data = f.read(chunk)
-            while data:
+            while data := f.read(chunk):
                 hash.update(data)
-                data = f.read(chunk)
             return hash.digest()
 
 ################################################################################

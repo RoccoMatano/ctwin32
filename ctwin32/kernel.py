@@ -377,8 +377,7 @@ def QueryDosDevice(device_name):
     size = 512
     buf = ctypes.create_unicode_buffer(size)
     while True:
-        res = _QueryDosDevice(device_name, buf, size)
-        if res:
+        if res := _QueryDosDevice(device_name, buf, size):
             return buf.value[:res]
         raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2
@@ -1022,8 +1021,7 @@ _EnumResourceNames = fun_fact(
 def EnumResourceNames(hmod, typ, callback, context):
     cbc = CallbackContext(callback, context)
     if not _EnumResourceNames(hmod, typ, _EnumResNameCb, ref(cbc)):
-        err = GetLastError()
-        if err != ERROR_RESOURCE_ENUM_USER_STOP:
+        if (err := GetLastError()) != ERROR_RESOURCE_ENUM_USER_STOP:
             raise ctypes.WinError(err)
 
 ################################################################################
@@ -1205,8 +1203,7 @@ _GetFileType = fun_fact(_k32.GetFileType, (DWORD, HANDLE))
 def GetFileType(hdl):
     res = _GetFileType(hdl)
     if res == FILE_TYPE_UNKNOWN:
-        err = GetLastError()
-        if err != ERROR_SUCCESS:
+        if (err := GetLastError()) != ERROR_SUCCESS:
             raise ctypes.WinError(err)
     return res
 

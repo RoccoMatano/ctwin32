@@ -1304,29 +1304,24 @@ def CredWrite(Credential, Flags=0):
         )
     cred = CREDENTIAL()
     for f in std_fields:
-        val = getattr(Credential, f, None)
-        if val is not None:
+        if val := getattr(Credential, f, None) is not None:
             setattr(cred, f, val)
 
     # ================================= blob ===================================
 
-    val = getattr(Credential, "CredentialBlob", None)
-    if val is not None:
+    if val := getattr(Credential, "CredentialBlob", None) is not None:
         cred.CredentialBlobSize = len(val)
         cred.CredentialBlob = (BYTE * len(val))(*tuple(map(int, val)))
 
     # ============================== attributes ================================
 
-    ns_attr = getattr(Credential, "Attributes", None)
-    if ns_attr:
+    if ns_attr := getattr(Credential, "Attributes", None):
         attr = (CREDENTIAL_ATTRIBUTE * len(ns_attr))()
         for i, a in enumerate(ns_attr):
             for f in ("Keyword", "Flags"):
-                val = getattr(a, f, None)
-                if val is not None:
+                if val := getattr(a, f, None) is not None:
                     setattr(attr[i], f, val)
-            val = getattr(a, "Value", None)
-            if val:
+            if val := getattr(a, "Value", None):
                 attr[i].ValueSize = len(val)
                 attr[i].Value = (BYTE * len(val))(*tuple(map(int, val)))
         cred.AttributeCount = len(ns_attr)

@@ -34,8 +34,7 @@ def list_pipes():
         print("----  ---  ---------")
         for info in ntdll.enum_directory_info(pipes):
             instances = info.EndOfFile
-            max_inst = info.AllocationSize
-            if max_inst == 2 ** 32 - 1:
+            if (max_inst := info.AllocationSize) == 2 ** 32 - 1:
                 max_inst = -1
             print(f"{instances:4d}  {max_inst:3d}  {info.FileName}")
 

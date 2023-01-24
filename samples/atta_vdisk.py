@@ -40,8 +40,7 @@ oflags = vdsk.OPEN_VIRTUAL_DISK_FLAG_NONE
 storage_type = vdsk.VIRTUAL_STORAGE_TYPE()
 
 
-ext = path.rsplit(".", 1)[1].lower()
-if ext == "iso":
+if (ext := path.rsplit(".", 1)[1].lower()) == "iso":
     oparams.Version = vdsk.OPEN_VIRTUAL_DISK_VERSION_1
     acc_mask = vdsk.VIRTUAL_DISK_ACCESS_READ
     aflags = (
