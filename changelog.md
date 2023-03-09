@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+ - `:=` precedence in advapi
+
 ## [2.0.0] - 2023-02-19
 
 ### Added

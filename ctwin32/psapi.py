@@ -59,10 +59,8 @@ def EnumProcessModulesEx(hdl, filter):
     while needed.value > size.value:
         size.value = needed.value
         mods = (HMODULE * (size.value // HSIZE))()
-        ok = _EnumProcessModulesEx(hdl, ref(mods), size, ref(needed), filter)
-        if not ok:
-            err = kernel.GetLastError()
-            if err != ERROR_PARTIAL_COPY:
+        if not _EnumProcessModulesEx(hdl, ref(mods), size, ref(needed), filter):
+            if (err := kernel.GetLastError()) != ERROR_PARTIAL_COPY:
                 raise ctypes.WinError(err)
     return mods[:needed.value // HSIZE]
 
