@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - `__eq__ ` for `GUID`
+- sample `fopa.py`
 
 ### Fixed
 
