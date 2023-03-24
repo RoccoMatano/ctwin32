@@ -24,10 +24,8 @@ from wheel.bdist_wheel import bdist_wheel
 
 class hacked_bdist_wheel(bdist_wheel):
     def get_tag(self):
-        impl, abi_tag, platform = bdist_wheel.get_tag(self)
-        if PLATFORM_NAME:
-            platform = PLATFORM_NAME
-        return (impl, abi_tag, platform)
+        impl, abi_tag, platform = super().get_tag()
+        return (impl, abi_tag, PLATFORM_NAME if PLATFORM_NAME else platform)
 
 ################################################################################
 
