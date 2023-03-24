@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - `__eq__ ` for `GUID`
 - sample `fopa.py`
+- sample `dump_ver_res.py`
 
 ### Fixed
 
