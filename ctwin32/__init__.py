@@ -27,6 +27,8 @@ import ctypes
 from .wtypes import (
     DWORD,
     HANDLE,
+    OSVERSIONINFOEX,
+    POSVERSIONINFOEX,
     PWSTR,
     UINT,
     WCHAR,
@@ -137,6 +139,21 @@ def argc_argv_from_args(args):
 
 def ns_from_struct(cts):
     return _namespace(**{f: getattr(cts, f) for f, _ in cts._fields_})
+
+################################################################################
+
+def _warn_win_ver():
+    osve = OSVERSIONINFOEX()
+    status = ctypes.WinDLL("ntdll.dll").RtlGetVersion(ref(osve))
+    if status == 0 and osve.dwMajorVersion < 10:
+        import warnings
+        msg = (
+            "ctwin32 does not intend to support old Windows versions "
+            "(< Windows 10). Be happy if it still works ;-)"
+            )
+        warnings.warn(msg, stacklevel=3)
+
+_warn_win_ver()
 
 ################################################################################
 

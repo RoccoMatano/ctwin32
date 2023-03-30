@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- ntdll.RtlGetVersion
+
+### Changed
+
+- ctwin32 no longer intends to support Windows versions older than Windows 10.
+Upon import ctwin32 now emits a corresponding warning when it is running on
+such an old version.
+
 ## [2.1.0] - 2023-03-27
 
 ### Added

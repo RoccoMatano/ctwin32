@@ -36,8 +36,10 @@ from .wtypes import (
     LONG_PTR,
     INT,
     NTSTATUS,
+    OSVERSIONINFOEX,
     PBOOLEAN,
     POINTER,
+    POSVERSIONINFOEX,
     PULONG,
     PUNICODE_STRING,
     PVOID,
@@ -53,6 +55,7 @@ from . import (
     ref,
     kernel,
     fun_fact,
+    ns_from_struct,
     ERROR_FILE_NOT_FOUND,
     ERROR_NO_MORE_FILES,
     SystemProcessInformation,
@@ -553,5 +556,14 @@ def enum_directory_info(hdir):
                 break
             else:
                 raise
+
+################################################################################
+
+_RtlGetVersion = fun_fact(_nt.RtlGetVersion, (NTSTATUS, POSVERSIONINFOEX))
+
+def RtlGetVersion():
+    osve = OSVERSIONINFOEX()
+    raise_failed_status(_RtlGetVersion(ref(osve)))
+    return ns_from_struct(osve)
 
 ################################################################################

@@ -303,6 +303,26 @@ class LOGFONT(ctypes.Structure):
 
 ################################################################################
 
+class OSVERSIONINFOEX(ctypes.Structure):
+    _fields_ = (
+        ("dwOSVersionInfoSize", DWORD),
+        ("dwMajorVersion", DWORD),
+        ("dwMinorVersion", DWORD),
+        ("dwBuildNumber", DWORD),
+        ("dwPlatformId", DWORD),
+        ("szCSDVersion", WCHAR * 128),
+        ("wServicePackMajor", WORD),
+        ("wServicePackMinor", WORD),
+        ("wSuiteMask", WORD),
+        ("wProductType", BYTE),
+        ("wReserved", BYTE),
+        )
+
+    def __init__(self):
+        self.dwOSVersionInfoSize = ctypes.sizeof(self)
+
+################################################################################
+
 # pointer types
 
 PWSTR = ctypes.c_wchar_p
@@ -336,6 +356,7 @@ PLUID = POINTER(LUID)
 PPLUID = POINTER(PLUID)
 CallbackContextPtr = POINTER(CallbackContext)
 PLOGFONT = POINTER(LOGFONT)
+POSVERSIONINFOEX = POINTER(OSVERSIONINFOEX)
 
 ################################################################################
 
