@@ -42,6 +42,7 @@ from .wtypes import (
     PULONG_PTR,
     PUSHORT,
     PVOID,
+    PWIN32_FIND_DATA,
     PWSTR,
     ScdToBeClosed,
     SHORT,
@@ -53,6 +54,7 @@ from .wtypes import (
     ULONG_PTR,
     USHORT,
     WCHAR,
+    WIN32_FIND_DATA,
     WORD,
     )
 from . import (
@@ -60,10 +62,14 @@ from . import (
     raise_if,
     raise_on_zero,
     fun_fact,
+    ERROR_ACCESS_DENIED,
+    ERROR_FILE_NOT_FOUND,
     ERROR_INSUFFICIENT_BUFFER,
+    ERROR_NO_MORE_FILES,
     ERROR_RESOURCE_ENUM_USER_STOP,
     ERROR_RESOURCE_NAME_NOT_FOUND,
     ERROR_SUCCESS,
+    FILE_ATTRIBUTE_DIRECTORY,
     FILE_TYPE_CHAR,
     FILE_TYPE_UNKNOWN,
     INVALID_FILE_ATTRIBUTES,
@@ -264,13 +270,13 @@ _DeviceIoControl = fun_fact(
         )
     )
 
-def DeviceIoControl(hdl, ioctl, in_bytes, out_len):
+def DeviceIoControl(hdl, ioctl, in_ctobj, out_len):
     bytes_returned = DWORD(0)
 
-    if in_bytes is None:
+    if in_ctobj is None or in_ctobj == 0:
         iptr, ilen = None, 0
     else:
-        iptr, ilen = ref(in_bytes), len(in_bytes)
+        iptr, ilen = ref(in_ctobj), ctypes.sizeof(in_ctobj)
 
     if out_len is None or out_len == 0:
         out, optr, olen = None, None, 0
@@ -1355,5 +1361,89 @@ def SetThreadErrorMode(mode):
     old = DWORD()
     raise_on_zero(_SetThreadErrorMode(mode, ref(old)))
     return old.value
+
+################################################################################
+
+_FindClose = fun_fact(_k32.FindClose, (BOOL, HANDLE))
+
+def FindClose(hdl):
+    raise_on_zero(_FindClose(hdl))
+
+################################################################################
+
+class FFHANDLE(
+        ScdToBeClosed,
+        HANDLE,
+        close_func=FindClose,
+        invalid=INVALID_HANDLE_VALUE
+        ):
+    pass
+
+################################################################################
+
+_FindFirstFile = fun_fact(
+    _k32.FindFirstFileW, (HANDLE, PWSTR, PWIN32_FIND_DATA)
+    )
+
+def FindFirstFile(name, ignore_not_found=False):
+    find_data = WIN32_FIND_DATA()
+    hdl = FFHANDLE(_FindFirstFile(name, ref(find_data)))
+    if not hdl.is_valid():
+        err = GetLastError()
+        if ignore_not_found and err == ERROR_FILE_NOT_FOUND:
+            return None, None
+        raise ctypes.WinError(err)
+    return hdl, find_data
+
+################################################################################
+
+_FindNextFile = fun_fact(
+    _k32.FindNextFileW, (BOOL, HANDLE, PWIN32_FIND_DATA)
+    )
+
+def FindNextFile(hdl):
+    find_data = WIN32_FIND_DATA()
+    res = _FindNextFile(hdl, ref(find_data))
+    if not res:
+        err = GetLastError()
+        if err == ERROR_NO_MORE_FILES:
+            return None
+        raise ctypes.WinError(err)
+    return find_data
+
+################################################################################
+
+def iter_dir(directory, ignore_access_denied=True):
+    pattern = str(directory) + "\\*"
+    try:
+        hdl, info = FindFirstFile(pattern, True)
+    except OSError as e:
+        if ignore_access_denied and e.winerror == ERROR_ACCESS_DENIED:
+            return
+        raise
+    if hdl is None:
+        return
+    with hdl:
+        while True:
+            yield directory, info
+            is_sub = (
+                bool(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) and
+                info.cFileName != "." and
+                info.cFileName != ".."
+                )
+            if is_sub:
+                sub = rf"{directory}\{info.cFileName}"
+                yield from iter_dir(sub, ignore_access_denied)
+
+            info = FindNextFile(hdl)
+            if info is None:
+                break
+
+################################################################################
+
+def find_file(name):
+    hdl, info = FindFirstFile(name)
+    hdl.close()
+    return info
 
 ################################################################################

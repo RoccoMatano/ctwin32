@@ -27,6 +27,9 @@ import ctypes
 from uuid import UUID
 from datetime import datetime
 
+# avoid circular dependency: ctwin32 -> wtypes -> ctwin32
+MAX_PATH = 260
+
 ################################################################################
 
 # integral types
@@ -323,6 +326,25 @@ class OSVERSIONINFOEX(ctypes.Structure):
 
 ################################################################################
 
+class WIN32_FIND_DATA(ctypes.Structure):
+    _fields_ = (
+        ("dwFileAttributes", DWORD),
+        ("ftCreationTime", FILETIME),
+        ("ftLastAccessTime", FILETIME),
+        ("ftLastWriteTime", FILETIME),
+        ("nFileSizeHigh", DWORD),
+        ("nFileSizeLow", DWORD),
+        ("dwReserved0", DWORD),
+        ("dwReserved1", DWORD),
+        ("cFileName", WCHAR * MAX_PATH),
+        ("cAlternateFileName", WCHAR * 14),
+        ("dwFileType", DWORD), # obsolete - do not use
+        ("dwCreatorType", DWORD), # obsolete - do not use
+        ("wFinderFlags", WORD),  # obsolete - do not use
+        )
+
+################################################################################
+
 # pointer types
 
 PWSTR = ctypes.c_wchar_p
@@ -357,6 +379,7 @@ PPLUID = POINTER(PLUID)
 CallbackContextPtr = POINTER(CallbackContext)
 PLOGFONT = POINTER(LOGFONT)
 POSVERSIONINFOEX = POINTER(OSVERSIONINFOEX)
+PWIN32_FIND_DATA = POINTER(WIN32_FIND_DATA)
 
 ################################################################################
 

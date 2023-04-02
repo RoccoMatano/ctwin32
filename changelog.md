@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - ntdll.RtlGetVersion
 - context manager `suppress_winerr`
+- kernel.FindFirstFile
+- kernel.FindNextFile
+- kernel.iter_dir
+- kernel.find_file
+- sample print_reparse_points.py
 
 ### Changed
 
