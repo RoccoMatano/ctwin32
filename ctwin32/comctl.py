@@ -75,6 +75,17 @@ def _load_comctl():
         "processorArchitecture='*' publicKeyToken='6595b64144ccf1df' ",
         "language='*'/></dependentAssembly></dependency></assembly>"
         )
+
+    # simply doing the following would lead to a sharing violation :-(
+    #
+    # with tempfile.NamedTemporaryFile() as f:
+    #     tmp_name = f.name
+    #     f.write("".join(manifest).encode("ascii"))
+    #     actx.lpSource = tmp_name
+    #     ctx = kernel.CreateActCtx(actx) # <- sharing violation here
+    #
+    # so it gets a little more complicated...
+
     tmp_name = None
     try:
         with tempfile.NamedTemporaryFile(delete=False) as f:
@@ -93,7 +104,9 @@ def _load_comctl():
     # activate context, load libray and and release the context
     cookie = kernel.ActivateActCtx(ctx)
     comctl = ctypes.WinDLL("comctl32.dll")  # <- this calls LoadLibrary
-    kernel.DeactivateActCtx(0, cookie)
+
+    # Do NOT deactivate the context! Just decrement its ref-count by
+    # releasing it.
     kernel.ReleaseActCtx(ctx)
 
     # verify DLL version
