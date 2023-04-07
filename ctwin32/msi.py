@@ -36,6 +36,7 @@ from .wtypes import (
 from . import (
     ref,
     raise_on_err,
+    suppress_winerr,
     fun_fact,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_ITEMS
@@ -112,16 +113,10 @@ def MsiViewFetch(view):
 ################################################################################
 
 def view_enum_records(view):
-    while True:
-        try:
-            record = MsiViewFetch(view)
-        except OSError as e:
-            if e.winerror == ERROR_NO_MORE_ITEMS:
-                break
-            else:
-                raise
-        with record:
-            yield record
+    with suppress_winerr(ERROR_NO_MORE_ITEMS):
+        while True:
+            with MsiViewFetch(view) as record:
+                yield record
 
 ################################################################################
 

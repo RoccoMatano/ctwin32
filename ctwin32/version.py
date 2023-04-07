@@ -37,6 +37,7 @@ from .wtypes import (
 from . import (
     ref,
     raise_on_zero,
+    suppress_winerr,
     fun_fact,
     ns_from_struct,
     ERROR_RESOURCE_TYPE_NOT_FOUND,
@@ -152,11 +153,8 @@ def get_string_info(fname, block=None):
 
     result = {}
     for k in _str_info_names:
-        try:
+        with suppress_winerr(ERROR_RESOURCE_TYPE_NOT_FOUND):
             result[k] = VerQueryValue(block, lang + k)
-        except OSError as e:
-            if e.winerror != ERROR_RESOURCE_TYPE_NOT_FOUND:
-                raise
     return result
 
 ################################################################################

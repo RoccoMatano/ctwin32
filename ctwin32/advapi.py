@@ -56,6 +56,7 @@ from . import (
     raise_if,
     raise_on_zero,
     raise_on_err,
+    suppress_winerr,
     fun_fact,
     ns_from_struct,
     argc_argv_from_args,
@@ -337,16 +338,11 @@ def RegEnumKeyEx(key, index):
 
 def reg_enum_keys(key):
     index = 0
-    while True:
-        try:
+    with suppress_winerr(ERROR_NO_MORE_ITEMS):
+        while True:
             sub_key_name = RegEnumKeyEx(key, index)
             index += 1
             yield sub_key_name
-        except OSError as e:
-            if e.winerror == ERROR_NO_MORE_ITEMS:
-                break
-            else:
-                raise
 
 ################################################################################
 
@@ -396,16 +392,11 @@ def RegEnumValue(key, index):
 
 def reg_enum_values(key):
     index = 0
-    while True:
-        try:
+    with suppress_winerr(ERROR_NO_MORE_ITEMS):
+        while True:
             tpl = RegEnumValue(key, index)
             index += 1
             yield tpl
-        except OSError as e:
-            if e.winerror == ERROR_NO_MORE_ITEMS:
-                break
-            else:
-                raise
 
 ################################################################################
 

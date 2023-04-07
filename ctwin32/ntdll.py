@@ -56,6 +56,7 @@ from . import (
     kernel,
     fun_fact,
     ns_from_struct,
+    suppress_winerr,
     ERROR_FILE_NOT_FOUND,
     ERROR_NO_MORE_FILES,
     SystemProcessInformation,
@@ -317,11 +318,8 @@ def _resolve_device_prefix(fname):
     dos_devices = {}
     for dc in "abcdefghijklmnopqrstuvwxyz":
         dn = dc + ":"
-        try:
+        with suppress_winerr(ERROR_FILE_NOT_FOUND):
             dos_devices[kernel.QueryDosDevice(dn)] = dn
-        except OSError as e:
-            if e.winerror != ERROR_FILE_NOT_FOUND:
-                raise e
 
     for ddk in dos_devices.keys():
         if fname.startswith(ddk):
@@ -546,16 +544,11 @@ def get_directory_info(hdir, restart_scan):
 
 def enum_directory_info(hdir):
     restart_scan = True
-    while True:
-        try:
+    with suppress_winerr(ERROR_NO_MORE_FILES):
+        while True:
             info = get_directory_info(hdir, restart_scan)
             restart_scan = False
             yield info
-        except OSError as e:
-            if e.winerror == ERROR_NO_MORE_FILES:
-                break
-            else:
-                raise
 
 ################################################################################
 

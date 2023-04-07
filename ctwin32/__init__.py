@@ -65,6 +65,24 @@ def raise_on_hr(hr):
 
 ################################################################################
 
+# similar to contextlib.suppress
+
+class suppress_winerr():
+    def __init__(self, *err_codes):
+        self._err_codes = err_codes
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exctype, excinst, exctb):
+        return (
+            exctype is not None and
+            issubclass(exctype, OSError) and
+            excinst.winerror in self._err_codes
+            )
+
+################################################################################
+
 def fun_fact(function, signature):
     function.restype = signature[0]
     function.argtypes = signature[1:]

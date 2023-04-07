@@ -45,6 +45,7 @@ from . import (
     ref,
     raise_on_zero,
     fun_fact,
+    suppress_winerr,
     INVALID_HANDLE_VALUE,
     DIGCF_PRESENT,
     DIGCF_ALLCLASSES,
@@ -55,6 +56,7 @@ from . import (
     DIF_PROPERTYCHANGE,
     SPDRP_DEVICEDESC,
     ERROR_NO_MORE_ITEMS,
+    ERROR_NOT_FOUND,
     )
 from .cfgmgr import (
     CM_Get_Device_ID,
@@ -183,12 +185,10 @@ def SetupDiEnumDeviceInfo(info_set, idx, deinda):
 def get_device_enumerators():
     res = []
     idx = 0
-    while True:
-        try:
+    with suppress_winerr(ERROR_NOT_FOUND):
+        while True:
             res.append(CM_Enumerate_Enumerators(idx))
             idx += 1
-        except OSError:
-            break
     return res
 
 ################################################################################
@@ -196,12 +196,10 @@ def get_device_enumerators():
 def get_device_classes(flags=0):
     res = []
     idx = 0
-    while True:
-        try:
+    with suppress_winerr(ERROR_NOT_FOUND):
+        while True:
             res.append(CM_Enumerate_Classes(idx, flags))
             idx += 1
-        except OSError:
-            break
     return res
 
 ################################################################################
@@ -542,15 +540,11 @@ def enum_dev_interfaces(guid):
     flags = DIGCF_PRESENT | DIGCF_DEVICEINTERFACE
     with SetupDiGetClassDevs(flags=flags, guid=guid) as info_set:
         idx = 0
-        while True:
-            try:
+        with suppress_winerr(ERROR_NO_MORE_ITEMS):
+            while True:
                 did = SetupDiEnumDeviceInterfaces(info_set, guid, idx)
-            except OSError as e:
-                if e.winerror == ERROR_NO_MORE_ITEMS:
-                    break
-                raise
-            idx += 1
-            yield info_set, did
+                idx += 1
+                yield info_set, did
 
 ################################################################################
 
