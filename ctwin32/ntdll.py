@@ -321,7 +321,7 @@ def _resolve_device_prefix(fname):
         with suppress_winerr(ERROR_FILE_NOT_FOUND):
             dos_devices[kernel.QueryDosDevice(dn)] = dn
 
-    for ddk in dos_devices.keys():
+    for ddk in dos_devices:
         if fname.startswith(ddk):
             fname = fname.replace(ddk, dos_devices[ddk], 1)
             break
@@ -386,8 +386,7 @@ def get_handles(pid=-1):
         )
     if pid == -1:
         return list(hi.Handles)
-    else:
-        return [h for h in hi.Handles if pid == h.UniqueProcessId]
+    return [h for h in hi.Handles if pid == h.UniqueProcessId]
 
 ################################################################################
 
@@ -506,11 +505,7 @@ def get_directory_info(hdir, restart_scan):
             None,
             restart_scan
             )
-        too_short = (
-            stat == STATUS_BUFFER_OVERFLOW
-            or stat == STATUS_INFO_LENGTH_MISMATCH
-            )
-        if too_short:
+        if stat in (STATUS_BUFFER_OVERFLOW, STATUS_INFO_LENGTH_MISMATCH):
             bsize *= 2
         else:
             break

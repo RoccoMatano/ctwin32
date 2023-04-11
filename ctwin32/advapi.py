@@ -1258,28 +1258,28 @@ def _ns_from_cred(cred):
 
 ################################################################################
 
-def CreadRead(TargetName, Type=CRED_TYPE_GENERIC, Flags=0):
+def CreadRead(target_name, typ=CRED_TYPE_GENERIC, flags=0):
     ptr = PCREDENTIAL()
     try:
-        raise_on_zero(_CredRead(TargetName, Type, Flags, ref(ptr)))
+        raise_on_zero(_CredRead(target_name, typ, flags, ref(ptr)))
         return _ns_from_cred(ptr.contents)
     finally:
         _CredFree(ptr)
 
 ################################################################################
 
-def CredEnumerate(Filter=None, Flags=0):
+def CredEnumerate(filter=None, flags=0):
     pptr = PPCREDENTIAL()
     cnt = DWORD()
     try:
-        raise_on_zero(_CredEnumerate(Filter, Flags, ref(cnt), ref(pptr)))
+        raise_on_zero(_CredEnumerate(filter, flags, ref(cnt), ref(pptr)))
         return tuple(_ns_from_cred(pptr[n].contents) for n in range(cnt.value))
     finally:
         _CredFree(pptr)
 
 ################################################################################
 
-def CredWrite(Credential, Flags=0):
+def CredWrite(credential, flags=0):
 
     # ============================== std fields ================================
 
@@ -1295,18 +1295,18 @@ def CredWrite(Credential, Flags=0):
         )
     cred = CREDENTIAL()
     for f in std_fields:
-        if (val := getattr(Credential, f, None)) is not None:
+        if (val := getattr(credential, f, None)) is not None:
             setattr(cred, f, val)
 
     # ================================= blob ===================================
 
-    if (val := getattr(Credential, "CredentialBlob", None)) is not None:
+    if (val := getattr(credential, "CredentialBlob", None)) is not None:
         cred.CredentialBlobSize = len(val)
         cred.CredentialBlob = (BYTE * len(val))(*tuple(map(int, val)))
 
     # ============================== attributes ================================
 
-    if ns_attr := getattr(Credential, "Attributes", None):
+    if ns_attr := getattr(credential, "Attributes", None):
         attr = (CREDENTIAL_ATTRIBUTE * len(ns_attr))()
         for i, a in enumerate(ns_attr):
             for f in ("Keyword", "Flags"):
@@ -1318,7 +1318,7 @@ def CredWrite(Credential, Flags=0):
         cred.AttributeCount = len(ns_attr)
         cred.Attributes = ctypes.cast(attr, PCREDENTIAL_ATTRIBUTE)
 
-    raise_on_zero(_CredWrite(ref(cred), Flags))
+    raise_on_zero(_CredWrite(ref(cred), flags))
 
 ################################################################################
 
@@ -1335,7 +1335,7 @@ class EHANDLE(ScdToBeClosed, HANDLE, close_func=CloseEventLog, invalid=0):
 ################################################################################
 
 _OpenEventLog = fun_fact(
-    _adv.OpenEventLogW, (HANDLE, PWSTR, PWSTR,)
+    _adv.OpenEventLogW, (HANDLE, PWSTR, PWSTR)
     )
 
 def OpenEventLog(source, server=None):
@@ -1385,7 +1385,7 @@ def _evt_from_void_p(vpelr):
     elr = ctypes.cast(vpelr, PEVENTLOGRECORD).contents
     if elr.NumStrings:
         stroffs = elr.StringOffset
-        for i in range(elr.NumStrings):
+        for _ in range(elr.NumStrings):
             nxt = ctypes.wstring_at(vpelr.value + stroffs)
             stroffs += (len(nxt) + 1) * ctypes.sizeof(WCHAR)
             strins.append(nxt)

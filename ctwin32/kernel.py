@@ -450,9 +450,9 @@ def FileTimeToLocalSystemTime(ft):
 
 ################################################################################
 
-def AdjustTime(SecondsToAdjust):
+def AdjustTime(seconds_to_adjust):
     ft = GetSystemTimeAsFileTime()
-    ft += int(SecondsToAdjust * 1e7)
+    ft += int(seconds_to_adjust * 1e7)
     st = FileTimeToSystemTime(ft)
     raise_on_zero(_k32.SetSystemTime(ref(st)))
 
@@ -520,7 +520,7 @@ def GetPrivateProfileSectionNames(filename):
         size *= 2
         buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSectionNames(buf, size, filename)
-    return buf[:res].split('\0')[:-1]
+    return buf[:res].split("\0")[:-1]
 
 ################################################################################
 
@@ -537,10 +537,10 @@ def GetPrivateProfileSection(secname, filename):
         size *= 2
         buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSection(secname, buf, size, filename)
-    entries = buf[:res].split('\0')[:-1]
+    entries = buf[:res].split("\0")[:-1]
     d = _collections.OrderedDict()
     for e in entries:
-        k, v = e.split('=', 1)
+        k, v = e.split("=", 1)
         d[k] = v
     return d
 
@@ -585,8 +585,7 @@ def GetEnvironmentVariable(name):
         raise_on_zero(req)
         if req <= size:
             break
-        else:
-            size = req
+        size = req
     return var.value
 
 ################################################################################
@@ -651,8 +650,7 @@ def ExpandEnvironmentStrings(template):
         raise_on_zero(req)
         if req <= size:
             break
-        else:
-            size = req
+        size = req
     return var.value
 
 ################################################################################
@@ -972,8 +970,7 @@ def GlobalGetAtomName(atom):
         raise_on_zero(req)
         if req <= size:
             break
-        else:
-            size = req
+        size = req
     return var.value
 
 ################################################################################
@@ -1135,7 +1132,7 @@ def load_message_string(hmod, msg_id):
                             "utf-8" if entry.Flags == MESSAGE_RESOURCE_UTF8
                             else get_ansi_encoding()
                             )
-                    return msg.strip('\0')
+                    return msg.strip("\0")
 
     raise ctypes.WinError(ERROR_RESOURCE_NAME_NOT_FOUND)
 

@@ -101,8 +101,7 @@ def VerQueryValue(block, subblock):
     raise_on_zero(_VerQueryValue(block, subblock, ref(value), ref(size)))
     if "StringFileInfo" in subblock:
         return ctypes.wstring_at(value.value, size.value).strip("\0")
-    else:
-        return ctypes.string_at(value.value, size.value)
+    return ctypes.string_at(value.value, size.value)
 
 ################################################################################
 

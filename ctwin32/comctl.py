@@ -102,7 +102,7 @@ def _load_comctl():
             pathlib.Path(tmp_name).unlink()
 
     # activate context, load libray and and release the context
-    cookie = kernel.ActivateActCtx(ctx)
+    kernel.ActivateActCtx(ctx)
     comctl = ctypes.WinDLL("comctl32.dll")  # <- this calls LoadLibrary
 
     # Do NOT deactivate the context! Just decrement its ref-count by

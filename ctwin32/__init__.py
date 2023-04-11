@@ -28,7 +28,6 @@ from .wtypes import (
     DWORD,
     HANDLE,
     OSVERSIONINFOEX,
-    POSVERSIONINFOEX,
     PWSTR,
     UINT,
     WCHAR,
@@ -142,7 +141,7 @@ def argc_argv_from_args(args):
     class ArgumentBuffer(ctypes.Structure):
         _fields_ = (
             ("pointers", PWSTR * argc),
-            ("strings", WCHAR * len(chain))
+            ("strings", WCHAR * len(chain)),
             )
 
     buffer = ArgumentBuffer(strings=chain)

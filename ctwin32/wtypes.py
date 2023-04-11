@@ -338,9 +338,9 @@ class WIN32_FIND_DATA(ctypes.Structure):
         ("dwReserved1", DWORD),
         ("cFileName", WCHAR * MAX_PATH),
         ("cAlternateFileName", WCHAR * 14),
-        ("dwFileType", DWORD), # obsolete - do not use
-        ("dwCreatorType", DWORD), # obsolete - do not use
-        ("wFinderFlags", WORD),  # obsolete - do not use
+        ("dwFileType", DWORD),     # obsolete - do not use
+        ("dwCreatorType", DWORD),  # obsolete - do not use
+        ("wFinderFlags", WORD),    # obsolete - do not use
         )
 
 ################################################################################

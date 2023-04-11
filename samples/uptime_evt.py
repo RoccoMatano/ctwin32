@@ -40,7 +40,8 @@ def boot_time():
 def up_time(time_boot=None):
     if time_boot is None:
         time_boot = boot_time()
-    return datetime.datetime.now() - time_boot
+    utime = datetime.datetime.now() - time_boot
+    return datetime.timedelta(seconds=int(utime.total_seconds()))
 
 if __name__ == "__main__":
     t_boot = boot_time()

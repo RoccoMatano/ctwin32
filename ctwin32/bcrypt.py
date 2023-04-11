@@ -481,7 +481,16 @@ _BCryptSignHash = fun_fact(
 def BCryptSignHash(key, digest, flags=0):
     size = ULONG()
     raise_failed_status(
-        _BCryptSignHash(key, None, digest, len(digest), None, 0, ref(size), 0)
+        _BCryptSignHash(
+            key,
+            None,
+            digest,
+            len(digest),
+            None,
+            0,
+            ref(size),
+            flags
+            )
         )
     signature = ctypes.create_string_buffer(size.value)
     raise_failed_status(
@@ -493,7 +502,7 @@ def BCryptSignHash(key, digest, flags=0):
             signature,
             len(signature),
             ref(size),
-            0
+            flags
             )
         )
     return bytes(signature)

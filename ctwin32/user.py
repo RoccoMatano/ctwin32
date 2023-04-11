@@ -395,7 +395,7 @@ class WINDOWPLACEMENT(ctypes.Structure):
         mi = f"({self.MinPosition.x}, {self.MinPosition.y})"
         ma = f"({self.MaxPosition.x}, {self.MaxPosition.y})"
         no = (
-            f"({self.NormalPosition.left}, {self.NormalPosition.top}, " +
+            f"({self.NormalPosition.left}, {self.NormalPosition.top}, ",
             f"{self.NormalPosition.right}, {self.NormalPosition.bottom})"
             )
         return f"{cl}({ln}, {fl}, {sc}, {mi}, {ma}, {no})"
@@ -555,7 +555,7 @@ def SendInput(inputs):
             inputs = (INPUT * num)(*inputs)
             ptr = ctypes.cast(inputs, PINPUT)
         except Exception as e:
-            raise TypeError(f"expected INPUT or list of INPUTs: {e}")
+            raise TypeError(f"expected INPUT or list of INPUTs: {e}") from e
     raise_on_zero(_SendInput(num, ptr, ctypes.sizeof(INPUT)))
 
 ################################################################################
@@ -617,8 +617,7 @@ def GetMonitorInfo(hmon):
 def get_wnd_center(hwnd=None):
     if hwnd is None:
         return GetMonitorInfo(MonitorFromWindow(None)).rcMonitor.center
-    else:
-        return GetWindowRect(hwnd).center
+    return GetWindowRect(hwnd).center
 
 ################################################################################
 
@@ -1225,7 +1224,7 @@ def txt_to_clip(txt, hwnd=None):
 
 def txt_from_clip(hwnd=None):
     if not IsClipboardFormatAvailable(CF_UNICODETEXT):
-        raise EnvironmentError("no clipboard text available")
+        raise OSError("no clipboard text available")
     OpenClipboard(hwnd)
     hmem = GetClipboardData(CF_UNICODETEXT)
     txt = ctypes.wstring_at(kernel.GlobalLock(hmem))
