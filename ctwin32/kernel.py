@@ -375,6 +375,17 @@ def TerminateProcess(handle, exit_code):
 
 ################################################################################
 
+_GetExitCodeProcess = fun_fact(
+    _k32.GetExitCodeProcess, (BOOL, HANDLE, PDWORD)
+    )
+
+def GetExitCodeProcess(handle):
+    exit_code = DWORD()
+    raise_on_zero(_GetExitCodeProcess(handle, ref(exit_code)))
+    return exit_code.value
+
+################################################################################
+
 _QueryDosDevice = fun_fact(
     _k32.QueryDosDeviceW, (DWORD, PWSTR, PWSTR, DWORD)
     )

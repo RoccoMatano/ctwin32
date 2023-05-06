@@ -173,9 +173,12 @@ def ShellExecuteEx(
 
     raise_on_zero(_ShellExecuteExW(ref(sei)))
 
+    rc = None
     if sei.hProcess is not None:
         kernel.WaitForSingleObject(sei.hProcess, INFINITE)
+        rc = kernel.GetExitCodeProcess(sei.hProcess)
         kernel.CloseHandle(sei.hProcess)
+    return rc
 
 ################################################################################
 

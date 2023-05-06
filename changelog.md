@@ -16,12 +16,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.iter_dir
 - kernel.find_file
 - sample print_reparse_points.py
+- kernel.GetExitCodeProcess
 
 ### Changed
 
 - ctwin32 no longer intends to support Windows versions older than Windows 10.
 Upon import ctwin32 now emits a corresponding warning when it is running on
 such an old version.
+- shell.ShellExecuteEx now returns the exit code of a process when called with
+`wait=True`.
 
 ## [2.1.0] - 2023-03-27
 
