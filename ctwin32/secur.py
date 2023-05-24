@@ -38,7 +38,7 @@ from .wtypes import (
     UNICODE_STRING,
     ULONG,
     )
-from . import ref, fun_fact
+from . import ref, fun_fact, suppress_winerr, ERROR_INVALID_PARAMETER
 from .ntdll import raise_failed_status
 from .kernel import FileTimeToLocalFileTime, FileTimeToSystemTime
 from .advapi import GetLengthSid, ConvertSidToStringSid
@@ -107,11 +107,8 @@ def LsaGetLogonSessionData(luid):
         lli = lsd.LastLogonInfo
 
         def la2dt(la):
-            st = FileTimeToSystemTime(FILETIME(la))
-            if st.Year > 9999:
-                # datetime cannot handle years > 9999
-                st = SYSTEMTIME(9999, 12, 0, 31)
-            else:
+            st = FileTimeToSystemTime(FILETIME(0))
+            with suppress_winerr(ERROR_INVALID_PARAMETER):
                 st = FileTimeToSystemTime(FileTimeToLocalFileTime(FILETIME(la)))
             return st.to_datetime()
 
@@ -161,10 +158,10 @@ def LsaEnumerateLogonSessions():
     pluid = PLUID()
     raise_failed_status(_LsaEnumerateLogonSessions(ref(count), ref(pluid)))
     try:
-        result = []
-        for idx in reversed(range(count.value)):
-            result.append(LsaGetLogonSessionData(pluid[idx]))
-        return result
+        return [
+            LsaGetLogonSessionData(pluid[idx])
+            for idx in reversed(range(count.value))
+            ]
     finally:
         LsaFreeReturnBuffer(pluid)
 
