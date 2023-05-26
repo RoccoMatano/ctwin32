@@ -26,6 +26,10 @@ such an old version.
 - shell.ShellExecuteEx now returns the exit code of a process when called with
 `wait=True`.
 
+### Fixed
+
+- fixed extraction of SID in advapi.ReadEventLog
+
 ## [2.1.0] - 2023-03-27
 
 ### Added

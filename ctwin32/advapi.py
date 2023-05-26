@@ -1392,7 +1392,7 @@ def _evt_from_void_p(vpelr):
     sid = ""
     if elr.UserSidLength:
         sid = ConvertSidToStringSid(
-            ctypes.string_at(vpelr.value + elr.UserSidOffset)
+            ctypes.string_at(vpelr.value + elr.UserSidOffset, elr.UserSidLength)
             )
     data = ctypes.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
     p_str = vpelr.value + ctypes.sizeof(EVENTLOGRECORD)
