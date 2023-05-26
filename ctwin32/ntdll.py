@@ -287,7 +287,6 @@ def enum_processes():
             )
         return _namespace(name=name, pid=pid)
 
-    res = []
     status = STATUS_INFO_LENGTH_MISMATCH
     while status == STATUS_INFO_LENGTH_MISMATCH:
         size = required_sys_info_size(SystemProcessInformation)
@@ -301,13 +300,11 @@ def enum_processes():
     raise_failed_status(status)
 
     pi = SYSTEM_PROCESS_INFORMATION.from_address(ctypes.addressof(buf))
-    res.append(_name_pid(pi))
+    res = [_name_pid(pi)]
 
-    while True:
-        if (offs := pi.NextEntryOffset) == 0:
-            break
+    while pi.NextEntryOffset:
         pi = SYSTEM_PROCESS_INFORMATION.from_address(
-            ctypes.addressof(pi) + offs
+            ctypes.addressof(pi) + pi.NextEntryOffset
             )
         res.append(_name_pid(pi))
     return res
@@ -553,5 +550,33 @@ def RtlGetVersion():
     osve = OSVERSIONINFOEX()
     raise_failed_status(_RtlGetVersion(ref(osve)))
     return ns_from_struct(osve)
+
+################################################################################
+
+_NtPowerInformation = fun_fact(
+    _nt.NtPowerInformation, (
+        NTSTATUS,
+        LONG,
+        PVOID,
+        ULONG,
+        PVOID,
+        ULONG,
+        )
+    )
+
+def NtPowerInformation(pwr_info, in_bytes, out_len):
+    if in_bytes is None:
+        iptr, ilen = None, 0
+    else:
+        iptr, ilen = ref(in_bytes), len(in_bytes)
+
+    if out_len is None or out_len == 0:
+        out, optr, olen = ctypes.create_string_buffer(0), None, 0
+    else:
+        out = ctypes.create_string_buffer(out_len)
+        optr, olen = ref(out), out_len
+
+    raise_failed_status(_NtPowerInformation(pwr_info, iptr, ilen, optr, olen))
+    return out.raw
 
 ################################################################################

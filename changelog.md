@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.find_file
 - sample print_reparse_points.py
 - kernel.GetExitCodeProcess
+- user.LoadString
+- ntdll.NtPowerInformation
+- sample power_requests.py
 
 ### Changed
 

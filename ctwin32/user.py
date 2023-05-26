@@ -47,6 +47,7 @@ from .wtypes import (
     POINTER,
     PPOINT,
     PPVOID,
+    PPWSTR,
     PRECT,
     PVOID,
     PWSTR,
@@ -65,17 +66,14 @@ from . import (
     raise_on_zero,
     raise_on_err,
     fun_fact,
-    WAIT_FAILED,
+    CF_UNICODETEXT,
+    GMEM_MOVEABLE,
     GWL_STYLE,
     GWL_EXSTYLE,
     INPUT_KEYBOARD,
     KEYEVENTF_KEYUP,
-    MONITOR_DEFAULTTOPRIMARY,
-    SWP_NOSIZE,
-    SWP_NOZORDER,
-    GMEM_MOVEABLE,
-    CF_UNICODETEXT,
     LR_DEFAULTSIZE,
+    MONITOR_DEFAULTTOPRIMARY,
     SPI_GETNONCLIENTMETRICS,
     SPI_SETNONCLIENTMETRICS,
     SPI_GETWHEELSCROLLLINES,
@@ -83,6 +81,9 @@ from . import (
     SPI_GETWORKAREA,
     SPIF_UPDATEINIFILE,
     SPIF_SENDCHANGE,
+    SWP_NOSIZE,
+    SWP_NOZORDER,
+    WAIT_FAILED,
     WM_QUIT,
     )
 from .ntdll import (
@@ -647,13 +648,21 @@ def start_centered(arglist):
 
 ################################################################################
 
+_LoadString = fun_fact(_usr.LoadStringW, (INT, HANDLE, UINT, PPWSTR, INT))
+
+def LoadString(hinst, strid):
+    ptr = PWSTR()
+    raise_on_zero(res := _LoadString(hinst, strid, ref(ptr), 0))
+    return ctypes.wstring_at(ptr, res)
+
+################################################################################
+
 _LoadCursor = fun_fact(_usr.LoadCursorW, (HANDLE, HANDLE, PWSTR))
 
 def LoadCursor(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
         cname = ctypes.cast(cname, PWSTR)
-    res = _LoadCursor(hinst, cname)
-    raise_on_zero(res)
+    raise_on_zero(res := _LoadCursor(hinst, cname))
     return res
 
 ################################################################################
@@ -663,8 +672,7 @@ _LoadIcon = fun_fact(_usr.LoadIconW, (HANDLE, HANDLE, PWSTR))
 def LoadIcon(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
         cname = ctypes.cast(cname, PWSTR)
-    res = _LoadIcon(hinst, cname)
-    raise_on_zero(res)
+    raise_on_zero(res := _LoadIcon(hinst, cname))
     return res
 
 ################################################################################
