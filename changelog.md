@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.2.0] - 2023-05-27
+
 ### Added
 
 - ntdll.RtlGetVersion
@@ -470,7 +472,8 @@ such an old version.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
-[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.1.0...master
+[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.2.0...master
+[2.2.0]: https://github.com/RoccoMatano/ctwin32/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/RoccoMatano/ctwin32/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/RoccoMatano/ctwin32/compare/1.11.0...2.0.0
 [1.11.0]: https://github.com/RoccoMatano/ctwin32/compare/1.10.0...1.11.0
