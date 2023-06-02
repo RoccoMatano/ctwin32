@@ -34,7 +34,6 @@ from .wtypes import (
     PPLUID,
     PVOID,
     PULONG,
-    SYSTEMTIME,
     UNICODE_STRING,
     ULONG,
     )

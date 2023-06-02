@@ -28,7 +28,6 @@ from ctwin32.iphlpapi import (
     get_host_interfaces,
     ConvertInterfaceGuidToLuid,
     ConvertInterfaceLuidToAlias,
-    ConvertInterfaceLuidToName,
     ConvertInterfaceIndexToLuid,
     )
 
@@ -42,12 +41,9 @@ while True:
     except OSError:
         break
 
-
 print("\n\nInterfaces by adapter:")
 for guid, ifaces in get_host_interfaces(None, True).items():
     alias = ConvertInterfaceLuidToAlias(ConvertInterfaceGuidToLuid(guid))
     print(f"\nAdapter: {alias}, {guid}")
     for nif in ifaces:
         print(f"    {nif!r}")
-
-

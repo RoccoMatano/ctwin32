@@ -35,7 +35,7 @@ def boot_time():
                 if (e.EventID & 0xffff) == BOOT_EVENT_ID:
                     return e.TimeGenerated
             some_events = advapi.ReadEventLog(log)
-    raise EnvironmentError("no boot event found")
+    raise OSError("no boot event found")
 
 def up_time(time_boot=None):
     if time_boot is None:

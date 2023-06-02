@@ -83,7 +83,7 @@ def get_drive_devinst(drv_type, drv_num):
     # have to iterate over all device interfaces that match the drive type. The
     # drive number is only unique within the group of devices that share the
     # same interface.
-    if drv_type == FILE_DEVICE_CD_ROM or drv_type == FILE_DEVICE_DVD:
+    if drv_type in (FILE_DEVICE_CD_ROM, FILE_DEVICE_DVD):
         guid = GUID_IFACE_CDROM
     elif drv_type == FILE_DEVICE_DISK:
         # ignoring that floppies ever existed
@@ -97,7 +97,7 @@ def get_drive_devinst(drv_type, drv_num):
         if dtype == drv_type and dnum == drv_num:
             return deinda.DevInst
 
-    raise EnvironmentError(f"devinst not found for {drv_type} {drv_num}")
+    raise OSError(f"devinst not found for {drv_type} {drv_num}")
 
 ################################################################################
 

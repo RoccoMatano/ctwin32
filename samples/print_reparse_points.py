@@ -28,9 +28,9 @@ import ctwin32
 from ctwin32 import (
     suppress_winerr,
     ERROR_MORE_DATA,
+    FILE_ATTRIBUTE_REPARSE_POINT,
     FILE_FLAG_OPEN_REPARSE_POINT,
     FILE_FLAG_BACKUP_SEMANTICS,
-    FILE_ATTRIBUTE_REPARSE_POINT,
     IO_REPARSE_TAG_SYMLINK,
     IO_REPARSE_TAG_MOUNT_POINT,
     )
@@ -78,8 +78,8 @@ class RP_DATA_UN(ctypes.Union):
 class REPARSE_DATA_BUFFER(ctypes.Structure):
     _fields_ = (
         ("ReparseTag", ULONG),
-        ('ReparseDataLength', USHORT),
-        ('Reserved', USHORT),
+        ("ReparseDataLength", USHORT),
+        ("Reserved", USHORT),
         ("_anon", RP_DATA_UN),
         )
     _anonymous_ = ("_anon",)
@@ -130,12 +130,12 @@ def readlink(link, get_subst_name=False):
 ################################################################################
 
 reparse_tags = {
-    v:k for k, v in vars(ctwin32).items() if k.startswith("IO_REPARSE_TAG_")
+    v: k for k, v in vars(ctwin32).items() if k.startswith("IO_REPARSE_TAG_")
     }
 follow = (IO_REPARSE_TAG_SYMLINK, IO_REPARSE_TAG_MOUNT_POINT)
 
-for directory, info in iter_dir(os.environ["SystemDrive"]):
-    if info.dwFileAttributes & ctwin32.FILE_ATTRIBUTE_REPARSE_POINT:
+for directory, info in iter_dir(os.environ["SYSTEMDRIVE"]):
+    if info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT:
         rpp = rf"{directory}\{info.cFileName}"
         if info.dwReserved0 in reparse_tags:
             tag = reparse_tags[info.dwReserved0]

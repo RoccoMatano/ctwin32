@@ -42,13 +42,13 @@ def extract_py_ver(fver_ms, fver_ls):
     micro, remainder = divmod(field3, 1000)
     level, serial = divmod(remainder, 10)
     level = {
-        0xa: 'alpha',
-        0xb: 'beta',
-        0xc: 'candidate',
-        0xf: 'final'
+        0xa: "alpha",
+        0xb: "beta",
+        0xc: "candidate",
+        0xf: "final"
         }[level]
     ver_info = collections.namedtuple(
-        'version_info',
+        "version_info",
         ["major", "minor", "micro", "releaselevel", "serial"]
         )(major, minor, micro, level, serial)
     return ver_info, api_ver

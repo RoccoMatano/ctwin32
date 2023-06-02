@@ -48,7 +48,6 @@ from ctwin32 import (
     RT_VERSION,
     )
 from ctwin32.wtypes import (
-    DWORD,
     PSTR,
     PVOID,
     WORD,
@@ -166,9 +165,9 @@ def find_ver_res_in_file(fname):
 ################################################################################
 
 if __name__ == "__main__":
-    start_path = os.path.expandvars(sys.argv[1]) if len(sys.argv) > 1 else '.'
+    start_path = os.path.expandvars(sys.argv[1]) if len(sys.argv) > 1 else "."
     p = pathlib.Path(start_path).resolve()
-    for file in (e for e in p.rglob('*') if e.is_file()):
+    for file in (e for e in p.rglob("*") if e.is_file()):
         try:
             for ver_res_bytes in find_ver_res_in_file(file):
                 ver_res = parse_version_resource(ver_res_bytes)

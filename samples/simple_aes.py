@@ -84,7 +84,7 @@ def hex_dump(data, bytes_per_line=16):
     while offset < length:
         chunk_len = min(length - offset, bytes_per_line)
         chunk = data[offset:offset + chunk_len]
-        ascii = chunk.translate(_ascii_trans).decode('ascii')
+        ascii = chunk.translate(_ascii_trans).decode("ascii")
         hexa = " ".join([f"{c:02x}" for c in chunk]).ljust(hex_chars)
         lines.append(f"{offset:08x} | {hexa} | {ascii}")
         offset += chunk_len
@@ -95,7 +95,7 @@ def hex_dump(data, bytes_per_line=16):
 if __name__ == "__main__":
 
     try:
-        assert False
+        assert 1 == 2
     except AssertionError:
         pass
     else:

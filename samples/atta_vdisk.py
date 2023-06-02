@@ -39,7 +39,6 @@ oflags = vdsk.OPEN_VIRTUAL_DISK_FLAG_NONE
 # do exactly that.
 storage_type = vdsk.VIRTUAL_STORAGE_TYPE()
 
-
 if (ext := path.rsplit(".", 1)[1].lower()) == "iso":
     oparams.Version = vdsk.OPEN_VIRTUAL_DISK_VERSION_1
     acc_mask = vdsk.VIRTUAL_DISK_ACCESS_READ
@@ -54,7 +53,6 @@ else:
 
     # not tested -> CHANGE THIS
     acc_mask = vdsk.VIRTUAL_DISK_ACCESS_NONE
-
 
 with vdsk.OpenVirtualDisk(storage_type, path, acc_mask, oflags, oparams) as vd:
     if do_detach:

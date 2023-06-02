@@ -25,13 +25,11 @@
 # This sample retrieves and prints power request. This is similar to what
 # `powercfg.exe /requests` does.
 
-import sys
 import ctypes
 from ctwin32 import (
     advapi,
     kernel,
     ntdll,
-    shell,
     user,
     suppress_winerr,
     ERROR_INSUFFICIENT_BUFFER,
@@ -49,6 +47,12 @@ from ctwin32.wtypes import (
 
 ################################################################################
 
+# flags for COUNTED_REASON_CONTEXT_RELATIVE.Flags
+DIAGNOSTIC_REASON_SIMPLE_STRING = 0x00000001
+DIAGNOSTIC_REASON_DETAILED_STRING = 0x00000002
+DIAGNOSTIC_REASON_NOT_SPECIFIED = 0x80000000
+DIAGNOSTIC_REASON_INVALID_FLAGS = ~ 0x80000007
+
 class _COUNTED_REASON_CTXT1(ctypes.Structure):
     _fields_ = (
         ("ResourceFileNameOffset", ULONG_PTR),
@@ -56,12 +60,14 @@ class _COUNTED_REASON_CTXT1(ctypes.Structure):
         ("StringCount", ULONG),
         ("SubstitutionStringsOffset", ULONG),
         )
+
 class _COUNTED_REASON_CTXT2(ctypes.Union):
     _anonymous_ = ("_anon1",)
     _fields_ = (
         ("_anon1", _COUNTED_REASON_CTXT1),
         ("SimpleStringOffset", ULONG_PTR),
         )
+
 class COUNTED_REASON_CONTEXT_RELATIVE(ctypes.Structure):
     _anonymous_ = ("_anon1",)
     _fields_ = (
@@ -69,6 +75,7 @@ class COUNTED_REASON_CONTEXT_RELATIVE(ctypes.Structure):
         ("_anon1", _COUNTED_REASON_CTXT2),
         )
 
+# caller types for DIAGNOSTIC_BUFFER.CallerType
 KERNEL_REQUESTER = 0
 PROCESS_REQUESTER = 1
 SERVICE_REQUESTER = 2
@@ -79,11 +86,13 @@ class _DIAG_BUFF1(ctypes.Structure):
         ("ProcessId", ULONG),
         ("ServiceTag", ULONG),
         )
+
 class _DIAG_BUFF2(ctypes.Structure):
     _fields_ = (
         ("DeviceDescriptionOffset", ULONG_PTR),
         ("DevicePathOffset", ULONG_PTR),
         )
+
 class _DIAG_BUFF3(ctypes.Union):
     _anonymous_ = ("_anon1", "_anon2")
     _fields_ = (
@@ -103,6 +112,7 @@ class DIAGNOSTIC_BUFFER(ctypes.Structure):
 # !! for simplicity we ignore all the definitions older than Windows 10 RS1+ !!
 
 POWER_REQUEST_SUPPORTED_TYPES = 6
+
 class POWER_REQUEST(ctypes.Structure):
     _fields_ = (
         ("SupportedRequestMask", ULONG),
@@ -129,9 +139,9 @@ request_types = {
     }
 
 requester_types = {
-    KERNEL_REQUESTER  : "[DRIVER]",
-    PROCESS_REQUESTER : "[PROCESS]",
-    SERVICE_REQUESTER : "[SERVICE]",
+    KERNEL_REQUESTER:  "[DRIVER]",
+    PROCESS_REQUESTER: "[PROCESS]",
+    SERVICE_REQUESTER: "[SERVICE]",
     }
 
 ################################################################################
@@ -148,11 +158,13 @@ def get_power_requests():
         data[:ctypes.sizeof(ULONG_PTR)],
         byteorder=ENDIANNESS
         )
+
     class POWER_REQUEST_LIST(ctypes.Structure):
         _fields_ = (
             ("Count", ULONG),
             ("PowerRequestOffsets", ULONG_PTR * count),
             )
+
     buf = ctypes.create_string_buffer(data)
     prl = POWER_REQUEST_LIST.from_buffer(buf)
 
@@ -192,9 +204,9 @@ def get_power_requests():
                     db_addr + pr.DiagnosticBuffer.ReasonOffset
                     )
                 ro_addr = ctypes.addressof(ro)
-                if ro.Flags & 1:
+                if ro.Flags & DIAGNOSTIC_REASON_SIMPLE_STRING:
                     reason = ctypes.wstring_at(ro_addr + ro.SimpleStringOffset)
-                elif ro.Flags & 2:
+                elif ro.Flags & DIAGNOSTIC_REASON_DETAILED_STRING:
                     mod_name = ctypes.wstring_at(
                         ro_addr + ro.ResourceFileNameOffset
                         )
@@ -203,7 +215,6 @@ def get_power_requests():
             requests[rt].append((callt_str, callid, reason))
 
     return requests
-
 
 ################################################################################
 

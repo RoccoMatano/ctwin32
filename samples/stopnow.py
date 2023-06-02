@@ -40,13 +40,13 @@ from ctwin32 import (
 def parse_args():
     ape = argparse.ArgumentParser()
     grp = ape.add_mutually_exclusive_group(required=True)
-    grp.add_argument("-s", "--shutdown", action='store_true')
-    grp.add_argument("-r", "--restart", action='store_true')
-    grp.add_argument("-l", "--logout", action='store_true')
-    grp.add_argument("-e", "--hibernate", action='store_true')
-    grp.add_argument("-y", "--standby", action='store_true')
-    grp.add_argument("-k", "--lock", action='store_true')
-    grp.add_argument("-d", "--disconnect", action='store_true')
+    grp.add_argument("-s", "--shutdown", action="store_true")
+    grp.add_argument("-r", "--restart", action="store_true")
+    grp.add_argument("-l", "--logout", action="store_true")
+    grp.add_argument("-e", "--hibernate", action="store_true")
+    grp.add_argument("-y", "--standby", action="store_true")
+    grp.add_argument("-k", "--lock", action="store_true")
+    grp.add_argument("-d", "--disconnect", action="store_true")
     return ape.parse_args()
 
 ################################################################################

@@ -25,14 +25,11 @@
 import sys
 import shutil
 import pathlib
+import contextlib
 import subprocess
 
 DEFAULT_PREFIX = "$default_prefix$"
-
-if len(sys.argv) >= 2:
-    prefix = sys.argv[1]
-else:
-    prefix = DEFAULT_PREFIX
+prefix = sys.argv[1] if len(sys.argv) >= 2 else DEFAULT_PREFIX
 tool = pathlib.Path(__file__).resolve().parent / "rm_sign_tool.py"
 
 def run(*args):
@@ -41,10 +38,8 @@ def run(*args):
     subprocess.run(cmd, check=True)
 
 def unlink(pth):
-    try:
+    with contextlib.suppress(OSError):
         pth.unlink()
-    except OSError:
-        pass
 
 private = pathlib.Path(f"{prefix}.private.key")
 public = pathlib.Path(f"{prefix}.public.key")

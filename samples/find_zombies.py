@@ -72,9 +72,7 @@ def get_zombies(verbose):
 def get_zombie_object_addresses(verbose):
     z = get_zombies(verbose)
     handles = ntdll.get_handles(kernel.GetCurrentProcessId())
-    res = dict(
-        [(h.Object, z[h.HandleValue]) for h in handles if h.HandleValue in z]
-        )
+    res = {h.Object: z[h.HandleValue] for h in handles if h.HandleValue in z}
     # Close the handles to the zombies so that we do not report that we ourself
     # hold on to them.
     for h in z:

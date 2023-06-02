@@ -29,7 +29,6 @@ import sys
 from ctwin32.advapi import running_as_admin
 from ctwin32.secur import LsaEnumerateLogonSessions
 
-
 if __name__ == "__main__":
     if not running_as_admin():
         m = "Need to run as administrator in order to enumerate logon sessions."
@@ -55,7 +54,7 @@ if __name__ == "__main__":
         ]
 
     def fmtt(dt):
-        return dt.isoformat(' ', 'seconds')
+        return dt.isoformat(" ", "seconds")
 
     for idx, ses in enumerate(LsaEnumerateLogonSessions()):
         lot = (

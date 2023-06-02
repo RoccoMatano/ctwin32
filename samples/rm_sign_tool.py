@@ -106,12 +106,12 @@ def parse_args():
     ape = argparse.ArgumentParser()
     sub = ape.add_subparsers(
         title="available commands",
-        dest='cmd',
-        help='action',
-        metavar='command'
+        dest="cmd",
+        help="action",
+        metavar="command"
         )
 
-    create = sub.add_parser('create', help='create a new key pair')
+    create = sub.add_parser("create", help="create a new key pair")
     create.add_argument(
         dest="private",
         metavar="<private_keyfile>",
@@ -123,7 +123,7 @@ def parse_args():
         help="name of public key file"
         )
 
-    sign = sub.add_parser('sign', help='create signature for a file')
+    sign = sub.add_parser("sign", help="create signature for a file")
     sign.add_argument(
         "-k",
         dest="keyfile",
@@ -142,7 +142,7 @@ def parse_args():
         "-x",
         dest="outhex",
         help="output signature as hex string",
-        action='store_true'
+        action="store_true"
         )
     sign.add_argument(
         dest="sourcefile",
@@ -150,7 +150,7 @@ def parse_args():
         help="name of file to sign"
         )
 
-    verify = sub.add_parser('verify', help='verify signature for a file')
+    verify = sub.add_parser("verify", help="verify signature for a file")
     verify.add_argument(
         "-k",
         dest="keyfile",

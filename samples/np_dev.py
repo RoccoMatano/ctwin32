@@ -43,11 +43,11 @@ def print_non_present():
 
 ################################################################################
 
-do_remove = len(sys.argv) > 1 and sys.argv[1] == '-r'
+do_remove = len(sys.argv) > 1 and sys.argv[1] == "-r"
 have_to_elevate = do_remove and not advapi.running_as_admin()
 
 if have_to_elevate:
-    shell.elevate(f'"{sys.executable}"', f'"{__file__}"', '-r')
+    shell.elevate(f'"{sys.executable}"', f'"{__file__}"', "-r")
 else:
     print_non_present()
     if do_remove:

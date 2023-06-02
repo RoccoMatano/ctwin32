@@ -63,6 +63,8 @@ class HistoryEntry:
 
 class KeyViewWnd(wndcls.SimpleWnd):
 
+    CHAR_MSG = (WM_CHAR, WM_SYSCHAR, WM_DEADCHAR, WM_SYSDEADCHAR)
+
     def __init__(self, wc_params):
         self.heading = (
             " message        key     char              rep.  "
@@ -71,10 +73,6 @@ class KeyViewWnd(wndcls.SimpleWnd):
         self.underline = "".join(
                 (" " if c == " " else "_") for c in self.heading
                 )
-        self.msg_fmt = [
-            " %-13s %3d %-18s%c%6u  %4d     %3s %4s %6s %5s",
-            " %-13s          0x%04X     %1s%c %6u  %4d     %3s %4s %6s %5s"
-            ]
         self.msg_name = [
             "WM_KEYDOWN",
             "WM_KEYUP",
@@ -130,22 +128,24 @@ class KeyViewWnd(wndcls.SimpleWnd):
         gdi.TextOut(hdc, 0, 0, self.heading)
         gdi.TextOut(hdc, 0, 0, self.underline)
 
-        char_msg = (WM_CHAR, WM_SYSCHAR, WM_DEADCHAR, WM_SYSDEADCHAR)
+
         for i in range(min(self.num_lines, self.y_lines)):
             then = self.history[i]
-            is_char = then.msg in char_msg
-            line = self.msg_fmt[is_char] % (
-                self.msg_name[then.msg - WM_KEYFIRST],
-                then.wp,
-                " " if is_char else user.GetKeyNameText(then.lp, True),
-                then.wp if is_char else ' ',
-                then.lp & 0xffff,
-                (then.lp >> 16) & 0xff,
-                "yes" if 0x01000000 & then.lp else "no",
-                "yes" if 0x20000000 & then.lp else "no",
-                "down" if 0x40000000 & then.lp else "up",
-                "up" if 0x80000000 & then.lp else "down",
-                )
+            rep = then.lp & 0xffff
+            scan = (then.lp >> 16) & 0xff
+            ext = "yes" if 0x01000000 & then.lp else "no"
+            alt = "yes" if 0x20000000 & then.lp else "no"
+            prev = "down" if 0x40000000 & then.lp else "up"
+            now = "up" if 0x80000000 & then.lp else "down"
+            name = self.msg_name[then.msg - WM_KEYFIRST]
+
+            if then.msg in self.CHAR_MSG:
+                middle = f"          {then.wp:#06x}      {chr(then.wp)} "
+            else:
+                kn = user.GetKeyNameText(then.lp, True)
+                middle = f" {then.wp:3} {kn:<18} "
+            end = f"{rep:6}  {scan:4}     {ext:>3} {alt:>4} {prev:>6} {now:>4}"
+            line = f" {name:<13}{middle}{end}"
             gdi.TextOut(hdc, 0, (self.y_lines - i) * self.char_height, line)
 
         gdi.SelectObject(hdc, prev_font)
