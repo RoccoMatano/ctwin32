@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- kernel.PowerCreateRequest
+- kernel.PowerSetRequest
+- kernel.PowerClearRequest
+- kernel.create_power_request
+
+### Changed
+
+- extended sample `power_requests.py` to demonstrate the effect of
+  kernel.create_power_request
+
+
 ## [2.2.0] - 2023-05-27
 
 ### Added

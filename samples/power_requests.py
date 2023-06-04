@@ -218,23 +218,42 @@ def get_power_requests():
 
 ################################################################################
 
+def print_power_requests():
+    requests = get_power_requests()
+    print()
+    for req_type in sorted(request_types):
+        requesters = requests[req_type]
+        tstr = request_types[req_type]
+        print(f"{tstr}:\n{(len(tstr) + 1) * '-'}")
+        if not requesters:
+            print("None\n")
+            continue
+        for ct, cid, reason in requesters:
+            print(f"{ct} ", end="")
+            for element in cid:
+                print(element)
+            print(f"{reason}\n")
+
+################################################################################
+
 if __name__ == "__main__":
 
     if advapi.running_as_admin():
-        requests = get_power_requests()
-        print()
-        for req_type in sorted(request_types):
-            requesters = requests[req_type]
-            tstr = request_types[req_type]
-            print(f"{tstr}:\n{(len(tstr) + 1) * '-'}")
-            if not requesters:
-                print("None\n")
-                continue
-            for ct, cid, reason in requesters:
-                print(f"{ct} ", end="")
-                for element in cid:
-                    print(element)
-                print(f"{reason}\n")
+        print("initial:")
+        print(80 * "-")
+        print_power_requests()
+
+        # create and activate a SystemRequired request
+        print("with self created 'SystemRequired' request:")
+        print(80 * "-")
+        reason = "demonstarting power requests"
+        req = kernel.PowerRequest.SystemRequired
+        with kernel.create_power_request(reason, req) as hdl:
+            print_power_requests()
+
+        print("final:")
+        print(80 * "-")
+        print_power_requests()
     else:
         print("Inquiring power request requires administrative privileges.")
 

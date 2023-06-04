@@ -23,6 +23,7 @@
 ################################################################################
 
 import collections as _collections
+from enum import IntEnum as _int_enum
 
 import ctypes
 from .wtypes import (
@@ -38,6 +39,7 @@ from .wtypes import (
     PBYTE,
     PDWORD,
     POINTER,
+    PPWSTR,
     PSIZE_T,
     PULONG_PTR,
     PUSHORT,
@@ -1453,5 +1455,86 @@ def find_file(name):
     hdl, info = FindFirstFile(name)
     hdl.close()
     return info
+
+################################################################################
+
+class PowerRequest(_int_enum):
+    DisplayRequired = 0
+    SystemRequired = 1
+    AwayModeRequired = 2
+    ExecutionRequired = 3
+    Inactive = -1
+
+    @classmethod
+    def from_param(cls, obj):
+        return int(cls(obj))
+
+# values for REASON_CONTEXT.Version and REASON_CONTEXT.Flags
+POWER_REQUEST_CONTEXT_VERSION = 0
+POWER_REQUEST_CONTEXT_SIMPLE_STRING = 1
+POWER_REQUEST_CONTEXT_DETAILED_STRING = 2
+
+class REASON_CONTEXT_DETAILED(ctypes.Structure):
+    _fields_ = (
+        ("LocalizedReasonModule", HMODULE),
+        ("LocalizedReasonId", ULONG),
+        ("ReasonStringCount", ULONG),
+        ("ReasonStrings", PPWSTR),
+        )
+
+class REASON_CONTEXT_UNION(ctypes.Union):
+    _fields_ = (
+        ("Detailed", REASON_CONTEXT_DETAILED),
+        ("SimpleReasonString", PWSTR),
+        )
+
+class REASON_CONTEXT(ctypes.Structure):
+    _fields_ = (
+        ("Version", ULONG),
+        ("Flags", DWORD),
+        ("Reason", REASON_CONTEXT_UNION)
+        )
+
+    def __init__(self, reason_str=""):
+        self.Version = POWER_REQUEST_CONTEXT_VERSION
+        self.Flags = POWER_REQUEST_CONTEXT_SIMPLE_STRING
+        self.Reason = REASON_CONTEXT_UNION(SimpleReasonString=reason_str)
+
+PREASON_CONTEXT = POINTER(REASON_CONTEXT)
+
+################################################################################
+
+_PowerCreateRequest = fun_fact(
+    _k32.PowerCreateRequest, (HANDLE, PREASON_CONTEXT)
+    )
+
+def PowerCreateRequest(reason):
+    hdl = FHANDLE(_PowerCreateRequest(ref(reason)))
+    hdl.raise_on_invalid()
+    return hdl
+
+################################################################################
+
+_PowerSetRequest = fun_fact(_k32.PowerSetRequest, (BOOL, HANDLE, PowerRequest))
+
+def PowerSetRequest(hdl, pwr_request):
+    raise_on_zero(_PowerSetRequest(hdl, pwr_request))
+
+################################################################################
+
+_PowerClearRequest = fun_fact(
+    _k32.PowerClearRequest, (BOOL, HANDLE, PowerRequest)
+    )
+
+def PowerClearRequest(hdl, pwr_request):
+    raise_on_zero(_PowerClearRequest(hdl, pwr_request))
+
+################################################################################
+
+def create_power_request(reason_str, pwr_request=PowerRequest.Inactive):
+    hdl = PowerCreateRequest(REASON_CONTEXT(reason_str))
+    if pwr_request != PowerRequest.Inactive:
+        PowerSetRequest(hdl, pwr_request)
+    return hdl
 
 ################################################################################
