@@ -397,6 +397,9 @@ def QueryDosDevice(device_name):
     buf = ctypes.create_unicode_buffer(size)
     while True:
         if res := _QueryDosDevice(device_name, buf, size):
+            if device_name is None:
+                addr = ctypes.addressof(buf)
+                return ctypes.wstring_at(addr, res).strip("\0").split("\0")
             return buf.value[:res]
         raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2

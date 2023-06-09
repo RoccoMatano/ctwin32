@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - extended sample `power_requests.py` to demonstrate the effect of
   kernel.create_power_request
 
+### Fixed
+
+- fixed kernel.QueryDosDevice to support `None` as input parameter (returning
+  the list of all MS-DOS device names)
 
 ## [2.2.0] - 2023-05-27
 
