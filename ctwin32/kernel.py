@@ -139,7 +139,12 @@ def GlobalLock(hmem):
 
 ################################################################################
 
-GlobalUnlock = fun_fact(_k32.GlobalUnlock, (PVOID, HANDLE))
+_GlobalUnlock = fun_fact(_k32.GlobalUnlock, (BOOL, HANDLE))
+
+def GlobalUnlock(hmem):
+    res = _GlobalUnlock(hmem)
+    if not res and (err := GetLastError()) != ERROR_SUCCESS:
+        raise ctypes.WinError(err)
 
 ################################################################################
 
