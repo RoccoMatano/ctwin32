@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.PowerSetRequest
 - kernel.PowerClearRequest
 - kernel.create_power_request
+- ruff and flake8 config in pyproject.toml
 
 ### Changed
 

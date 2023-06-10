@@ -26,9 +26,55 @@ dynamic = ["version", "readme"]
 homepage = "https://github.com/RoccoMatano/ctwin32"
 changelog = "https://github.com/RoccoMatano/ctwin32/blob/master/changelog.md"
 
+################################################################################
+
 [tool.setuptools]
 packages = ["ctwin32"]
 
 [tool.setuptools.dynamic]
 version = {attr = "ctwin32.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
+
+################################################################################
+
+[tool.ruff]
+target-version = "py38"
+select = [
+    "B",        # flake8-bugbear
+    "C4",       # flake8-comprehensions
+    "COM",      # flake8-commas
+    "E",        # pycodestyle errors
+    "F",        # Pyflakes
+    "INP",      # flake8-no-pep420
+    "PIE",      # flake8-pie
+    "PLE",      # pylint errors
+    "PLW",      # pylint warnings
+    "PTH",      # flake8-use-pathlib
+    "Q",        # flake8-quotes
+    "RET",      # flake8-return
+    "RSE",      # flake8-raise
+    "SIM",      # flake8-simplify
+    "UP",       # pyupgrade
+    "W",        # pycodestyle warnings
+    "YTT",      # flake8-2020
+    ]
+ignore = [
+    "COM812",   # Trailing comma missing
+    "PTH123",   # open() should be replaced by Path.open()
+    "RSE102",   # Unnecessary parentheses on raised exception
+    "RET505",   # Unnecessary {branch} after return statement
+    "RET508",   # Unnecessary {branch} after break statement
+    "SIM102",   # Use a single if statement instead of nested if statements
+    "SIM117",   # Use a single instead of nested `with` statements
+    ]
+line-length = 80
+
+################################################################################
+
+[tool.flake8]
+# E305 expected %s blank lines after class or function definition, found %d
+# E221 multiple spaces before operator
+extend-ignore = ["E305", "E221"]
+max-line-length = 80
+
+################################################################################
