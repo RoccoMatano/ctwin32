@@ -46,6 +46,8 @@ select = [
     "E",        # pycodestyle errors
     "F",        # Pyflakes
     "INP",      # flake8-no-pep420
+    "ISC",      # flake8-implicit-str-concat
+    # "N",        # pep8-naming is not approprate for win32 API names
     "PIE",      # flake8-pie
     "PLE",      # pylint errors
     "PLW",      # pylint warnings
@@ -53,6 +55,7 @@ select = [
     "Q",        # flake8-quotes
     "RET",      # flake8-return
     "RSE",      # flake8-raise
+    "RUF",      # ruff-specific rules
     "SIM",      # flake8-simplify
     "UP",       # pyupgrade
     "W",        # pycodestyle warnings
@@ -60,6 +63,7 @@ select = [
     ]
 ignore = [
     "COM812",   # Trailing comma missing
+    "ISC003",   # Explicitly concatenated string should be implicitly concatenated
     "PTH123",   # open() should be replaced by Path.open()
     "RSE102",   # Unnecessary parentheses on raised exception
     "RET505",   # Unnecessary {branch} after return statement

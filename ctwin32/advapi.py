@@ -386,7 +386,7 @@ def RegEnumValue(key, index):
         else:
             raise ctypes.WinError(err)
 
-    return (name.value,) + registry_to_py(typ.value, value.raw[:vlen.value])
+    return (name.value, *registry_to_py(typ.value, value.raw[:vlen.value]))
 
 ################################################################################
 
