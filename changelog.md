@@ -14,11 +14,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.PowerClearRequest
 - kernel.create_power_request
 - ruff and flake8 config in pyproject.toml
+- kernel.GetDriveType
+- kernel.GetLogicalDriveStrings
+- kernel.FindFirstVolume
+- kernel.FindNextVolume
+- kernel.FindVolumeClose
+- kernel.enum_volumes
+- kernel.GetVolumePathNamesForVolumeName
+- sample volume_paths.py
 
 ### Changed
 
-- extended sample `power_requests.py` to demonstrate the effect of
+- extended sample power_requests.py to demonstrate the effect of
   kernel.create_power_request
+- 'multi-strings' (strings that represent a list of strings by joining its
+  elements with '\0') are now always returned as a list of plain strings.
 
 ### Fixed
 
@@ -48,7 +58,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Upon import ctwin32 now emits a corresponding warning when it is running on
 such an old version.
 - shell.ShellExecuteEx now returns the exit code of a process when called with
-`wait=True`.
+  `wait=True`.
 
 ### Fixed
 
@@ -59,8 +69,8 @@ such an old version.
 ### Added
 
 - `__eq__ ` for `GUID`
-- sample `fopa.py`
-- sample `dump_ver_res.py`
+- sample fopa.py
+- sample dump_ver_res.py
 - the `samples` directory is now included in `sdist`
 
 ### Fixed

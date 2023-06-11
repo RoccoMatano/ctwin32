@@ -60,18 +60,30 @@ from .wtypes import (
     WORD,
     )
 from . import (
-    ref,
-    raise_if,
-    raise_on_zero,
+    cmdline_from_args,
     fun_fact,
+    multi_str_from_addr,
+    multi_str_from_ubuf,
+    ns_from_struct,
+    raise_if,
+    raise_on_err,
+    raise_on_zero,
+    ref,
+    ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     ERROR_ACCESS_DENIED,
     ERROR_FILE_NOT_FOUND,
     ERROR_INSUFFICIENT_BUFFER,
+    ERROR_MORE_DATA,
     ERROR_NO_MORE_FILES,
     ERROR_RESOURCE_ENUM_USER_STOP,
     ERROR_RESOURCE_NAME_NOT_FOUND,
     ERROR_SUCCESS,
+    GENERIC_READ,
+    GENERIC_WRITE,
     FILE_ATTRIBUTE_DIRECTORY,
+    FILE_ATTRIBUTE_NORMAL,
+    FILE_SHARE_READ,
+    FILE_SHARE_WRITE,
     FILE_TYPE_CHAR,
     FILE_TYPE_UNKNOWN,
     INVALID_FILE_ATTRIBUTES,
@@ -79,19 +91,10 @@ from . import (
     IMAGE_FILE_MACHINE_UNKNOWN,
     IMAGE_FILE_MACHINE_AMD64,
     IMAGE_FILE_MACHINE_I386,
+    OPEN_EXISTING,
     RT_MESSAGETABLE,
     STD_OUTPUT_HANDLE,
     WAIT_FAILED,
-    ENABLE_VIRTUAL_TERMINAL_PROCESSING,
-    GENERIC_READ,
-    GENERIC_WRITE,
-    FILE_SHARE_READ,
-    FILE_SHARE_WRITE,
-    FILE_ATTRIBUTE_NORMAL,
-    OPEN_EXISTING,
-    multi_str_from_addr,
-    cmdline_from_args,
-    ns_from_struct,
     )
 
 _k32 = ctypes.WinDLL("kernel32.dll")
@@ -403,8 +406,7 @@ def QueryDosDevice(device_name):
     while True:
         if res := _QueryDosDevice(device_name, buf, size):
             if device_name is None:
-                addr = ctypes.addressof(buf)
-                return ctypes.wstring_at(addr, res).strip("\0").split("\0")
+                return multi_str_from_ubuf(buf, res)
             return buf.value[:res]
         raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2
@@ -541,7 +543,7 @@ def GetPrivateProfileSectionNames(filename):
         size *= 2
         buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSectionNames(buf, size, filename)
-    return buf[:res].split("\0")[:-1]
+    return multi_str_from_ubuf(buf, res)
 
 ################################################################################
 
@@ -558,7 +560,7 @@ def GetPrivateProfileSection(secname, filename):
         size *= 2
         buf = ctypes.create_unicode_buffer(size)
         res = _GetPrivateProfileSection(secname, buf, size, filename)
-    entries = buf[:res].split("\0")[:-1]
+    entries = multi_str_from_ubuf(buf, res)
     d = _collections.OrderedDict()
     for e in entries:
         k, v = e.split("=", 1)
@@ -639,7 +641,7 @@ def GetEnvironmentStrings():
         raise_on_zero(_FreeEnvironmentStrings(ptr))
 
 def env_str_to_dict(estr):
-    return dict(s.split("=", 1) for s in estr.strip("\0").split("\0"))
+    return dict(s.split("=", 1) for s in estr)
 
 def get_env_as_dict():
     return env_str_to_dict(GetEnvironmentStrings())
@@ -1544,5 +1546,80 @@ def create_power_request(reason_str, pwr_request=PowerRequest.Inactive):
     if pwr_request != PowerRequest.Inactive:
         PowerSetRequest(hdl, pwr_request)
     return hdl
+
+################################################################################
+
+GetDriveType = fun_fact(_k32.GetDriveTypeW, (UINT, PWSTR))
+
+################################################################################
+
+_GetLogicalDriveStrings = fun_fact(
+    _k32.GetLogicalDriveStringsW, (DWORD, DWORD, PWSTR)
+    )
+
+def GetLogicalDriveStrings():
+    size = 256
+    buf = ctypes.create_unicode_buffer(size)
+    raise_on_zero(res := _GetLogicalDriveStrings(size, buf))
+    return multi_str_from_ubuf(buf, res)
+
+################################################################################
+
+_FindFirstVolume = fun_fact(_k32.FindFirstVolumeW, (HANDLE, PWSTR, DWORD))
+
+def FindFirstVolume():
+    size = 256
+    buf = ctypes.create_unicode_buffer(size)
+    hdl = _FindFirstVolume(buf, size)
+    raise_if(hdl == INVALID_HANDLE_VALUE)
+    return hdl, buf.value
+
+################################################################################
+
+_FindNextVolume = fun_fact(_k32.FindNextVolumeW, (BOOL, HANDLE, PWSTR, DWORD))
+
+def FindNextVolume(hdl):
+    size = 256
+    buf = ctypes.create_unicode_buffer(size)
+    raise_on_zero(_FindNextVolume(hdl, buf, size))
+    return buf.value
+
+################################################################################
+
+_FindVolumeClose = fun_fact(_k32.FindVolumeClose, (BOOL, HANDLE))
+
+def FindVolumeClose(hdl):
+    raise_on_zero(_FindVolumeClose(hdl))
+
+################################################################################
+
+def enum_volumes():
+    hdl, vol = FindFirstVolume()
+    try:
+        while True:
+            yield vol
+            vol = FindNextVolume(hdl)
+    except OSError as e:
+        if e.winerror != ERROR_NO_MORE_FILES:
+            raise
+    finally:
+        FindVolumeClose(hdl)
+
+################################################################################
+
+_GetVolumePathNamesForVolumeName = fun_fact(
+    _k32.GetVolumePathNamesForVolumeNameW, (BOOL, PWSTR, PWSTR, DWORD, PDWORD)
+    )
+
+def GetVolumePathNamesForVolumeName(vol):
+    size = DWORD(256)
+    while True:
+        buf = ctypes.create_unicode_buffer(size.value)
+        ok = _GetVolumePathNamesForVolumeName(vol, buf, size, ref(size))
+        if ok:
+            return multi_str_from_ubuf(buf, size.value)
+        else:
+            if (err := GetLastError()) != ERROR_MORE_DATA:
+                raise_on_err(err)
 
 ################################################################################

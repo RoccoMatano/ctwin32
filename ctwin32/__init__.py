@@ -89,6 +89,12 @@ def fun_fact(function, signature):
 
 ################################################################################
 
+def multi_str_from_str(_str):
+    _str = _str.rstrip("\0")
+    return [] if not _str else _str.split("\0")
+
+################################################################################
+
 def multi_str_from_addr(addr):
     WCHAR_SIZE = ctypes.sizeof(WCHAR)
     end = addr
@@ -98,7 +104,14 @@ def multi_str_from_addr(addr):
         else:
             # +WCHAR_SIZE for final null
             size = (end + WCHAR_SIZE - addr) // WCHAR_SIZE
-            return ctypes.wstring_at(addr, size)
+            return multi_str_from_str(ctypes.wstring_at(addr, size))
+
+################################################################################
+
+def multi_str_from_ubuf(buf, size=-1):
+    if size >= 0:
+        return multi_str_from_str(buf[:size])
+    return multi_str_from_addr(ctypes.addressof(buf))
 
 ################################################################################
 
