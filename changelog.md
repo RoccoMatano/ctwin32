@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.enum_volumes
 - kernel.GetVolumePathNamesForVolumeName
 - sample volume_paths.py
+- ntdll.RtlGetCurrentPeb
 
 ### Changed
 
