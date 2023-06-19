@@ -30,6 +30,7 @@ from .wtypes import (
     PDWORD,
     PGUID,
     PINT,
+    PVOID,
     PWSTR,
     PULONG,
     ULONG,
@@ -39,10 +40,12 @@ from . import (
     fun_fact,
     MAX_DEVICE_ID_LEN,
     MAX_PATH,
+    CM_LOCATE_DEVNODE_NORMAL,
     CR_SUCCESS,
     ERROR_FLOPPY_UNKNOWN_ERROR,
     ERROR_CURRENT_DIRECTORY,
     )
+from .advapi import registry_to_py
 _cfg = ctypes.WinDLL("cfgmgr32.dll")
 
 ################################################################################
@@ -144,5 +147,54 @@ def CM_Request_Device_Eject(devinst):
         def_err = ERROR_CURRENT_DIRECTORY
         err = CM_MapCrToWin32Err(err, def_err) or def_err
         raise OSError(err, f"device removal was vetoed ({vv}): {vn}")
+
+################################################################################
+
+_CM_Locate_DevNode = fun_fact(
+    _cfg.CM_Locate_DevNodeW, (DWORD, PDWORD, PWSTR, ULONG)
+    )
+
+def CM_Locate_DevNode(device_id, flags=CM_LOCATE_DEVNODE_NORMAL):
+    devinst = DWORD()
+    raise_on_cr(_CM_Locate_DevNode(ref(devinst), device_id, flags))
+    return devinst.value
+
+################################################################################
+
+_CM_Get_DevNode_Registry_Property = fun_fact(
+    _cfg.CM_Get_DevNode_Registry_PropertyW, (
+        DWORD,
+        DWORD,
+        ULONG,
+        PULONG,
+        PVOID,
+        PULONG,
+        ULONG
+        )
+    )
+
+def CM_Get_DevNode_Registry_Property(devinst, prop):
+    reg_type = DWORD()
+    req_size = DWORD()
+    _CM_Get_DevNode_Registry_Property(
+        devinst,
+        prop,
+        ref(reg_type),
+        None,
+        ref(req_size),
+        0
+        )
+    buf = ctypes.create_string_buffer(req_size.value)
+    raise_on_cr(
+        _CM_Get_DevNode_Registry_Property(
+            devinst,
+            prop,
+            ref(reg_type),
+            buf,
+            ref(req_size),
+            0
+            )
+        )
+    return registry_to_py(reg_type.value, buf.raw[:req_size.value])
 
 ################################################################################

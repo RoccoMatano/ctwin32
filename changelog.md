@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.GetVolumePathNamesForVolumeName
 - sample volume_paths.py
 - ntdll.RtlGetCurrentPeb
+- cfgmgr.CM_Locate_DevNode
+- cfgmgr.CM_Get_DevNode_Registry_Property
+- sample restart_usb_port.py
+
 
 ### Changed
 
