@@ -26,7 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - cfgmgr.CM_Locate_DevNode
 - cfgmgr.CM_Get_DevNode_Registry_Property
 - sample restart_usb_port.py
-
+- sample api_set.py
 
 ### Changed
 
