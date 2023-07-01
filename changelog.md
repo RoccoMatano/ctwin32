@@ -27,6 +27,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - cfgmgr.CM_Get_DevNode_Registry_Property
 - sample restart_usb_port.py
 - sample api_set.py
+- advapi.DuplicateTokenEx
+- advapi.SetTokenInformation
+- advapi.CreateProcessAsUser
+- advapi.create_process_as_user
+- advapi.StartServiceCtrlDispatcher
+- advapi.RegisterServiceCtrlHandler
+- advapi.SetServiceStatus
+- sample lsc.py
 
 ### Changed
 
@@ -40,6 +48,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed kernel.QueryDosDevice to support `None` as input parameter (returning
   the list of all MS-DOS device names)
 - checking the return code of kernel.GlobalUnlock
+- member names of advapi.SERVICE_STATUS (leading `dw` was missing)
 
 ## [2.2.0] - 2023-05-27
 

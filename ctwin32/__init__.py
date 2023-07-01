@@ -118,7 +118,7 @@ def multi_str_from_ubuf(buf, size=-1):
 def cmdline_from_args(args):
     BS = "\\"
     parts = []
-    for arg in args:
+    for arg in map(str, args):
         bs_accu = []
         if parts:
             parts.append(" ")

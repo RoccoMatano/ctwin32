@@ -60,6 +60,7 @@ from . import (
     fun_fact,
     ns_from_struct,
     argc_argv_from_args,
+    cmdline_from_args,
     REG_DWORD,
     REG_QWORD,
     REG_SZ,
@@ -82,7 +83,16 @@ from . import (
     EVENTLOG_SEQUENTIAL_READ,
     EVENTLOG_BACKWARDS_READ,
     )
-from .kernel import LocalFree, GetLastError, KHANDLE
+from .kernel import (
+    LocalFree,
+    GetLastError,
+    KHANDLE,
+    PSECURITY_ATTRIBUTES,
+    PSTARTUPINFO,
+    PPROCESS_INFORMATION,
+    PROCESS_INFORMATION,
+    STARTUPINFO,
+    )
 
 _adv = ctypes.WinDLL("advapi32.dll")
 
@@ -604,6 +614,106 @@ def OpenProcessToken(proc_handle, desired_acc):
 
 ################################################################################
 
+_DuplicateTokenEx = fun_fact(
+    _adv.DuplicateTokenEx,
+    (BOOL, HANDLE, DWORD, PSECURITY_ATTRIBUTES, INT, INT, PHANDLE)
+    )
+
+def DuplicateTokenEx(tok, acc, sattr, imp, typ):
+    dup = KHANDLE()
+    raise_on_zero(_DuplicateTokenEx(tok, acc, ref(sattr), imp, typ, ref(dup)))
+    return dup
+
+################################################################################
+
+_SetTokenInformation = fun_fact(
+    _adv.SetTokenInformation, (BOOL, HANDLE, INT, PVOID, DWORD)
+    )
+
+def SetTokenInformation(hdl, cls, info):
+    raise_on_zero(
+        _SetTokenInformation(hdl, cls, ref(info), ctypes.sizeof(info))
+        )
+
+################################################################################
+
+_CreateProcessAsUser = fun_fact(
+    _adv.CreateProcessAsUserW, (
+        BOOL,
+        HANDLE,
+        PWSTR,
+        PWSTR,
+        PSECURITY_ATTRIBUTES,
+        PSECURITY_ATTRIBUTES,
+        BOOL,
+        DWORD,
+        PVOID,
+        PWSTR,
+        PSTARTUPINFO,
+        PPROCESS_INFORMATION,
+        )
+    )
+
+def CreateProcessAsUser(
+        token,
+        app_name,
+        cmd_line,
+        proc_attr,
+        thread_attr,
+        inherit,
+        cflags,
+        env,
+        curdir,
+        startup_info
+        ):
+    proc_info = PROCESS_INFORMATION()
+    raise_on_zero(
+        _CreateProcessAsUser(
+            token,
+            app_name,
+            cmd_line,
+            ref(proc_attr) if proc_attr is not None else None,
+            ref(thread_attr) if thread_attr is not None else None,
+            inherit,
+            cflags,
+            env,
+            curdir,
+            ref(startup_info),
+            ref(proc_info)
+            )
+        )
+    return proc_info
+
+################################################################################
+
+def create_process_as_user(
+        token,
+        arglist,
+        cflags=0,
+        startup_info=None,
+        inherit=False,
+        env=None,
+        curdir=None,
+        proc_attr=None,
+        thread_attr=None,
+        ):
+    if startup_info is None:
+        startup_info = STARTUPINFO()
+    return CreateProcessAsUser(
+        token,
+        None,
+        cmdline_from_args(arglist),
+        proc_attr,
+        thread_attr,
+        inherit,
+        cflags,
+        env,
+        curdir,
+        startup_info
+        )
+
+################################################################################
+
 _LookupPrivilegeValue = fun_fact(
     _adv.LookupPrivilegeValueW, (BOOL, PWSTR, PWSTR, PLUID)
     )
@@ -1007,13 +1117,13 @@ def StartService(handle, arglist):
 
 class SERVICE_STATUS(ctypes.Structure):
     _fields_ = (
-        ("ServiceType", DWORD),
-        ("CurrentState", DWORD),
-        ("ControlsAccepted", DWORD),
-        ("Win32ExitCode", DWORD),
-        ("ServiceSpecificExitCode", DWORD),
-        ("CheckPoint", DWORD),
-        ("WaitHint", DWORD),
+        ("dwServiceType", DWORD),
+        ("dwCurrentState", DWORD),
+        ("dwControlsAccepted", DWORD),
+        ("dwWin32ExitCode", DWORD),
+        ("dwServiceSpecificExitCode", DWORD),
+        ("dwCheckPoint", DWORD),
+        ("dwWaitHint", DWORD),
         )
 PSERVICE_STATUS = POINTER(SERVICE_STATUS)
 
@@ -1180,6 +1290,46 @@ def QueryServiceConfig(svc):
     pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
     raise_on_zero(_QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
     return ns_from_struct(pqsc.contents)
+
+################################################################################
+
+SERVICE_MAIN_FUNCTION = ctypes.WINFUNCTYPE(None, DWORD, PPWSTR)
+
+class SERVICE_TABLE_ENTRY(ctypes.Structure):
+    _fields_ = (
+        ("lpServiceName", PWSTR),
+        ("lpServiceProc", SERVICE_MAIN_FUNCTION),
+        )
+PSERVICE_TABLE_ENTRY = POINTER(SERVICE_TABLE_ENTRY)
+
+_StartServiceCtrlDispatcher = fun_fact(
+    _adv.StartServiceCtrlDispatcherW, (BOOL, PSERVICE_TABLE_ENTRY)
+    )
+
+def StartServiceCtrlDispatcher(table):
+    raise_on_zero(_StartServiceCtrlDispatcher(ref(table[0])))
+
+################################################################################
+
+HANDLER_FUNCTION = ctypes.WINFUNCTYPE(None, DWORD)
+
+_RegisterServiceCtrlHandler = fun_fact(
+    _adv.RegisterServiceCtrlHandlerW, (HANDLE, PWSTR, HANDLER_FUNCTION)
+    )
+
+def RegisterServiceCtrlHandler(name, handler):
+    res = _RegisterServiceCtrlHandler(name, handler)
+    raise_on_zero(res)
+    return res
+
+################################################################################
+
+_SetServiceStatus = fun_fact(
+    _adv.SetServiceStatus, (BOOL, HANDLE, PSERVICE_STATUS)
+    )
+
+def SetServiceStatus(hdl, status):
+    raise_on_zero(_SetServiceStatus(hdl, ref(status)))
 
 ################################################################################
 
