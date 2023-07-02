@@ -109,7 +109,7 @@ _wts = ctypes.WinDLL("wtsapi32.dll")
 class WTS_SESSION_INFO(ctypes.Structure):
     _fields_ = (
         ("SessionId", DWORD),
-        ("WinStationName", PWSTR),
+        ("pWinStationName", PWSTR),
         ("State", LONG),
         )
 P_SESSION_INFO = POINTER(WTS_SESSION_INFO)

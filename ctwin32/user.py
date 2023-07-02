@@ -375,29 +375,29 @@ class WINDOWPLACEMENT(ctypes.Structure):
         ("length", UINT),
         ("flags", UINT),
         ("showCmd", UINT),
-        ("MinPosition", POINT),
-        ("MaxPosition", POINT),
-        ("NormalPosition", RECT),
+        ("ptMinPosition", POINT),
+        ("ptMaxPosition", POINT),
+        ("rcNormalPosition", RECT),
         )
 
     def __init__(self, f=0, s=1, mi=(0, 0), ma=(0, 0), no=(0, 0, 0, 0)):
         self.length = ctypes.sizeof(WINDOWPLACEMENT)
         self.flags = f
         self.showCmd = s
-        self.MinPosition = mi
-        self.MaxPosition = ma
-        self.NormalPosition = no
+        self.ptMinPosition = mi
+        self.ptMaxPosition = ma
+        self.rcNormalPosition = no
 
     def __repr__(self):
         cl = self.__class__.__name__
         ln = self.length
         fl = self.flags
         sc = self.showCmd
-        mi = f"({self.MinPosition.x}, {self.MinPosition.y})"
-        ma = f"({self.MaxPosition.x}, {self.MaxPosition.y})"
+        mi = f"({self.ptMinPosition.x}, {self.ptMinPosition.y})"
+        ma = f"({self.ptMaxPosition.x}, {self.ptMaxPosition.y})"
         no = (
-            f"({self.NormalPosition.left}, {self.NormalPosition.top}, ",
-            f"{self.NormalPosition.right}, {self.NormalPosition.bottom})"
+            f"({self.rcNormalPosition.left}, {self.rcNormalPosition.top}, ",
+            f"{self.rcNormalPosition.right}, {self.rcNormalPosition.bottom})"
             )
         return f"{cl}({ln}, {fl}, {sc}, {mi}, {ma}, {no})"
 

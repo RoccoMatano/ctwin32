@@ -115,21 +115,21 @@ class FILETIME(ctypes.Structure):
     # cannot represent FILETIME as ctypes.c_ulonglong since that would change
     # the alignment
     _fields_ = (
-        ("LowDateTime", DWORD),
-        ("HighDateTime", DWORD),
+        ("dwLowDateTime", DWORD),
+        ("dwHighDateTime", DWORD),
         )
 
     def __init__(self, i64=0):
-        self.LowDateTime = i64 & 0xffffffff
-        self.HighDateTime = i64 >> 32
+        self.dwLowDateTime = i64 & 0xffffffff
+        self.dwHighDateTime = i64 >> 32
 
     def __int__(self):
-        return self.LowDateTime | (self.HighDateTime << 32)
+        return self.dwLowDateTime | (self.dwHighDateTime << 32)
 
     def __iadd__(self, other):
         i64 = int(self) + other
-        self.LowDateTime = i64 & 0xffffffff
-        self.HighDateTime = i64 >> 32
+        self.dwLowDateTime = i64 & 0xffffffff
+        self.dwHighDateTime = i64 >> 32
         return self
 
     def __repr__(self):
@@ -139,41 +139,41 @@ class FILETIME(ctypes.Structure):
 
 class SYSTEMTIME(ctypes.Structure):
     _fields_ = (
-        ("Year",         WORD),
-        ("Month",        WORD),
-        ("DayOfWeek",    WORD),
-        ("Day",          WORD),
-        ("Hour",         WORD),
-        ("Minute",       WORD),
-        ("Second",       WORD),
-        ("Milliseconds", WORD)
+        ("wYear",         WORD),
+        ("wMonth",        WORD),
+        ("wDayOfWeek",    WORD),
+        ("wDay",          WORD),
+        ("wHour",         WORD),
+        ("wMinute",       WORD),
+        ("wSecond",       WORD),
+        ("wMilliseconds", WORD)
         )
 
     ############################################################################
 
     def to_datetime(self):
         return datetime(
-            self.Year,
-            self.Month,
-            self.Day,
-            self.Hour,
-            self.Minute,
-            self.Second,
-            self.Milliseconds * 1000
+            self.wYear,
+            self.wMonth,
+            self.wDay,
+            self.wHour,
+            self.wMinute,
+            self.wSecond,
+            self.wMilliseconds * 1000
             )
 
     ############################################################################
 
     def from_datetime(self, dt):
-        self.Year = dt.year
-        self.Month = dt.month
-        self.Day = dt.day
-        self.Hour = dt.hour
-        self.Minute = dt.minute
-        self.Second = dt.second
-        self.Milliseconds = dt.microsecond // 1000
+        self.wYear = dt.year
+        self.wMonth = dt.month
+        self.wDay = dt.day
+        self.wHour = dt.hour
+        self.wMinute = dt.minute
+        self.wSecond = dt.second
+        self.wMilliseconds = dt.microsecond // 1000
         dow = dt.isoweekday()
-        self.DayOfWeek = 0 if dow == 7 else dow
+        self.wDayOfWeek = 0 if dow == 7 else dow
         return self
 
     ############################################################################
@@ -184,14 +184,14 @@ class SYSTEMTIME(ctypes.Structure):
     ############################################################################
 
     def from_struct_time(self, st):
-        self.Year = st.tm_year
-        self.Month = st.tm_mon
-        self.Day = st.tm_mday
-        self.Hour = st.tm_hour
-        self.Minute = st.tm_min
-        self.Second = st.tm_sec
-        self.Milliseconds = 0
-        self.DayOfWeek = 0 if st.tm_wday == 6 else st.tm_wday + 1
+        self.wYear = st.tm_year
+        self.wMonth = st.tm_mon
+        self.wDay = st.tm_mday
+        self.wHour = st.tm_hour
+        self.wMinute = st.tm_min
+        self.wSecond = st.tm_sec
+        self.wMilliseconds = 0
+        self.wDayOfWeek = 0 if st.tm_wday == 6 else st.tm_wday + 1
         return self
 
     ############################################################################

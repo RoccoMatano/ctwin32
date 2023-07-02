@@ -1152,15 +1152,15 @@ def DeleteService(service):
 
 class SERVICE_STATUS_PROCESS(ctypes.Structure):
     _fields_ = (
-        ("ServiceType", DWORD),
-        ("CurrentState", DWORD),
-        ("ControlsAccepted", DWORD),
-        ("Win32ExitCode", DWORD),
-        ("ServiceSpecificExitCode", DWORD),
-        ("CheckPoint", DWORD),
-        ("WaitHint", DWORD),
-        ("ProcessId", DWORD),
-        ("ServiceFlags", DWORD),
+        ("dwServiceType", DWORD),
+        ("dwCurrentState", DWORD),
+        ("dwControlsAccepted", DWORD),
+        ("dwWin32ExitCode", DWORD),
+        ("dwServiceSpecificExitCode", DWORD),
+        ("dwCheckPoint", DWORD),
+        ("dwWaitHint", DWORD),
+        ("dwProcessId", DWORD),
+        ("dwServiceFlags", DWORD),
         )
 
 _QueryServiceStatusEx = fun_fact(
@@ -1192,8 +1192,8 @@ def QueryServiceStatusEx(service):
 
 class ENUM_SERVICE_STATUS_PROCESS(ctypes.Structure):
     _fields_ = (
-        ("ServiceName", PWSTR),
-        ("DisplayName", PWSTR),
+        ("lpServiceName", PWSTR),
+        ("lpDisplayName", PWSTR),
         ("ServiceStatusProcess", SERVICE_STATUS_PROCESS),
         )
 
@@ -1256,15 +1256,15 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
 
 class QUERY_SERVICE_CONFIG(ctypes.Structure):
     _fields_ = (
-        ("ServiceType", DWORD),
-        ("StartType", DWORD),
-        ("ErrorControl", DWORD),
-        ("BinaryPathName", DWORD),
-        ("LoadOrderGroup", DWORD),
-        ("TagId", DWORD),
-        ("Dependencies", DWORD),
-        ("ServiceStartName", DWORD),
-        ("DisplayName", DWORD),
+        ("dwServiceType", DWORD),
+        ("dwStartType", DWORD),
+        ("dwErrorControl", DWORD),
+        ("lpBinaryPathName", PWSTR),
+        ("lpLoadOrderGroup", PWSTR),
+        ("dwTagId", DWORD),
+        ("lpDependencies", PWSTR),
+        ("lpServiceStartName", PWSTR),
+        ("lpDisplayName", PWSTR),
         )
 PQUERY_SERVICE_CONFIG = POINTER(QUERY_SERVICE_CONFIG)
 

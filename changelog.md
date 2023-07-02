@@ -48,7 +48,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - fixed kernel.QueryDosDevice to support `None` as input parameter (returning
   the list of all MS-DOS device names)
 - checking the return code of kernel.GlobalUnlock
-- member names of advapi.SERVICE_STATUS (leading `dw` was missing)
+- member names in the following structures were missing prefixes (hungarian
+  notation):
+  - advapi.SERVICE_STATUS
+  - advapi.SERVICE_STATUS_PROCESS
+  - advapi.ENUM_SERVICE_STATUS_PROCESS
+  - advapi.QUERY_SERVICE_CONFIG
+  - misc.WTS_SESSION_INFO
+  - user.WINDOWPLACEMENT
+  - wtypes.FILETIME
+  - wtypes.SYSTEMTIME
 
 ## [2.2.0] - 2023-05-27
 
