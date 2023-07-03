@@ -34,6 +34,7 @@ from .wtypes import (
     FILETIME,
     HANDLE,
     INT,
+    LARGE_INTEGER,
     LONG,
     LUID,
     PBOOL,
@@ -623,6 +624,37 @@ def DuplicateTokenEx(tok, acc, sattr, imp, typ):
     dup = KHANDLE()
     raise_on_zero(_DuplicateTokenEx(tok, acc, ref(sattr), imp, typ, ref(dup)))
     return dup
+
+################################################################################
+
+class TOKEN_STATISTICS(ctypes.Structure):
+    _fields_ = (
+        ("TokenId", LUID),
+        ("AuthenticationId", LUID),
+        ("ExpirationTime", LARGE_INTEGER),
+        ("TokenType", INT),
+        ("ImpersonationLevel", INT),
+        ("DynamicCharged", DWORD),
+        ("DynamicAvailable", DWORD),
+        ("GroupCount", DWORD),
+        ("PrivilegeCount", DWORD),
+        ("ModifiedId", LUID),
+        )
+
+################################################################################
+_GetTokenInformation = fun_fact(
+    _adv.GetTokenInformation, (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
+    )
+
+def GetTokenInformation(hdl, cls):
+    rlen = DWORD(256)
+    while True:
+        size = rlen.value
+        buf = ctypes.create_string_buffer(size)
+        if _GetTokenInformation(hdl, cls, buf, size, ref(rlen)):
+            return buf.raw[:rlen.value]
+        elif (err := GetLastError()) != ERROR_INSUFFICIENT_BUFFER:
+            raise ctypes.WinError(err)
 
 ################################################################################
 

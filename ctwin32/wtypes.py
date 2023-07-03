@@ -273,8 +273,15 @@ class LUID(ctypes.Structure):
         ("HighPart", LONG)
         )
 
+    def __init__(self, value):
+        self.LowPart = value & 0xffffffff
+        self.HighPart = value >> 32
+
     def __int__(self):
         return self.LowPart | (self.HighPart << 32)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({int(self)})"
 
 ################################################################################
 
