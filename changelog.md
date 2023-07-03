@@ -36,13 +36,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - advapi.SetServiceStatus
 - sample lsc.py
 - advapi.GetTokenInformation
+- kernel.dbg_print
+- module svc_util with functions
+  - func_as_system
+  - create_process_in_session_copy_token
+  - func_as_trusted_installer
+  - proc_as_trusted_installer
 
 ### Changed
 
 - extended sample power_requests.py to demonstrate the effect of
   kernel.create_power_request
 - 'multi-strings' (strings that represent a list of strings by joining its
-  elements with '\0') are now always returned as a list of plain strings.
+  elements with `\0`) are now always returned as a list of plain strings.
+- greatly simplified sample lsc.py by using svc_util
 
 ### Fixed
 

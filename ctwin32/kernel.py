@@ -521,6 +521,11 @@ def OutputDebugString(dstr):
 
 ################################################################################
 
+def dbg_print(*args, end="\n"):
+    _OutputDebugStringW(f"{' '.join(map(str, args))}{end}")
+
+################################################################################
+
 _SetThreadExecutionState = fun_fact(
     _k32.SetThreadExecutionState, (DWORD, DWORD)
     )
