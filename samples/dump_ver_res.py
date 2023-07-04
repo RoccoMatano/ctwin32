@@ -36,6 +36,7 @@ from types import SimpleNamespace
 from pprint import pprint
 from ctwin32 import (
     kernel,
+    suppress_winerr,
     ERROR_ACCESS_DENIED,
     ERROR_BAD_EXE_FORMAT,
     ERROR_FILE_NOT_FOUND,
@@ -153,14 +154,11 @@ EXPECTED_ERR = (
 LOLI_FLAGS = LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE
 
 def find_ver_res_in_file(fname):
-    try:
+    with suppress_winerr(*EXPECTED_ERR):
         with kernel.LoadLibraryEx(str(fname), LOLI_FLAGS) as hmod:
             for name in kernel.get_resource_names(hmod, RT_VERSION):
                 addr, size = kernel.get_resource_info(hmod, name, RT_VERSION)
                 yield ctypes.string_at(addr, size)
-    except OSError as e:
-        if e.winerror not in EXPECTED_ERR:
-            raise
 
 ################################################################################
 
