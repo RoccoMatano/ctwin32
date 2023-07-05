@@ -84,43 +84,6 @@ def _load_func(file_name, func_name):
 
 ################################################################################
 
-def _start_as_service(arglist):
-    # Arguments for _start_as_service will be:
-    #   0       path to module implementing the function to be run
-    #   1       name of the function to be run
-    #   2 ...   string arguments for function
-    #
-    # But _start_as_service doesn't really care. However, _service_main will
-    # very well take this into account.
-
-    service_name = str(uuid.uuid4())
-    with advapi.OpenSCManager(None, None, SC_MANAGER_CREATE_SERVICE) as scm:
-        create_args = (
-            scm,
-            service_name,
-            service_name,
-            SERVICE_START | SERVICE_QUERY_STATUS | DELETE,
-            SERVICE_WIN32_OWN_PROCESS,
-            SERVICE_DEMAND_START,
-            SERVICE_ERROR_NORMAL,
-            cmdline_from_args([sys.executable, _FILE])
-            )
-        for _ in range(2):
-            try:
-                with advapi.CreateService(*create_args) as svc:
-                    advapi.StartService(svc, arglist)
-                    advapi.DeleteService(svc)
-                break
-            except OSError as e:
-                kernel.dbg_print(f"create/start err: {e}")
-                if e.winerror == ERROR_SERVICE_EXISTS:
-                    with advapi.OpenService(scm, service_name, DELETE) as svc:
-                        advapi.DeleteService(svc)
-                else:
-                    raise
-
-################################################################################
-
 @advapi.SERVICE_MAIN_FUNCTION
 def _service_main(argc, argv):
     # Since this is a python callback that ctypes calls when requested
@@ -172,44 +135,59 @@ def _service_main(argc, argv):
 
 ################################################################################
 
-def _get_service_pid(name):
-    with advapi.OpenSCManager(None, None, SC_MANAGER_CONNECT) as scm:
-        flags = SERVICE_START | SERVICE_QUERY_STATUS
-        with advapi.OpenService(scm, name, flags) as svc:
-            status = advapi.QueryServiceStatusEx(svc)
-            if status.dwProcessId:
-                return status.dwProcessId
-            else:
-                advapi.StartService(svc, [])
-                deadline = time.time() + 2
-                status = advapi.QueryServiceStatusEx(svc)
-                while not status.dwProcessId:
-                    if time.time() >= deadline:
-                        raise OSError("timeout waiting for service to start")
-                    status = advapi.QueryServiceStatusEx(svc)
-                return status.dwProcessId
+def _run_service():
+    tid = kernel.GetCurrentThreadId()
+    kernel.dbg_print(f"trying to start dispatcher: {tid}")
+
+    # For a service with SERVICE_WIN32_OWN_PROCESS set, windows will ignore
+    # the service name in the dispatch table.
+    table = (advapi.SERVICE_TABLE_ENTRY * 2)()
+    table[0].lpServiceName = ""
+    table[0].lpServiceProc = _service_main
+    # table[1] will be zero initialized by default, which is exactly
+    # what we need
+
+    # Calling StartServiceCtrlDispatcher will fail if this process was not
+    # started by the SCM and is not supposed to run as a service.
+    advapi.StartServiceCtrlDispatcher(table)
+    kernel.dbg_print(f"returned from dispatcher: {tid}")
 
 ################################################################################
 
-def _run_service():
-    try:
-        tid = kernel.GetCurrentThreadId()
-        kernel.dbg_print(f"trying to start dispatcher: {tid}")
+def _start_as_service(arglist):
+    # Arguments for _start_as_service will be:
+    #   0       path to module implementing the function to be run
+    #   1       name of the function to be run
+    #   2 ...   string arguments for function
+    #
+    # But _start_as_service doesn't really care. However, _service_main will
+    # very well take this into account.
 
-        # For a service with SERVICE_WIN32_OWN_PROCESS set, windows will ignore
-        # the service name in the dispatch table.
-        table = (advapi.SERVICE_TABLE_ENTRY * 2)()
-        table[0].lpServiceName = ""
-        table[0].lpServiceProc = _service_main
-        # table[1] will be zero initialized by default, which is exactly
-        # what we need
-
-        # Calling StartServiceCtrlDispatcher will fail if this process was not
-        # started by the SCM and is not supposed to run as a service.
-        advapi.StartServiceCtrlDispatcher(table)
-        kernel.dbg_print(f"returned from dispatcher: {tid}")
-    except BaseException:
-        _print_and_exit(traceback.format_exc())
+    service_name = str(uuid.uuid4())
+    with advapi.OpenSCManager(None, None, SC_MANAGER_CREATE_SERVICE) as scm:
+        create_args = (
+            scm,
+            service_name,
+            service_name,
+            SERVICE_START | SERVICE_QUERY_STATUS | DELETE,
+            SERVICE_WIN32_OWN_PROCESS,
+            SERVICE_DEMAND_START,
+            SERVICE_ERROR_NORMAL,
+            cmdline_from_args([sys.executable, _FILE, "_run_service"])
+            )
+        for _ in range(2):
+            try:
+                with advapi.CreateService(*create_args) as svc:
+                    advapi.StartService(svc, arglist)
+                    advapi.DeleteService(svc)
+                break
+            except OSError as e:
+                kernel.dbg_print(f"create/start err: {e}")
+                if e.winerror == ERROR_SERVICE_EXISTS:
+                    with advapi.OpenService(scm, service_name, DELETE) as svc:
+                        advapi.DeleteService(svc)
+                else:
+                    raise
 
 ################################################################################
 
@@ -283,6 +261,25 @@ def _call_func_as_svc_acc(*args):
 
 ################################################################################
 
+def get_service_pid(name):
+    with advapi.OpenSCManager(None, None, SC_MANAGER_CONNECT) as scm:
+        flags = SERVICE_START | SERVICE_QUERY_STATUS
+        with advapi.OpenService(scm, name, flags) as svc:
+            status = advapi.QueryServiceStatusEx(svc)
+            if status.dwProcessId:
+                return status.dwProcessId
+            else:
+                advapi.StartService(svc, [])
+                deadline = time.time() + 2
+                status = advapi.QueryServiceStatusEx(svc)
+                while not status.dwProcessId:
+                    if time.time() >= deadline:
+                        raise OSError("timeout waiting for service to start")
+                    status = advapi.QueryServiceStatusEx(svc)
+                return status.dwProcessId
+
+################################################################################
+
 def _service_account_from_system(*args):
     kernel.dbg_print("in _service_account_from_system")
     for i, arg in enumerate(args):
@@ -291,7 +288,7 @@ def _service_account_from_system(*args):
     # possible arg structures
     # a) service_name cwd session file_name func_name *func_args
     # b) service_name 'command' cwd session *command_line_args
-    pid = _get_service_pid(args[0])
+    pid = get_service_pid(args[0])
     if args[1] == "command":
         directory = args[2]
         session = int(args[3])
@@ -344,11 +341,35 @@ def proc_as_trusted_installer(*command_line_args):
 
 ################################################################################
 
+def running_as_trusted_installer():
+    ti_sid = "S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464"
+    return advapi.CheckTokenMembership(
+        None,
+        advapi.ConvertStringSidToSid(ti_sid)
+        )
+
+################################################################################
+
+def _main():
+    kernel.dbg_print(f"starting {_FILE.name}: {sys.argv}")
+    try:
+        available_tasks = (
+            # argv[1]/func          min len(argv)
+            (_run_service,          2),
+            (_call_func_as_svc_acc, 4),
+            )
+        for func, length in available_tasks:
+            if len(sys.argv) >= length and sys.argv[1] == func.__name__:
+                func(*sys.argv[2:])
+                break
+        else:
+            raise RuntimeError(f"invalid args: {sys.argv}")
+    except BaseException:
+        _print_and_exit(traceback.format_exc())
+
+################################################################################
+
 if __name__ == "__main__":
-    kernel.dbg_print(f"starting {_FILE.name}, args: {sys.argv}")
-    if len(sys.argv) >= 4 and sys.argv[1] == "_call_func_as_svc_acc":
-        _call_func_as_svc_acc(*sys.argv[2:])
-    else:
-        _run_service()
+    _main()
 
 ################################################################################
