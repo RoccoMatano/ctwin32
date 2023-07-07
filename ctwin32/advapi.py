@@ -27,6 +27,7 @@ from datetime import datetime as _dt
 import ctypes
 
 from .wtypes import (
+    ArgcArgvFromArgs,
     BOOL,
     BYTE,
     DWORD,
@@ -60,7 +61,6 @@ from . import (
     suppress_winerr,
     fun_fact,
     ns_from_struct,
-    argc_argv_from_args,
     cmdline_from_args,
     REG_DWORD,
     REG_QWORD,
@@ -642,6 +642,7 @@ class TOKEN_STATISTICS(ctypes.Structure):
         )
 
 ################################################################################
+
 _GetTokenInformation = fun_fact(
     _adv.GetTokenInformation, (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
     )
@@ -1142,8 +1143,8 @@ _StartService = fun_fact(
     )
 
 def StartService(handle, arglist):
-    argc, argv, _ = argc_argv_from_args(arglist)
-    raise_on_zero(_StartService(handle, argc, argv))
+    aa = ArgcArgvFromArgs(arglist)
+    raise_on_zero(_StartService(handle, aa.argc, aa.argv))
 
 ################################################################################
 

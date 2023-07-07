@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - svc_util.running_as_trusted_installer
 
+### Changed
+
+- replaced function argc_argv_from_args by class wtypes.ArgcArgvFromArgs
+  (removing shaky manual lifetime mamagement).
+
 ## [2.3.0] - 2023-07-04
 
 ### Added

@@ -145,28 +145,6 @@ def cmdline_from_args(args):
 
 ################################################################################
 
-def argc_argv_from_args(args):
-    if not args:
-        return 0, None, None
-    argc = len(args)
-    chain = "\0".join(args) + "\0"
-
-    class ArgumentBuffer(ctypes.Structure):
-        _fields_ = (
-            ("pointers", PWSTR * argc),
-            ("strings", WCHAR * len(chain)),
-            )
-
-    buffer = ArgumentBuffer(strings=chain)
-    argv = ctypes.addressof(buffer)
-    str_addr = argv + ArgumentBuffer.strings.offset
-    for i, arg in enumerate(args):
-        buffer.pointers[i] = str_addr
-        str_addr += ctypes.sizeof(WCHAR) * (len(arg) + 1)
-    return argc, argv, buffer
-
-################################################################################
-
 def ns_from_struct(cts):
     return _namespace(**{f: getattr(cts, f) for f, *_ in cts._fields_})
 

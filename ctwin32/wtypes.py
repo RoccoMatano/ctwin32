@@ -459,6 +459,8 @@ def LOWORD(dw):
 def HIWORD(dw):
     return (dw >> 16) & 0xffff
 
+################################################################################
+
 # c_void_p has a flaw: neither can c_void_p.from_param() process a py_object,
 # nor does cast() allow to convert a py_object to a c_void_p
 # (cast(py_object(obj), c_void_p) fails). Therefore we need this odd way of
@@ -466,3 +468,42 @@ def HIWORD(dw):
 
 def pvoid_from_obj(obj):
     return PVOID.from_buffer(ctypes.py_object(obj))
+
+################################################################################
+
+class ArgcArgvFromArgs():
+    """Converts a list of strings into a buffer that contains the strings
+    and an array of pointers to these strings. The number of strings and the
+    address of the pointer array are provided by the attributes `argc` and
+    `argv`.
+    """
+    def __init__(self, args):
+        if not args:
+            self._argc = 0
+            self._argv = None
+        else:
+            self._argc = len(args)
+            chain = "\0".join(args) + "\0"
+
+            class ArgumentBuffer(ctypes.Structure):
+                _fields_ = (
+                    ("pointers", PWSTR * self._argc),
+                    ("strings", WCHAR * len(chain)),
+                    )
+
+            self._buffer = ArgumentBuffer(strings=chain)
+            self._argv = ctypes.addressof(self._buffer)
+            str_addr = self._argv + ArgumentBuffer.strings.offset
+            for i, arg in enumerate(args):
+                self._buffer.pointers[i] = str_addr
+                str_addr += ctypes.sizeof(WCHAR) * (len(arg) + 1)
+
+    @property
+    def argc(self):
+        return self._argc
+
+    @property
+    def argv(self):
+        return self._argv
+
+################################################################################
