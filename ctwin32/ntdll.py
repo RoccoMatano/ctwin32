@@ -47,6 +47,7 @@ from .wtypes import (
     UINT_PTR,
     ULARGE_INTEGER,
     ULONG,
+    ULONG_PTR,
     UNICODE_STRING,
     WCHAR,
     WCHAR_SIZE,
@@ -63,8 +64,10 @@ from . import (
     SystemProcessInformation,
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
+    ProcessCommandLineInformation,
     ProcessImageFileName,
     ProcessBasicInformation,
+    ProcessWow64Information,
     )
 
 _nt = ctypes.WinDLL("ntdll.dll")
@@ -580,5 +583,23 @@ def NtPowerInformation(pwr_info, in_bytes, out_len):
 
     raise_failed_status(_NtPowerInformation(pwr_info, iptr, ilen, optr, olen))
     return out
+
+################################################################################
+
+def get_proc_command_line(proc_handle):
+    buf = _var_size_proc_info(proc_handle, ProcessCommandLineInformation)
+    return str(UNICODE_STRING.from_buffer(buf))
+
+################################################################################
+
+def get_proc_env_blk(proc_handle):
+    return get_proc_ext_basic_info(proc_handle).BasicInfo.PebBaseAddress
+
+################################################################################
+
+def get_wow64_proc_env_blk(proc_handle):
+    peb32 = ULONG_PTR()
+    _fixed_size_proc_info(proc_handle, ProcessWow64Information, peb32)
+    return peb32.value
 
 ################################################################################

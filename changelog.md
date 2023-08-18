@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - svc_util.running_as_trusted_installer
+- ntdll.get_proc_command_line
+- ntdll.get_proc_env_blk
+- ntdll.get_wow64_proc_env_blk
+- kernel.ReadProcessMemory
+- kernel.WriteProcessMemory
+- kernel.get_proc_env_as_dict
 
 ### Changed
 

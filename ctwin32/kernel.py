@@ -54,6 +54,7 @@ from .wtypes import (
     UINT,
     UINT_PTR,
     ULONG,
+    ULONGLONG,
     ULONG_PTR,
     USHORT,
     WCHAR,
@@ -66,6 +67,7 @@ from . import (
     multi_str_from_addr,
     multi_str_from_ubuf,
     ns_from_struct,
+    ntdll,
     raise_if,
     raise_on_err,
     raise_on_zero,
@@ -1629,5 +1631,52 @@ def GetVolumePathNamesForVolumeName(vol):
         else:
             if (err := GetLastError()) != ERROR_MORE_DATA:
                 raise_on_err(err)
+
+################################################################################
+
+_ReadProcessMemory = fun_fact(
+    _k32.ReadProcessMemory, (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
+    )
+
+def ReadProcessMemory(hdl, addr, length):
+    buf = ctypes.create_string_buffer(length)
+    raise_on_zero(_ReadProcessMemory(hdl, addr, buf, length, None))
+    return buf
+
+################################################################################
+
+_WriteProcessMemory = fun_fact(
+    _k32.WriteProcessMemory, (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
+    )
+
+def WriteProcessMemory(hdl, addr, data):
+    raise_on_zero(_WriteProcessMemory(hdl, addr, data, len(data), None))
+
+################################################################################
+
+def get_proc_env_as_dict(hdl):
+    t32 = (    DWORD, 16,  72,  656)    # noqa: E201, RUF100
+    t64 = (ULONGLONG, 32, 128, 1008)
+    peb = ntdll.get_wow64_proc_env_blk(hdl)
+    if peb != 0:
+        # type, offs process params, offs env ptr, offs env len
+        typ, opp, oep, oel = t32
+    else:
+        typ, opp, oep, oel = t64 if ctypes.sizeof(PVOID) == 8 else t32
+        peb = ntdll.get_proc_env_blk(hdl)
+    isize = ctypes.sizeof(typ)
+
+    def read_proc_int(addr):
+        return typ.from_buffer(ReadProcessMemory(hdl, addr, isize)).value
+
+    process_params = read_proc_int(peb + opp)
+    env_ptr = read_proc_int(process_params + oep)
+    env_len = read_proc_int(process_params + oel)
+
+    buf = ReadProcessMemory(hdl, env_ptr, env_len)
+    str_len = env_len // ctypes.sizeof(WCHAR)
+    str_type = WCHAR * str_len
+    env = multi_str_from_ubuf(str_type.from_buffer(buf), str_len)
+    return env_str_to_dict(env)
 
 ################################################################################
