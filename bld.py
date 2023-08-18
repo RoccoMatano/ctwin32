@@ -24,10 +24,10 @@ def initiate_actions():
     # support to execute more than one action per process. Therefore we
     # have to use a child process for every action.
     common = [sys.executable, str(THIS_SCRIPT), "--action"]
-    subprocess.run([*common, "build_sdist"])
+    subprocess.run([*common, "build_sdist"], check=True)
     for tag in ("win_amd64", "win32", "win_arm64"):
         cmd = [*common, "build_wheel", "--build-option", f"-p {tag}"]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)
 
 ################################################################################
 

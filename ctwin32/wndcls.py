@@ -37,7 +37,6 @@ from .wtypes import (
     POINT,
     PPOINT,
     PVOID,
-    pvoid_from_obj,
     UINT,
     WORD,
     )
@@ -482,7 +481,7 @@ class SimpleWnd(BaseWnd):
             wcp.parent,
             wcp.menu,
             wcp.cls.hInstance,
-            pvoid_from_obj(self)
+            id(self)
             )
 
     ############################################################################
@@ -647,7 +646,7 @@ class BaseDlg(BaseWnd):
             template,
             self.parent,
             self._dlg_proc_,
-            pvoid_from_obj(self)
+            id(self)
             )
 
     ############################################################################
@@ -657,7 +656,7 @@ class BaseDlg(BaseWnd):
             template,
             self.parent,
             self._dlg_proc_,
-            pvoid_from_obj(self)
+            id(self)
             )
 
     ############################################################################
@@ -720,7 +719,7 @@ _std_classes = {
 
 ################################################################################
 
-def dlg_item_bytes(
+def dlg_item_template(
         style,
         x,
         y,
@@ -754,7 +753,7 @@ def dlg_item_bytes(
 
 ################################################################################
 
-def dlg_bytes(
+def dlg_template(
         items,
         style,
         x,
@@ -768,19 +767,19 @@ def dlg_bytes(
     # bytes = template + menu + class + title + pointsize + typeface + items
     style |= DS_SETFONT  # always set font
     tmpl = user.DLGTEMPLATE(style, 0, len(items), x, y, cx, cy)
-    bts = (
-        bytes(tmpl) +
-        bytes(WORD(0)) +    # no menu
-        bytes(WORD(0)) +    # default class
-        bytes(ctypes.create_unicode_buffer(title)) +
-        bytes(WORD(pointsize)) +
+    bts = b"".join((
+        bytes(tmpl),
+        bytes(WORD(0)),     # no menu
+        bytes(WORD(0)),     # default class
+        bytes(ctypes.create_unicode_buffer(title)),
+        bytes(WORD(pointsize)),
         bytes(ctypes.create_unicode_buffer(typeface))
-        )
-    # align to DWORD for the following items
-    bts += (-len(bts) % 4) * b"\0"
-    for item in items:
-        bts += dlg_item_bytes(*item)
-    return bts
+        ))
+    return b"".join((
+        bts,
+        (-len(bts) % 4) * b"\0",  # align to DWORD for the following items
+        *(dlg_item_template(*item) for item in items)
+        ))
 
 ################################################################################
 
@@ -832,7 +831,7 @@ class InputDlg(BaseDlg):
     def ask(self, question, caption="", password=False):
         self.question = question
         self.password = password
-        template = dlg_bytes(
+        template = dlg_template(
             self.DLG_ITEMS,
             DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU,
             0,

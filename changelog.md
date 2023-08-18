@@ -15,6 +15,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - replaced function argc_argv_from_args by class wtypes.ArgcArgvFromArgs
   (removing shaky manual lifetime mamagement).
+- to improve efficiency a little, use `from_buffer` instead of `from_address`
+  where approriate
+- improve usage of ntdll.NtQuerySystemInformation
+- use `id` instead of `pvoid_from_obj`
+- renamed wndcls.dlg_item_bytes to dlg_item_template
+- renamed wndcls.dlg_bytes to dlg_template
 
 ## [2.3.0] - 2023-07-04
 

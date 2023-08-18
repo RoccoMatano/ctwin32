@@ -50,7 +50,7 @@ from .wtypes import (
     PVOID,
     PWSTR,
     ScdToBeClosed,
-    WCHAR,
+    WCHAR_SIZE,
     WORD,
     )
 from . import (
@@ -935,7 +935,7 @@ def GetSecurityDescriptorOwner(sd):
             ref(defaulted)
             )
         )
-    return ctypes.string_at(psid, GetLengthSid(psid)), defaulted
+    return ctypes.string_at(psid, GetLengthSid(psid)), bool(defaulted)
 
 ################################################################################
 
@@ -1237,7 +1237,7 @@ _EnumServicesStatusEx = fun_fact(
         INT,
         DWORD,
         DWORD,
-        PBYTE,
+        PVOID,
         DWORD,
         PDWORD,
         PDWORD,
@@ -1247,43 +1247,38 @@ _EnumServicesStatusEx = fun_fact(
     )
 
 def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
-    esize = ctypes.sizeof(ENUM_SERVICE_STATUS_PROCESS)
-
-    res = []
-    buf = ctypes.create_string_buffer(0)
-    buf_len = 0
+    stat_size = ctypes.sizeof(ENUM_SERVICE_STATUS_PROCESS)
+    buf = ctypes.create_string_buffer(16 * 1024)
     needed = DWORD()
     num_ret = DWORD()
     resume = DWORD()
+    result = []
+    success = False
 
-    while True:
-        buf_addr = ctypes.addressof(buf)
-        suc = _EnumServicesStatusEx(
+    while not success:
+        success = _EnumServicesStatusEx(
             scm,
             SC_ENUM_PROCESS_INFO,
             stype,
             sstate,
-            ctypes.cast(buf_addr, PBYTE),
-            buf_len,
+            buf,
+            ctypes.sizeof(buf),
             ref(needed),
             ref(num_ret),
             ref(resume),
             group_name
             )
-        raise_if(not suc and GetLastError() != ERROR_MORE_DATA)
+        raise_if(not success and GetLastError() != ERROR_MORE_DATA)
 
-        for n in range(num_ret.value):
-            essp = ENUM_SERVICE_STATUS_PROCESS.from_address(
-                buf_addr + n * esize
-                )
-            res.append(ns_from_struct(essp))
+        for offs in range(0, num_ret.value * stat_size, stat_size):
+            status = ENUM_SERVICE_STATUS_PROCESS.from_buffer(buf, offs)
+            result.append(ns_from_struct(status))
 
-        if suc:
+        if success:
             break
         buf = ctypes.create_string_buffer(needed.value)
-        buf_len = needed
 
-    return res
+    return result
 
 ################################################################################
 
@@ -1562,25 +1557,26 @@ PEVENTLOGRECORD = POINTER(EVENTLOGRECORD)
 
 ################################################################################
 
-def _evt_from_void_p(vpelr):
-    # vpelr is PVOID for simpler address calculations
-    strins = []
-    elr = ctypes.cast(vpelr, PEVENTLOGRECORD).contents
+def _evt_from_buf(buf, offs):
+    addr = ctypes.addressof(buf) + offs
+    elr = EVENTLOGRECORD.from_buffer(buf, offs)
+
+    str_ins = []
     if elr.NumStrings:
         stroffs = elr.StringOffset
         for _ in range(elr.NumStrings):
-            nxt = ctypes.wstring_at(vpelr.value + stroffs)
-            stroffs += (len(nxt) + 1) * ctypes.sizeof(WCHAR)
-            strins.append(nxt)
+            nxt = ctypes.wstring_at(addr + stroffs)
+            stroffs += (len(nxt) + 1) * WCHAR_SIZE
+            str_ins.append(nxt)
     sid = ""
     if elr.UserSidLength:
         sid = ConvertSidToStringSid(
-            ctypes.string_at(vpelr.value + elr.UserSidOffset, elr.UserSidLength)
+            ctypes.string_at(addr + elr.UserSidOffset, elr.UserSidLength)
             )
-    data = ctypes.string_at(vpelr.value + elr.DataOffset, elr.DataLength)
-    p_str = vpelr.value + ctypes.sizeof(EVENTLOGRECORD)
+    data = ctypes.string_at(addr + elr.DataOffset, elr.DataLength)
+    p_str = addr + ctypes.sizeof(EVENTLOGRECORD)
     src_name = ctypes.wstring_at(p_str)
-    p_str += (len(src_name) + 1) * ctypes.sizeof(WCHAR)
+    p_str += (len(src_name) + 1) * WCHAR_SIZE
     computer_name = ctypes.wstring_at(p_str)
 
     return elr.Length, _namespace(
@@ -1595,7 +1591,7 @@ def _evt_from_void_p(vpelr):
         ReservedFlags=elr.ReservedFlags,
         Sid=sid,
         SourceName=src_name,
-        StringInserts=strins,
+        StringInserts=str_ins,
         TimeGenerated=_dt.fromtimestamp(elr.TimeGenerated),
         TimeWritten=_dt.fromtimestamp(elr.TimeWritten),
         )
@@ -1637,12 +1633,11 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
             break
 
     res = []
-    addr = ctypes.addressof(buf)
-    while got > 0:
-        elen, evt = _evt_from_void_p(PVOID(addr))
+    offs = 0
+    while offs < got:
+        elen, evt = _evt_from_buf(buf, offs)
         res.append(evt)
-        addr += elen
-        got -= elen
+        offs += elen
     return res
 
 ################################################################################

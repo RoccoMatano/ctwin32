@@ -49,6 +49,7 @@ from .wtypes import (
     ULONG,
     UNICODE_STRING,
     WCHAR,
+    WCHAR_SIZE,
     WORD,
     )
 from . import (
@@ -270,32 +271,42 @@ def NtQueryInformationProcess(phandle, pinfo, buf, buf_size, p_ret_len):
 
 ################################################################################
 
-def required_sys_info_size(sys_info):
+def _var_size_proc_info(proc_handle, proc_info):
+    # This works only for the few information classes that return variable
+    # size items (50, 51, 60, 64, 85, 97). Those that deliver fixed size items
+    # cannot be queried for the required size.
     size = ULONG(0)
-    NtQuerySystemInformation(sys_info, 0, size, ref(size))
-    return size
+    NtQueryInformationProcess(proc_handle, proc_info, 0, size, ref(size))
+    buff = ctypes.create_string_buffer(size.value)
+    raise_failed_status(
+        NtQueryInformationProcess(proc_handle, proc_info, buff, size, ref(size))
+        )
+    return buff
 
 ################################################################################
 
-def required_proc_info_size(handle, proc_info):
-    size = ULONG(0)
-    NtQueryInformationProcess(handle, proc_info, 0, size, ref(size))
-    return size
+def _fixed_size_proc_info(proc_handle, proc_info, dest):
+    size = ctypes.sizeof(dest)
+    raise_failed_status(
+        NtQueryInformationProcess(proc_handle, proc_info, ref(dest), size, None)
+        )
 
 ################################################################################
 
 def enum_processes():
-    def _name_pid(pi):
-        pid = pi.UniqueProcessId if pi.UniqueProcessId else 0
-        name = (
-            str(pi.ImageName) if pi.ImageName.Buffer else
-            ("idle" if pid == 0 else "system")
+    def name_pid(pi):
+        return _namespace(
+            name=(
+                str(pi.ImageName) if pi.ImageName.Buffer else
+                ("idle" if not pi.UniqueProcessId else "system")
+                ),
+            pid=pi.UniqueProcessId or 0
             )
-        return _namespace(name=name, pid=pid)
 
     status = STATUS_INFO_LENGTH_MISMATCH
     while status == STATUS_INFO_LENGTH_MISMATCH:
-        size = required_sys_info_size(SystemProcessInformation)
+        size = ULONG(0)
+        NtQuerySystemInformation(SystemProcessInformation, 0, 0, ref(size))
         buf = ctypes.create_string_buffer(size.value)
         status = NtQuerySystemInformation(
             SystemProcessInformation,
@@ -305,14 +316,14 @@ def enum_processes():
             )
     raise_failed_status(status)
 
-    pi = SYSTEM_PROCESS_INFORMATION.from_address(ctypes.addressof(buf))
-    res = [_name_pid(pi)]
+    offs = 0
+    pi = SYSTEM_PROCESS_INFORMATION.from_buffer(buf, offs)
+    res = [name_pid(pi)]
 
     while pi.NextEntryOffset:
-        pi = SYSTEM_PROCESS_INFORMATION.from_address(
-            ctypes.addressof(pi) + pi.NextEntryOffset
-            )
-        res.append(_name_pid(pi))
+        offs += pi.NextEntryOffset
+        pi = SYSTEM_PROCESS_INFORMATION.from_buffer(buf, offs)
+        res.append(name_pid(pi))
     return res
 
 ################################################################################
@@ -367,14 +378,8 @@ def proc_path_from_pid(pid):
 ################################################################################
 
 def proc_path_from_handle(handle):
-    info = ProcessImageFileName
-    rlen = required_proc_info_size(handle, info)
-    buf = ctypes.create_string_buffer(rlen.value)
-    addr = ctypes.addressof(buf)
-    raise_failed_status(
-        NtQueryInformationProcess(handle, info, addr, rlen, ref(rlen))
-        )
-    return _resolve_device_prefix(str(UNICODE_STRING.from_address(addr)))
+    buf = _var_size_proc_info(handle, ProcessImageFileName)
+    return _resolve_device_prefix(str(UNICODE_STRING.from_buffer(buf)))
 
 ################################################################################
 
@@ -417,22 +422,13 @@ def NtGetNextProcess(current, access, attribs=0, flags=0):
 
 def get_proc_ext_basic_info(proc_handle):
     pebi = PROCESS_EXTENDED_BASIC_INFORMATION()
-    rlen = ULONG(0)
-    raise_failed_status(
-        NtQueryInformationProcess(
-            proc_handle,
-            ProcessBasicInformation,
-            ref(pebi),
-            ctypes.sizeof(pebi),
-            ref(rlen)
-            )
-        )
+    _fixed_size_proc_info(proc_handle, ProcessBasicInformation, pebi)
     return pebi
 
 ################################################################################
 
-def pid_from_handle(handle):
-    return get_proc_ext_basic_info(handle).BasicInfo.UniqueProcessId
+def pid_from_handle(proc_handle):
+    return get_proc_ext_basic_info(proc_handle).BasicInfo.UniqueProcessId
 
 ################################################################################
 
@@ -514,17 +510,17 @@ def get_directory_info(hdir, restart_scan):
             break
     raise_failed_status(stat)
 
-    pv = ctypes.cast(ctypes.addressof(buf), PVOID)
-    dinfo = ctypes.cast(
-        ctypes.addressof(buf), PFILE_DIRECTORY_INFORMATION
-        ).contents
-    name_addr = pv.value + FILE_DIRECTORY_INFORMATION.FileName.offset
-    name = ctypes.wstring_at(name_addr, dinfo.FileNameLength // 2)
-
     def la2dt(la):
         return kernel.FileTimeToLocalSystemTime(
             FILETIME(la)
             ).to_datetime()
+
+    dinfo = FILE_DIRECTORY_INFORMATION.from_buffer(buf)
+    name = ctypes.wstring_at(
+        ctypes.addressof(buf) +
+        FILE_DIRECTORY_INFORMATION.FileName.offset,
+        dinfo.FileNameLength // WCHAR_SIZE
+        )
 
     return _namespace(
         FileIndex=dinfo.FileIndex,
@@ -583,6 +579,6 @@ def NtPowerInformation(pwr_info, in_bytes, out_len):
         optr, olen = ref(out), out_len
 
     raise_failed_status(_NtPowerInformation(pwr_info, iptr, ilen, optr, olen))
-    return out.raw
+    return out
 
 ################################################################################

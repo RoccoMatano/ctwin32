@@ -41,6 +41,7 @@ CHAR = ctypes.c_char
 BOOLEAN = BYTE
 
 WCHAR = ctypes.c_wchar
+WCHAR_SIZE = ctypes.sizeof(WCHAR)
 SHORT = ctypes.c_short
 WORD = USHORT = ctypes.c_ushort
 
@@ -262,7 +263,7 @@ class UNICODE_STRING(ctypes.Structure):
     def __str__(self):
         return ctypes.wstring_at(
             self.Buffer,
-            self.Length // ctypes.sizeof(WCHAR)
+            self.Length // WCHAR_SIZE
             )
 
 ################################################################################
@@ -496,7 +497,7 @@ class ArgcArgvFromArgs():
             str_addr = self._argv + ArgumentBuffer.strings.offset
             for i, arg in enumerate(args):
                 self._buffer.pointers[i] = str_addr
-                str_addr += ctypes.sizeof(WCHAR) * (len(arg) + 1)
+                str_addr += WCHAR_SIZE * (len(arg) + 1)
 
     @property
     def argc(self):

@@ -26,7 +26,6 @@ import re
 import ctypes
 from .wtypes import (
     BOOL,
-    BYTE,
     DWORD,
     GUID,
     HANDLE,
@@ -40,6 +39,7 @@ from .wtypes import (
     ScdToBeClosed,
     ULONG_PTR,
     WCHAR,
+    WCHAR_SIZE,
     )
 from . import (
     ref,
@@ -571,12 +571,14 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
         None
         )
 
-    diff = req_size.value - ctypes.sizeof(DWORD)
+    strlen = (
+        req_size.value - ctypes.sizeof(DWORD) + WCHAR_SIZE - 1
+        ) // WCHAR_SIZE
 
     class LOCAL_SPDIDD(ctypes.Structure):
         _fields_ = (
             ("cbSize", DWORD),
-            ("DevicePath", BYTE * diff),
+            ("DevicePath", WCHAR * strlen),
             )
 
     ifdetail = LOCAL_SPDIDD()
@@ -593,6 +595,6 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
             ref(deinda),
             )
         )
-    return ctypes.wstring_at(ctypes.addressof(ifdetail.DevicePath)), deinda
+    return ifdetail.DevicePath, deinda
 
 ################################################################################

@@ -84,8 +84,6 @@ class REPARSE_DATA_BUFFER(ctypes.Structure):
         )
     _anonymous_ = ("_anon",)
 
-PREPARSE_DATA_BUFFER = ctypes.POINTER(REPARSE_DATA_BUFFER)
-
 FSCTL_GET_REPARSE_POINT = 0x000900a8
 
 ################################################################################
@@ -96,12 +94,10 @@ def readlink(link, get_subst_name=False):
         size = 512
         while True:
             with suppress_winerr(ERROR_MORE_DATA):
-                byts = DeviceIoControl(hdl, FSCTL_GET_REPARSE_POINT, None, size)
+                buf = DeviceIoControl(hdl, FSCTL_GET_REPARSE_POINT, None, size)
                 break
             size *= 2
-    rpd_buff = ctypes.create_string_buffer(byts)
-    p_rpd = ctypes.cast(rpd_buff, PREPARSE_DATA_BUFFER)
-    rpd = p_rpd.contents
+    rpd = REPARSE_DATA_BUFFER.from_buffer(buf)
     if rpd.ReparseTag == IO_REPARSE_TAG_SYMLINK:
         path_buff = (
             ctypes.addressof(rpd) +

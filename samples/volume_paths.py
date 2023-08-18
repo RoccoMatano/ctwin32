@@ -33,7 +33,7 @@ from ctwin32 import (
     ERROR_NOT_SUPPORTED,
     GENERIC_EXECUTE,
     )
-from ctwin32.wtypes import ULONG, LARGE_INTEGER, ENDIANNESS
+from ctwin32.wtypes import ULONG, LARGE_INTEGER
 
 ################################################################################
 
@@ -46,35 +46,33 @@ class DISK_EXTENT(ctypes.Structure):
         ("ExtentLength", LARGE_INTEGER),
         )
 
-def get_disk_extends(data_bytes):
-    num = int.from_bytes(
-        data_bytes[:ctypes.sizeof(ULONG)],
-        byteorder=ENDIANNESS
-        )
+def get_disk_extends(buf):
+
+    num = ULONG.from_buffer(buf).value
+
     class VOLUME_DISK_EXTENTS(ctypes.Structure):
         _fields_ = (
             ("NumberOfDiskExtents", ULONG),
             ("Extents", DISK_EXTENT * num),
             )
-    return VOLUME_DISK_EXTENTS.from_buffer_copy(data_bytes).Extents
+    return VOLUME_DISK_EXTENTS.from_buffer(buf).Extents
 
 ################################################################################
 
 def get_volume_extends(vol_name):
     with kernel.create_file(vol_name, GENERIC_EXECUTE) as hdl:
-        bites = None
         size = 128
         while True:
             size *= 2
             with suppress_winerr(ERROR_MORE_DATA):
-                bites = kernel.DeviceIoControl(
+                buf = kernel.DeviceIoControl(
                     hdl,
                     IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS,
                     None,
                     size
                     )
                 break
-    return get_disk_extends(bites)
+    return get_disk_extends(buf)
 
 ################################################################################
 

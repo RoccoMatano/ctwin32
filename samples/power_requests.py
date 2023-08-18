@@ -37,7 +37,6 @@ from ctwin32 import (
     LOAD_LIBRARY_AS_IMAGE_RESOURCE,
     )
 from ctwin32.wtypes import (
-    ENDIANNESS,
     INT,
     SIZE_T,
     ULONG,
@@ -148,31 +147,26 @@ requester_types = {
 
 def get_power_requests():
     GetPowerRequestList = 45
-    data = b""
-    size = 512
-    while not data:
+    size = 1024
+    buf = None
+    while buf is None:
         size *= 2
         with suppress_winerr(ERROR_INSUFFICIENT_BUFFER):
-            data = ntdll.NtPowerInformation(GetPowerRequestList, None, size)
-    count = int.from_bytes(
-        data[:ctypes.sizeof(ULONG_PTR)],
-        byteorder=ENDIANNESS
-        )
+            buf = ntdll.NtPowerInformation(GetPowerRequestList, None, size)
+
+    count = ULONG.from_buffer(buf).value
 
     class POWER_REQUEST_LIST(ctypes.Structure):
         _fields_ = (
             ("Count", ULONG),
             ("PowerRequestOffsets", ULONG_PTR * count),
             )
-
-    buf = ctypes.create_string_buffer(data)
     prl = POWER_REQUEST_LIST.from_buffer(buf)
 
     requests = {k: [] for k in request_types}
     for ri in range(prl.Count):
-        pr = POWER_REQUEST.from_address(
-            ctypes.addressof(buf) + prl.PowerRequestOffsets[ri]
-            )
+        pr = POWER_REQUEST.from_buffer(buf, prl.PowerRequestOffsets[ri])
+
         for rt in request_types:
             # Must not access elements of `PowerRequestCount` that are not
             # approved by `SupportedRequestMask`. Furthermore only requests

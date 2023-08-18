@@ -30,7 +30,7 @@ from .wtypes import (
     OSVERSIONINFOEX,
     PWSTR,
     UINT,
-    WCHAR,
+    WCHAR_SIZE,
     )
 ref = ctypes.byref
 
@@ -96,7 +96,6 @@ def multi_str_from_str(_str):
 ################################################################################
 
 def multi_str_from_addr(addr):
-    WCHAR_SIZE = ctypes.sizeof(WCHAR)
     end = addr
     while True:
         if slen := len(ctypes.cast(end, PWSTR).value):
@@ -6929,7 +6928,7 @@ NUM_CR_RESULTS = 0x0000003C
 CM_ENUMERATE_CLASSES_INSTALLER = 0x00000000
 CM_ENUMERATE_CLASSES_INTERFACE = 0x00000001
 CM_ENUMERATE_CLASSES_BITS = 0x00000001
-CM_LOCATE_DEVNODE_NORMAL =0x00000000
+CM_LOCATE_DEVNODE_NORMAL = 0x00000000
 CM_LOCATE_DEVNODE_PHANTOM = 0x00000001
 CM_LOCATE_DEVNODE_CANCELREMOVE = 0x00000002
 CM_LOCATE_DEVNODE_NOVALIDATION = 0x00000004

@@ -123,7 +123,7 @@ class ApiSet():
             mini = 0
             maxi = self.count - 1
             while mini <= maxi:
-                curi = (mini + maxi ) // 2
+                curi = (mini + maxi) // 2
                 entry, name = self._get_entry_info(curi, True)
                 if dllname.startswith(name):
                     for value in self._enum_values(entry):

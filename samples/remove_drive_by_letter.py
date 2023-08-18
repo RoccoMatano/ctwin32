@@ -73,7 +73,7 @@ def get_drive_type_number(file_name):
             None,
             ctypes.sizeof(STORAGE_DEVICE_NUMBER)
             )
-    sdn = STORAGE_DEVICE_NUMBER.from_buffer_copy(sdn)
+    sdn = STORAGE_DEVICE_NUMBER.from_buffer(sdn)
     return sdn.DeviceType, sdn.DeviceNumber
 
 ################################################################################

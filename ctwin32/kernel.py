@@ -31,6 +31,7 @@ from .wtypes import (
     BYTE,
     CallbackContext,
     CallbackContextPtr,
+    CHAR,
     DWORD,
     FILETIME,
     HANDLE,
@@ -306,7 +307,9 @@ def DeviceIoControl(hdl, ioctl, in_ctobj, out_len):
             None
             )
         )
-    return out.raw[:bytes_returned.value] if out else None
+    if num_ret := bytes_returned.value:
+        return out if num_ret == olen else (CHAR * num_ret).from_buffer(out)
+    return None
 
 ################################################################################
 
@@ -646,7 +649,7 @@ def GetEnvironmentStrings():
         raise_on_zero(_FreeEnvironmentStrings(ptr))
 
 def env_str_to_dict(estr):
-    return dict(s.split("=", 1) for s in estr)
+    return dict(s.split("=", 1) for s in estr if s[0] != "=")
 
 def get_env_as_dict():
     return env_str_to_dict(GetEnvironmentStrings())

@@ -98,9 +98,9 @@ def restart_usb_port(device_id):
             )
         olen = ctypes.sizeof(USB_CYCLE_PORT_PARAMS)
         params = USB_CYCLE_PORT_PARAMS(portnumber, 0)
-        bts = kernel.DeviceIoControl(hhub, ioctl, params, olen)
+        buf = kernel.DeviceIoControl(hhub, ioctl, params, olen)
 
-    result = USB_CYCLE_PORT_PARAMS.from_buffer_copy(bts)
+    result = USB_CYCLE_PORT_PARAMS.from_buffer(buf)
     ntdll.raise_failed_status(result.StatusReturned)
 
 ################################################################################
