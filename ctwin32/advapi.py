@@ -1641,3 +1641,17 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
     return res
 
 ################################################################################
+
+_EncryptFile = fun_fact(_adv.EncryptFileW, (BOOL, PWSTR))
+
+def EncryptFile(file_or_dir_name):
+    raise_on_zero(_EncryptFile(file_or_dir_name))
+
+################################################################################
+
+_DecryptFile = fun_fact(_adv.DecryptFileW, (BOOL, PWSTR, DWORD))
+
+def DecryptFile(file_or_dir_name):
+    raise_on_zero(_DecryptFile(file_or_dir_name, 0))
+
+################################################################################

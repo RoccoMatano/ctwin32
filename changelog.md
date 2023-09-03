@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.ReadProcessMemory
 - kernel.WriteProcessMemory
 - kernel.get_proc_env_as_dict
+- advapi.EncryptFile
+- advapi.DecryptFile
 
 ### Changed
 
