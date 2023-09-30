@@ -11,7 +11,7 @@ if sys.platform != "win32":
 
 ################################################################################
 
-# hack to ensure platform tag can be set from the outside
+# hack to enable platform tag being set from the outside
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("-p", "--platform-name", default="")
