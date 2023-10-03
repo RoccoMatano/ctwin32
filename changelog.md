@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - renamed wndcls.dlg_item_bytes to dlg_item_template
 - renamed wndcls.dlg_bytes to dlg_template
 
+### Fixed
+
+- ntdll.get_handles did not handle the case where new handles were created
+  between asking for the required buffer size and actually retrieving the
+  handles
+
 ## [2.3.0] - 2023-07-04
 
 ### Added

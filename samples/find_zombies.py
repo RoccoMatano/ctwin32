@@ -41,25 +41,24 @@ def get_zombies(verbose):
     is_deleting = ntdll.PROCESS_EXTENDED_BASIC_FLAGS.IsProcessDeleting
     add_lf = False
 
-    h = ntdll.NtGetNextProcess(None, PROCESS_QUERY_LIMITED_INFORMATION)
-    while h.value:
-        close_me = h.value
+    hdl = ntdll.NtGetNextProcess(None, PROCESS_QUERY_LIMITED_INFORMATION)
+    while hdl:
+        close_me = hdl
         try:
-            pebi = ntdll.get_proc_ext_basic_info(h)
+            pebi = ntdll.get_proc_ext_basic_info(hdl)
         except OSError as e:
             print(e)
-            pass
         else:
             if (pebi.Flags & is_deleting) != 0:
-                path = ntdll.proc_path_from_handle(h)
-                zombies[h.value] = path
+                path = ntdll.proc_path_from_handle(hdl)
+                zombies[hdl] = path
                 close_me = None
                 if verbose:
                     zpid = pebi.BasicInfo.UniqueProcessId
                     ppid = pebi.BasicInfo.InheritedFromUniqueProcessId
                     print(f"zpid = {zpid:5}, ppid = {ppid:5}, {path}")
                     add_lf = True
-        h = ntdll.NtGetNextProcess(h, PROCESS_QUERY_LIMITED_INFORMATION)
+        hdl = ntdll.NtGetNextProcess(hdl, PROCESS_QUERY_LIMITED_INFORMATION)
         # only keep handles of zombies open
         if close_me:
             ntdll.NtClose(close_me)

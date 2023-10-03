@@ -390,14 +390,21 @@ def get_handles(pid=-1):
     info = SystemExtendedHandleInformation
     hi = _make_handle_info(1)
     rlen = ULONG(0)
-    _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
-    hi = _make_handle_info(hi.NumberOfHandles)
-    raise_failed_status(
+    while True:
         _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
-        )
-    if pid == -1:
-        return list(hi.Handles)
-    return [h for h in hi.Handles if pid == h.UniqueProcessId]
+        hi = _make_handle_info(hi.NumberOfHandles)
+        status = _NtQuerySystemInformation(
+            info,
+            ref(hi),
+            ctypes.sizeof(hi),
+            ref(rlen)
+            )
+        if status == STATUS_INFO_LENGTH_MISMATCH:
+            continue
+        raise_failed_status(status)
+        if pid == -1:
+            return list(hi.Handles)
+        return [h for h in hi.Handles if pid == h.UniqueProcessId]
 
 ################################################################################
 
@@ -419,7 +426,7 @@ def NtGetNextProcess(current, access, attribs=0, flags=0):
     # have to ignore returned NTSTATUS, success/failure is conveyed by the
     # nxt handle
     _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
-    return nxt
+    return nxt.value
 
 ################################################################################
 
