@@ -152,7 +152,7 @@ class SYSTEMTIME(ctypes.Structure):
 
     ############################################################################
 
-    def to_datetime(self):
+    def to_datetime(self, tzinfo=None):
         return datetime(
             self.wYear,
             self.wMonth,
@@ -160,7 +160,8 @@ class SYSTEMTIME(ctypes.Structure):
             self.wHour,
             self.wMinute,
             self.wSecond,
-            self.wMilliseconds * 1000
+            self.wMilliseconds * 1000,
+            tzinfo
             )
 
     ############################################################################
