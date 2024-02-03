@@ -434,6 +434,7 @@ class SimpleWnd(BaseWnd):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
                     res = self.on_message(msg, wp, lp)
                     if msg == WM_NCDESTROY:
+                        self.del_prop(_PROP_SELF)
                         self.hwnd = None
                     return res
 
@@ -625,6 +626,7 @@ class BaseDlg(BaseWnd):
                             self.parent.send_notify(ref(ma.hdr))
                         res = self.on_message(msg, wp, lp)
                         if (msg == WM_NCDESTROY):
+                            self.del_prop(_PROP_SELF)
                             self.hwnd = None
                         return res
                 else:
