@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.5.0] - 2023-03-11
+
 ### Added
 
 - kernel.CreateIoCompletionPort
@@ -579,6 +581,7 @@ such an old version.
   existence of this change log).
 
 [Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.4.0...master
+[2.5.0]: https://github.com/RoccoMatano/ctwin32/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/RoccoMatano/ctwin32/compare/2.3.0...2.4.0
 [2.3.0]: https://github.com/RoccoMatano/ctwin32/compare/2.2.0...2.3.0
 [2.2.0]: https://github.com/RoccoMatano/ctwin32/compare/2.1.0...2.2.0
