@@ -266,6 +266,7 @@ class OVERLAPPED(ctypes.Structure):
         )
 
 POVERLAPPED = POINTER(OVERLAPPED)
+PPOVERLAPPED = POINTER(POVERLAPPED)
 
 ################################################################################
 
@@ -312,6 +313,43 @@ def DeviceIoControl(hdl, ioctl, in_ctobj, out_len):
     if num_ret := bytes_returned.value:
         return out if num_ret == olen else (CHAR * num_ret).from_buffer(out)
     return None
+
+################################################################################
+
+_CreateIoCompletionPort = fun_fact(
+    _k32.CreateIoCompletionPort,
+    (KHANDLE, HANDLE, HANDLE, ULONG_PTR, DWORD)
+    )
+
+def CreateIoCompletionPort(file, existing, key, num_threads):
+    print(f"{file=}, {existing=}, {key=}, {num_threads=}")
+    ioport = _CreateIoCompletionPort(file, existing, key, num_threads)
+    ioport.raise_on_invalid()
+    return ioport
+
+def create_io_completion_port(file, key, num_threads=0, existing=None):
+    return CreateIoCompletionPort(file, existing, key, num_threads)
+
+################################################################################
+
+_GetQueuedCompletionStatus = fun_fact(
+    _k32.GetQueuedCompletionStatus,
+    (BOOL, HANDLE, PDWORD, PULONG_PTR, PPOVERLAPPED, DWORD)
+    )
+
+def GetQueuedCompletionStatus(port, timeout):
+    num_bytes = DWORD()
+    key = ULONG_PTR()
+    ovrl = POVERLAPPED()
+    raise_on_zero(
+        _GetQueuedCompletionStatus(
+            port,
+            ref(num_bytes),
+            ref(key),
+            ref(ovrl),
+            timeout)
+            )
+    return num_bytes.value, key.value, ovrl
 
 ################################################################################
 
@@ -398,6 +436,12 @@ def GetExitCodeProcess(handle):
     exit_code = DWORD()
     raise_on_zero(_GetExitCodeProcess(handle, ref(exit_code)))
     return exit_code.value
+
+################################################################################
+
+_GetCommandLine = fun_fact(_k32.GetCommandLineW, (PWSTR,))
+def GetCommandLine():
+    return ctypes.wstring_at(_GetCommandLine())
 
 ################################################################################
 
@@ -888,6 +932,57 @@ def create_process(
         curdir,
         startup_info
         )
+
+################################################################################
+
+_CreateJobObject = fun_fact(
+    _k32.CreateJobObjectW,
+    (KHANDLE, PSECURITY_ATTRIBUTES, PWSTR)
+    )
+
+def CreateJobObject(attrib=None, name=None):
+    attrib = None if attrib is None else ref(attrib)
+    job = _CreateJobObject(attrib, name)
+    job.raise_on_invalid()
+    return job
+
+################################################################################
+
+_AssignProcessToJobObject = fun_fact(
+    _k32.AssignProcessToJobObject,
+    (BOOL, HANDLE, HANDLE)
+    )
+
+def AssignProcessToJobObject(job, proc):
+    raise_on_zero(_AssignProcessToJobObject(job, proc))
+
+################################################################################
+
+class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(ctypes.Structure):
+    _fields_ = (
+        ("CompletionKey", PVOID),
+        ("CompletionPort", HANDLE),
+        )
+
+################################################################################
+
+_SetInformationJobObject = fun_fact(
+    _k32.SetInformationJobObject,
+    (BOOL, HANDLE, INT, PVOID, DWORD)
+    )
+
+def SetInformationJobObject(job, cls, ct_info):
+    size = ctypes.sizeof(ct_info)
+    raise_on_zero(_SetInformationJobObject(job, cls, ref(ct_info), size))
+
+################################################################################
+
+_ResumeThread = fun_fact(_k32.ResumeThread, (DWORD, HANDLE))
+
+def ResumeThread(thdl):
+    scnt = _ResumeThread(thdl)
+    raise_if(scnt == 0xffffffff)
+    return scnt
 
 ################################################################################
 

@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- kernel.CreateIoCompletionPort
+- kernel.create_io_completion_port
+- kernel.GetQueuedCompletionStatus
+- kernel.GetCommandLine
+- kernel.CreateJobObject
+- kernel.AssignProcessToJobObject
+- kernel.SetInformationJobObject
+- kernel.ResumeThread
+- sample wait_for_job.py
+
 ## [2.4.0] - 2023-10-03
 
 ### Added
