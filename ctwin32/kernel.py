@@ -322,7 +322,6 @@ _CreateIoCompletionPort = fun_fact(
     )
 
 def CreateIoCompletionPort(file, existing, key, num_threads):
-    print(f"{file=}, {existing=}, {key=}, {num_threads=}")
     ioport = _CreateIoCompletionPort(file, existing, key, num_threads)
     ioport.raise_on_invalid()
     return ioport

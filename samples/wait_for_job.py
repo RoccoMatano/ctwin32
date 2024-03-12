@@ -22,6 +22,9 @@
 #
 ################################################################################
 
+# This example shows how to wait for a job object. I.e. waiting until all
+# processes in this job stopped executing.
+
 import sys
 from ctwin32 import (
     kernel,
@@ -36,7 +39,6 @@ from ctwin32 import (
 
 def create_job(arglist):
     arglist = ["cmd", "/c", *arglist] if sys.stdout is not None else arglist
-    print(f"{arglist=}")
     job = kernel.CreateJobObject()
     with kernel.create_process(arglist, CREATE_SUSPENDED) as proc_info:
         kernel.AssignProcessToJobObject(job, proc_info.hProcess)
