@@ -144,8 +144,14 @@ def cmdline_from_args(args):
 
 ################################################################################
 
-def ns_from_struct(cts):
-    return _namespace(**{f: getattr(cts, f) for f, *_ in cts._fields_})
+def ns_from_struct(ctypes_struct):
+    # hack the class name for nicer repr
+    class HackedClassName(_namespace):
+        pass
+    HackedClassName.__name__ = type(ctypes_struct).__name__
+    return HackedClassName(
+        **{f: getattr(ctypes_struct, f) for f, *_ in ctypes_struct._fields_}
+        )
 
 ################################################################################
 
@@ -7639,6 +7645,9 @@ ISOLATIONPOLICY_MANIFEST_RESOURCE_ID = PWSTR(4)
 ISOLATIONPOLICY_BROWSER_MANIFEST_RESOURCE_ID = PWSTR(5)
 MINIMUM_RESERVED_MANIFEST_RESOURCE_ID = PWSTR(1)
 MAXIMUM_RESERVED_MANIFEST_RESOURCE_ID = PWSTR(16)
+
+IMAGE_DOS_SIGNATURE = 0x5A4D
+IMAGE_NT_SIGNATURE = 0x00004550
 
 IMAGE_FILE_MACHINE_UNKNOWN = 0
 IMAGE_FILE_MACHINE_TARGET_HOST = 0x0001
