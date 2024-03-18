@@ -66,13 +66,16 @@ select = [
     ]
 ignore = [
     "COM812",   # Trailing comma missing
+    "COM819",   # prohibited-trailing-comma
     "ISC003",   # Explicitly concatenated string should be implicitly concatenated
+    "PLW1510",  # `subprocess.run` without explicit `check` argument
     "PTH123",   # open() should be replaced by Path.open()
     "RSE102",   # Unnecessary parentheses on raised exception
     "RET505",   # Unnecessary {branch} after return statement
     "RET508",   # Unnecessary {branch} after break statement
     "SIM102",   # Use a single if statement instead of nested if statements
     "SIM117",   # Use a single instead of nested `with` statements
+    "UP015",    # redundant-open-modes
     "UP039",    # unnecessary-class-parentheses
     "RUF013",   # implicit-optional -> no f..g typing!!!
     ]
