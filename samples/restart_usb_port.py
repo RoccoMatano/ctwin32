@@ -34,9 +34,7 @@ from ctwin32 import (
     cfgmgr,
     kernel,
     ntdll,
-    setupapi,
     CTL_CODE,
-    ERROR_PATH_NOT_FOUND,
     FILE_ANY_ACCESS,
     FILE_DEVICE_UNKNOWN,
     METHOD_BUFFERED,
@@ -75,14 +73,10 @@ def restart_usb_port(device_id):
     # Step 3: the USB hub is the parent device
     hub = cfgmgr.CM_Get_Parent(devinst)
 
-    # Step 4: scan all USB hubs for this devinst to get its device path
+    # Step 4: request the USB hub's device interface
+    didstr = cfgmgr.CM_Get_Device_ID(hub)
     guid = GUID("f18a0e88-c30c-11d0-8815-00a0c906bed8")
-    for info_set, did in setupapi.enum_dev_interfaces(guid):
-        path, deinda = setupapi.SetupDiGetDeviceInterfaceDetail(info_set, did)
-        if deinda.DevInst == hub:
-            break
-    else:
-        raise ctypes.WinError(ERROR_PATH_NOT_FOUND)
+    path = cfgmgr.CM_Get_Device_Interface_List(guid, didstr)[0]
 
     # Step 5: open the hub
     with kernel.create_file(path) as hhub:

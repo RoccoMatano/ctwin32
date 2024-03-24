@@ -38,9 +38,12 @@ from .wtypes import (
 from . import (
     ref,
     fun_fact,
+    multi_str_from_str,
     MAX_DEVICE_ID_LEN,
     MAX_PATH,
+    CM_GET_DEVICE_INTERFACE_LIST_PRESENT,
     CM_LOCATE_DEVNODE_NORMAL,
+    CR_BUFFER_SMALL,
     CR_SUCCESS,
     ERROR_FLOPPY_UNKNOWN_ERROR,
     ERROR_CURRENT_DIRECTORY,
@@ -196,5 +199,68 @@ def CM_Get_DevNode_Registry_Property(devinst, prop):
             )
         )
     return registry_to_py(reg_type.value, buf.raw[:req_size.value])
+
+################################################################################
+
+_CM_Get_Device_Interface_List_Size = fun_fact(
+    _cfg.CM_Get_Device_Interface_List_SizeW, (
+        DWORD,
+        PULONG,
+        PGUID,
+        PWSTR,
+        ULONG
+        )
+    )
+
+def CM_Get_Device_Interface_List_Size(
+    guid,
+    didstr,
+    flags=CM_GET_DEVICE_INTERFACE_LIST_PRESENT
+    ):
+    size = ULONG()
+    raise_on_cr(
+        _CM_Get_Device_Interface_List_Size(
+            ref(size),
+            ref(guid),
+            didstr,
+            flags
+            )
+        )
+    return size.value
+
+################################################################################
+
+_CM_Get_Device_Interface_List = fun_fact(
+    _cfg.CM_Get_Device_Interface_ListW, (
+        DWORD,
+        PGUID,
+        PWSTR,
+        PWSTR,
+        ULONG,
+        ULONG
+        )
+    )
+
+def CM_Get_Device_Interface_List(
+    guid,
+    didstr,
+    flags=CM_GET_DEVICE_INTERFACE_LIST_PRESENT
+    ):
+    res = CR_BUFFER_SMALL
+    while res == CR_BUFFER_SMALL:
+        size = ULONG(CM_Get_Device_Interface_List_Size(guid, didstr, flags))
+        iface = ctypes.create_unicode_buffer(size.value)
+        res = _CM_Get_Device_Interface_List(
+            ref(guid),
+            didstr,
+            iface,
+            size,
+            flags
+            )
+        if res == CR_SUCCESS:
+            return multi_str_from_str(iface.value)
+        if res != CR_BUFFER_SMALL:
+            raise_on_cr(res)
+    return []
 
 ################################################################################

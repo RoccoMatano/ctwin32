@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- cfgmgr.CM_Get_Device_Interface_List_Size
+- cfgmgr.CM_Get_Device_Interface_List
+
+### Changed
+
+- let sample 'restart_usb_port.py' use cfgmgr.CM_Get_Device_Interface_List
+  instead of setupapi.SetupDiGetDeviceInterfaceDetail
+
 ## [2.5.0] - 2023-03-11
 
 ### Added
