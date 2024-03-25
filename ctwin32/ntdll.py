@@ -29,6 +29,7 @@ from collections import defaultdict as _defdict
 import ctypes
 from .wtypes import (
     BOOLEAN,
+    BYTE,
     FILETIME,
     HANDLE,
     LARGE_INTEGER,
@@ -131,6 +132,35 @@ class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
         ("HandleCount", ULONG),
         ("SessionId", ULONG),
         ("UniqueProcessKey", UINT_PTR),
+        )
+
+################################################################################
+
+class SYSTEM_BASIC_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("Reserved", ULONG),
+        ("TimerResolution", ULONG),
+        ("PageSize", ULONG),
+        ("NumberOfPhysicalPages", ULONG),
+        ("LowestPhysicalPageNumber", ULONG),
+        ("HighestPhysicalPageNumber", ULONG),
+        ("AllocationGranularity", ULONG),
+        ("MinimumUserModeAddress", ULONG_PTR),
+        ("MaximumUserModeAddress", ULONG_PTR),
+        ("ActiveProcessorsAffinityMask", ULONG_PTR),
+        ("NumberOfProcessors", BYTE),
+        )
+
+################################################################################
+
+class SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("IdleTime", LARGE_INTEGER),
+        ("KernelTime", LARGE_INTEGER),
+        ("UserTime", LARGE_INTEGER),
+        ("DpcTime", LARGE_INTEGER),
+        ("InterruptTime", LARGE_INTEGER),
+        ("InterruptCount", ULONG),
         )
 
 ################################################################################

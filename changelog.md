@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - cfgmgr.CM_Get_Device_Interface_List_Size
 - cfgmgr.CM_Get_Device_Interface_List
+- ntdll.SYSTEM_BASIC_INFORMATION
+- ntdll.SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
+- sample cnt_irq.py
 
 ### Changed
 
