@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - ntdll.SYSTEM_BASIC_INFORMATION
 - ntdll.SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
 - sample cnt_irq.py
+- gdi.SetBkColor
+- gdi.ExtTextOut
+- gdi.fill_solid_rect
 
 ### Changed
 
@@ -593,7 +596,7 @@ such an old version.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
-[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.4.0...master
+[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.5.0...master
 [2.5.0]: https://github.com/RoccoMatano/ctwin32/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/RoccoMatano/ctwin32/compare/2.3.0...2.4.0
 [2.3.0]: https://github.com/RoccoMatano/ctwin32/compare/2.2.0...2.3.0

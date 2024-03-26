@@ -26,12 +26,16 @@ import ctypes
 from .wtypes import (
     BOOL,
     BYTE,
+    DWORD,
     HANDLE,
     INT,
     LONG,
+    PINT,
     PLOGFONT,
     POINTER,
+    PRECT,
     PWSTR,
+    UINT,
     WCHAR,
     )
 from . import (
@@ -39,6 +43,7 @@ from . import (
     raise_if,
     raise_on_zero,
     fun_fact,
+    ETO_OPAQUE,
     HGDI_ERROR,
     )
 
@@ -129,9 +134,38 @@ def SetBkMode(hdc, mode):
 
 ################################################################################
 
+_SetBkColor = fun_fact(_gdi.SetBkColor, (DWORD, HANDLE, DWORD))
+
+def SetBkColor(hdc, colorref):
+    previous = _SetBkColor(hdc, colorref)
+    raise_on_zero(previous)
+    return previous
+
+################################################################################
+
 _TextOut = fun_fact(_gdi.TextOutW, (BOOL, HANDLE, INT, INT, PWSTR, INT))
 
 def TextOut(hdc, x, y, text):
     raise_on_zero(_TextOut(hdc, x, y, text, len(text)))
+
+################################################################################
+
+_ExtTextOut = fun_fact(
+    _gdi.ExtTextOutW,
+    (BOOL, HANDLE, INT, INT, UINT, PRECT, PWSTR, UINT, PINT)
+    )
+
+def ExtTextOut(hdc, x, y, opt, rect, text, pDX=None):
+    span = len(text) if text else 0
+    raise_on_zero(
+        _ExtTextOut(hdc, x, y, opt, ref(rect), text, span, pDX)
+        )
+
+################################################################################
+
+def fill_solid_rect(hdc, rect, colorref):
+    oldclr = SetBkColor(hdc, colorref)
+    ExtTextOut(hdc, 0, 0, ETO_OPAQUE, rect, None, None)
+    SetBkColor(hdc, oldclr)
 
 ################################################################################
