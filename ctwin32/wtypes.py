@@ -127,8 +127,20 @@ class FILETIME(ctypes.Structure):
     def __int__(self):
         return self.dwLowDateTime | (self.dwHighDateTime << 32)
 
+    def __add__(self, other):
+        return self.__class__(int(self) + int(other))
+
+    def __sub__(self, other):
+        return self.__class__(int(self) - int(other))
+
     def __iadd__(self, other):
-        i64 = int(self) + other
+        i64 = int(self) + int(other)
+        self.dwLowDateTime = i64 & 0xffffffff
+        self.dwHighDateTime = i64 >> 32
+        return self
+
+    def __isub__(self, other):
+        i64 = int(self) - int(other)
         self.dwLowDateTime = i64 & 0xffffffff
         self.dwHighDateTime = i64 >> 32
         return self

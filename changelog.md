@@ -17,11 +17,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - gdi.SetBkColor
 - gdi.ExtTextOut
 - gdi.fill_solid_rect
+- kernel.QueryInformationJobObject
+- sample timeit.py
 
 ### Changed
 
 - let sample 'restart_usb_port.py' use cfgmgr.CM_Get_Device_Interface_List
   instead of setupapi.SetupDiGetDeviceInterfaceDetail
+- support for addition and subtraction of FILETIME
 
 ## [2.5.0] - 2023-03-11
 

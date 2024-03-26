@@ -36,6 +36,7 @@ from .wtypes import (
     FILETIME,
     HANDLE,
     INT,
+    LARGE_INTEGER,
     PBOOL,
     PBYTE,
     PDWORD,
@@ -963,6 +964,18 @@ class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(ctypes.Structure):
         ("CompletionPort", HANDLE),
         )
 
+class JOBOBJECT_BASIC_ACCOUNTING_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("TotalUserTime", LARGE_INTEGER),
+        ("TotalKernelTime", LARGE_INTEGER),
+        ("ThisPeriodTotalUserTime", LARGE_INTEGER),
+        ("ThisPeriodTotalKernelTime", LARGE_INTEGER),
+        ("TotalPageFaultCount", DWORD),
+        ("TotalProcesses", DWORD),
+        ("ActiveProcesses", DWORD),
+        ("TotalTerminatedProcesses", DWORD),
+    )
+
 ################################################################################
 
 _SetInformationJobObject = fun_fact(
@@ -973,6 +986,25 @@ _SetInformationJobObject = fun_fact(
 def SetInformationJobObject(job, cls, ct_info):
     size = ctypes.sizeof(ct_info)
     raise_on_zero(_SetInformationJobObject(job, cls, ref(ct_info), size))
+
+################################################################################
+
+_QueryInformationJobObject = fun_fact(
+    _k32.QueryInformationJobObject,
+    (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
+    )
+
+def QueryInformationJobObject(job, cls, res_obj):
+    raise_on_zero(
+        _QueryInformationJobObject(
+            job,
+            cls,
+            ref(res_obj),
+            ctypes.sizeof(res_obj),
+            None
+            )
+        )
+    return res_obj
 
 ################################################################################
 
