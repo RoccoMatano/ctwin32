@@ -90,7 +90,8 @@ def fun_fact(function, signature):
 ################################################################################
 
 def multi_str_from_str(_str):
-    _str = _str.rstrip("\0")
+    idx = _str.find("\0\0")
+    _str = _str[:idx] if idx != -1 else _str.rstrip("\0")
     return [] if not _str else _str.split("\0")
 
 ################################################################################

@@ -156,26 +156,26 @@ _CreateEnvironmentBlock = fun_fact(
     _ue.CreateEnvironmentBlock, (BOOL, PPVOID, HANDLE, BOOL)
     )
 
-def _env_block_from_token(token):
+def _env_block_from_token(token, inherit):
     ptr = PVOID()
-    raise_on_zero(_CreateEnvironmentBlock(ref(ptr), token, False))
+    raise_on_zero(_CreateEnvironmentBlock(ref(ptr), token, inherit))
     try:
         return multi_str_from_addr(ptr.value)
     finally:
         raise_on_zero(_DestroyEnvironmentBlock(ptr))
 
-def CreateEnvironmentBlock(token=None):
+def CreateEnvironmentBlock(token=None, inherit=False):
     if token is None:
         with advapi.OpenProcessToken(
                 kernel.GetCurrentProcess(),
                 TOKEN_READ
                 ) as t:
-            return _env_block_from_token(t)
+            return _env_block_from_token(t, inherit)
     else:
-        return _env_block_from_token(token)
+        return _env_block_from_token(token, inherit)
 
-def create_env_block_as_dict(token=None):
-    return kernel.env_str_to_dict(CreateEnvironmentBlock(token))
+def create_env_block_as_dict(token=None, inherit=False):
+    return kernel.env_str_to_dict(CreateEnvironmentBlock(token, inherit))
 
 ################################################################################
 
