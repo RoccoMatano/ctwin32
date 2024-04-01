@@ -26,6 +26,7 @@ from types import SimpleNamespace as _namespace
 
 import ctypes
 from .wtypes import (
+    string_buffer,
     BOOL,
     BYTE,
     CallbackContext,
@@ -120,7 +121,7 @@ _GetWindowText = fun_fact(_usr.GetWindowTextW, (INT, HWND, PWSTR, INT))
 
 def GetWindowText(hwnd):
     slen = GetWindowTextLength(hwnd)
-    buf = ctypes.create_unicode_buffer(slen + 1)
+    buf = string_buffer(slen + 1)
     res = _GetWindowText(hwnd, buf, slen + 1)
     raise_if(res != slen)
     return buf.value
@@ -142,7 +143,7 @@ def GetClassName(hwnd):
     size = 32
     while True:
         size *= 2
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
         res = _GetClassName(hwnd, buf, buf._length_)
         raise_on_zero(res)
         if res != size - 1:
@@ -912,7 +913,7 @@ def GetDlgItemText(dlg, id):
     res = length
     while res >= length:
         length *= 2
-        buf = ctypes.create_unicode_buffer(length)
+        buf = string_buffer(length)
         kernel.SetLastError(0)
         res = _GetDlgItemText(dlg, id, buf, length)
         raise_on_err(kernel.GetLastError())
@@ -1200,7 +1201,7 @@ _GetClipboardFormatName = fun_fact(
 
 def GetClipboardFormatName(fmt_atom):
     bufsize = 1024
-    buf = ctypes.create_unicode_buffer(bufsize)
+    buf = string_buffer(bufsize)
     if _GetClipboardFormatName(fmt_atom, buf, bufsize) == 0:
         raise ctypes.WinError()
     return buf.value
@@ -1212,7 +1213,7 @@ EnumClipboardFormats = fun_fact(_usr.EnumClipboardFormats, (DWORD, DWORD))
 ################################################################################
 
 def txt_to_clip(txt, hwnd=None):
-    buf = ctypes.create_unicode_buffer(txt)
+    buf = string_buffer(txt)
     size = ctypes.sizeof(buf)
     copied = False
     hcopy = kernel.GlobalAlloc(GMEM_MOVEABLE, size)
@@ -1263,7 +1264,7 @@ def GetKeyNameText(lparam, expect_empty=False):
     size = ret = 32
     while ret >= size - 1:
         size *= 2
-        key_name = ctypes.create_unicode_buffer(size)
+        key_name = string_buffer(size)
         ret = _GetKeyNameText(lparam, key_name, size)
         raise_if(not ret and not expect_empty)
     return key_name.value

@@ -25,6 +25,8 @@
 import re
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     BOOL,
     DWORD,
     GUID,
@@ -213,7 +215,7 @@ def SetupDiClassNameFromGuid(guid):
     guid = GUID(guid)  # need ctypes instance
     req_size = DWORD(0)
     _SetupDiClassNameFromGuid(ref(guid), None, 0, ref(req_size))
-    name = ctypes.create_unicode_buffer(req_size.value)
+    name = string_buffer(req_size.value)
     raise_on_zero(
         _SetupDiClassNameFromGuid(
             ref(guid),
@@ -256,7 +258,7 @@ _SetupDiGetDeviceInstanceId = fun_fact(
 def SetupDiGetDeviceInstanceId(info_set, deinda):
     req_size = DWORD()
     _SetupDiGetDeviceInstanceId(info_set, deinda, None, 0, ref(req_size))
-    idstr = ctypes.create_unicode_buffer(req_size.value)
+    idstr = string_buffer(req_size.value)
     raise_on_zero(
         _SetupDiGetDeviceInstanceId(
             info_set,
@@ -485,7 +487,7 @@ def SetupDiGetDeviceRegistryProperty(info_set, deinda, prop):
         0,
         ref(req_size)
         )
-    buf = ctypes.create_string_buffer(req_size.value)
+    buf = byte_buffer(req_size.value)
     raise_on_zero(
         _SetupDiGetDeviceRegistryProperty(
             info_set,

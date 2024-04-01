@@ -76,6 +76,30 @@ HANDLE = HINSTANCE = HMODULE = HWND = ctypes.c_void_p
 
 ################################################################################
 
+# byte and string buffers
+
+def byte_buffer(init, size=None):
+    if isinstance(init, bytes):
+        if size is None:
+            size = 1 + len(init)
+        (buf := (CHAR * size)()).value = init
+        return buf
+    elif isinstance(init, int):
+        return (CHAR * init)()
+    raise TypeError(init)
+
+def string_buffer(init, size=None):
+    if isinstance(init, str):
+        if size is None:
+            size = 1 + sum(2 if ord(c) > 0xFFFF else 1 for c in init)
+        (buf := (WCHAR * size)()).value = init
+        return buf
+    elif isinstance(init, int):
+        return (WCHAR * init)()
+    raise TypeError(init)
+
+################################################################################
+
 # some structure definitions
 
 class GUID(ULONG * 4):         # using ULONG for correct alignment

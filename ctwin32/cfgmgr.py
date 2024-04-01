@@ -24,6 +24,8 @@
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     DWORD,
     GUID,
     INT,
@@ -69,7 +71,7 @@ _CM_Get_Device_ID = fun_fact(
     )
 
 def CM_Get_Device_ID(devinst):
-    idstr = ctypes.create_unicode_buffer(MAX_DEVICE_ID_LEN)
+    idstr = string_buffer(MAX_DEVICE_ID_LEN)
     raise_on_cr(_CM_Get_Device_ID(devinst, idstr, MAX_DEVICE_ID_LEN, 0))
     return idstr.value
 
@@ -94,7 +96,7 @@ _CM_Enumerate_Enumerators = fun_fact(
     )
 
 def CM_Enumerate_Enumerators(idx):
-    enum_str = ctypes.create_unicode_buffer(MAX_DEVICE_ID_LEN)
+    enum_str = string_buffer(MAX_DEVICE_ID_LEN)
     size = ULONG(MAX_DEVICE_ID_LEN)
     raise_on_cr(_CM_Enumerate_Enumerators(idx, enum_str, ref(size), 0))
     return enum_str.value
@@ -136,7 +138,7 @@ _CM_Request_Device_Eject = fun_fact(
 
 def CM_Request_Device_Eject(devinst):
     veto_type = INT()
-    veto_name = ctypes.create_unicode_buffer(MAX_PATH)
+    veto_name = string_buffer(MAX_PATH)
     err = _CM_Request_Device_Eject(
         devinst,
         ref(veto_type),
@@ -187,7 +189,7 @@ def CM_Get_DevNode_Registry_Property(devinst, prop):
         ref(req_size),
         0
         )
-    buf = ctypes.create_string_buffer(req_size.value)
+    buf = byte_buffer(req_size.value)
     raise_on_cr(
         _CM_Get_DevNode_Registry_Property(
             devinst,
@@ -249,7 +251,7 @@ def CM_Get_Device_Interface_List(
     res = CR_BUFFER_SMALL
     while res == CR_BUFFER_SMALL:
         size = ULONG(CM_Get_Device_Interface_List_Size(guid, didstr, flags))
-        iface = ctypes.create_unicode_buffer(size.value)
+        iface = string_buffer(size.value)
         res = _CM_Get_Device_Interface_List(
             ref(guid),
             didstr,

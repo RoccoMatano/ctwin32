@@ -24,6 +24,7 @@
 
 import ctypes
 from .wtypes import (
+    string_buffer,
     BOOL,
     DWORD,
     HANDLE,
@@ -85,7 +86,7 @@ def GetMappedFileName(hdl, addr):
     length = size
     while length == size:
         size *= 2
-        name = ctypes.create_unicode_buffer(size)
+        name = string_buffer(size)
         length = _GetMappedFileName(hdl, addr, name, size)
     return ntdll._resolve_device_prefix(name.value)
 
@@ -100,7 +101,7 @@ def GetModuleFileNameEx(hdl, mod):
     length = size
     while length == size:
         size *= 2
-        name = ctypes.create_unicode_buffer(size)
+        name = string_buffer(size)
         length = _GetModuleFileNameEx(hdl, mod, name, size)
         raise_on_zero(length)
     return name.value

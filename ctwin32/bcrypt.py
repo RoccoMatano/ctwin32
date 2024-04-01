@@ -24,6 +24,8 @@
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     ENDIANNESS,
     HANDLE,
     NTSTATUS,
@@ -212,7 +214,7 @@ _BCryptGetProperty = fun_fact(
 def BCryptGetProperty(obj, name):
     size = ULONG()
     raise_failed_status(_BCryptGetProperty(obj, name, None, 0, ref(size), 0))
-    buf = ctypes.create_string_buffer(size.value)
+    buf = byte_buffer(size.value)
     raise_failed_status(_BCryptGetProperty(obj, name, buf, size, ref(size), 0))
     return bytes(buf)
 
@@ -239,7 +241,7 @@ def BCryptSetProperty(obj, name, value):
     if isinstance(value, int):
         buf = value.to_bytes(((value.bit_length() + 31) // 32) * 4, ENDIANNESS)
     elif isinstance(value, str):
-        buf = bytes(ctypes.create_unicode_buffer(value))
+        buf = bytes(string_buffer(value))
     else:
         buf = bytes(value)
     raise_failed_status(_BCryptSetProperty(obj, name, buf, len(buf), 0))
@@ -291,7 +293,7 @@ _BCryptFinishHash = fun_fact(
     )
 
 def BCryptFinishHash(bhash, dig_size):
-    buf = ctypes.create_string_buffer(dig_size)
+    buf = byte_buffer(dig_size)
     raise_failed_status(_BCryptFinishHash(bhash, buf, len(buf), 0))
     return bytes(buf)
 
@@ -310,7 +312,7 @@ class BCryptHash:
             self.balg = BCryptOpenAlgorithmProvider(alg)
             self.dig_size = get_property_ulong(self.balg, BCRYPT_HASH_LENGTH)
             obj_size = get_property_ulong(self.balg, BCRYPT_OBJECT_LENGTH)
-            self.obj_buf = ctypes.create_string_buffer(obj_size)
+            self.obj_buf = byte_buffer(obj_size)
             self.hash = BCryptCreateHash(self.balg, self.obj_buf)
         except OSError:
             self.close()
@@ -382,7 +384,7 @@ def BCryptExportKey(key, btype, exp_key=None):
     raise_failed_status(
         _BCryptExportKey(key, exp_key, btype, None, 0, ref(size), 0)
         )
-    blob = ctypes.create_string_buffer(size.value)
+    blob = byte_buffer(size.value)
     raise_failed_status(
         _BCryptExportKey(key, exp_key, btype, blob, size, ref(size), 0)
         )
@@ -426,7 +428,7 @@ _BCryptGenerateSymmetricKey = fun_fact(
 def BCryptGenerateSymmetricKey(balg, secret):
     ksize = get_property_ulong(balg, BCRYPT_OBJECT_LENGTH)
     key = BCRYPT_KEY()
-    key.buf = ctypes.create_string_buffer(ksize)
+    key.buf = byte_buffer(ksize)
     raise_failed_status(
         _BCryptGenerateSymmetricKey(
             balg,
@@ -492,7 +494,7 @@ def BCryptSignHash(key, digest, flags=0):
             flags
             )
         )
-    signature = ctypes.create_string_buffer(size.value)
+    signature = byte_buffer(size.value)
     raise_failed_status(
         _BCryptSignHash(
             key,
@@ -570,7 +572,7 @@ def BCryptEncrypt(key, input, iv=None, flags=0):
             flags
             )
         )
-    output = ctypes.create_string_buffer(size.value)
+    output = byte_buffer(size.value)
     raise_failed_status(
         _BCryptEncrypt(
             key,
@@ -621,7 +623,7 @@ def BCryptDecrypt(key, input, iv=None, flags=0):
             flags
             )
         )
-    output = ctypes.create_string_buffer(size.value)
+    output = byte_buffer(size.value)
     raise_failed_status(
         _BCryptDecrypt(
             key,

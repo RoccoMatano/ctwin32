@@ -28,6 +28,8 @@ from collections import defaultdict as _defdict
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     BYTE,
     DWORD,
     GUID,
@@ -313,7 +315,7 @@ def get_host_interfaces(version=4, include_loopback=False):
     blen = ULONG(16 * 1024)
     error = ERROR_BUFFER_OVERFLOW
     while error == ERROR_BUFFER_OVERFLOW:
-        buffer = ctypes.create_string_buffer(blen.value)
+        buffer = byte_buffer(blen.value)
         p_addr = ctypes.cast(buffer, PIP_ADAPTER_ADDRESSES)
         error = _GetAdaptersAddresses(fam, flags, None, p_addr, ref(blen))
     raise_on_err(error)
@@ -410,7 +412,7 @@ IF_MAX_STRING_SIZE = 256
 def ConvertInterfaceLuidToAlias(luid):
     luid = ULONGLONG(luid)
     size = SIZE_T(IF_MAX_STRING_SIZE + 1)
-    alias = ctypes.create_unicode_buffer(size.value)
+    alias = string_buffer(size.value)
     raise_on_err(_ConvertInterfaceLuidToAlias(ref(luid), alias, size))
     return alias.value
 
@@ -424,7 +426,7 @@ _ConvertInterfaceLuidToName = fun_fact(
 def ConvertInterfaceLuidToName(luid):
     luid = ULONGLONG(luid)
     size = SIZE_T(IF_MAX_STRING_SIZE + 1)
-    name = ctypes.create_unicode_buffer(size.value)
+    name = string_buffer(size.value)
     raise_on_err(_ConvertInterfaceLuidToName(ref(luid), name, size))
     return name.value
 

@@ -29,6 +29,7 @@ from ctwin32 import (
     user,
     advapi,
     shell,
+    wtypes,
     HWND_BROADCAST,
     WM_SETTINGCHANGE,
     SMTO_NORMAL,
@@ -68,7 +69,7 @@ def is_persistent_env_var(name, system=False):
 ################################################################################
 
 def broadcast_env_change():
-    estr = ctypes.create_unicode_buffer("Environment")
+    estr = wtypes.string_buffer("Environment")
     user.SendMessageTimeout(
         HWND_BROADCAST,
         WM_SETTINGCHANGE,

@@ -24,6 +24,7 @@
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
     BOOL,
     DWORD,
     PDWORD,
@@ -85,7 +86,7 @@ _GetFileVersionInfo = fun_fact(
 def GetFileVersionInfo(fname, size=0):
     if size == 0:
         size = GetFileVersionInfoSize(fname)
-    buf = ctypes.create_string_buffer(size)
+    buf = byte_buffer(size)
     raise_on_zero(_GetFileVersionInfo(fname, 0, size, buf))
     return buf.raw
 

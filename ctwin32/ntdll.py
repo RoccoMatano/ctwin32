@@ -28,6 +28,8 @@ from collections import defaultdict as _defdict
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     BOOLEAN,
     BYTE,
     FILETIME,
@@ -310,7 +312,7 @@ def _var_size_proc_info(proc_handle, proc_info):
     # cannot be queried for the required size.
     size = ULONG(0)
     NtQueryInformationProcess(proc_handle, proc_info, 0, size, ref(size))
-    buff = ctypes.create_string_buffer(size.value)
+    buff = byte_buffer(size.value)
     raise_failed_status(
         NtQueryInformationProcess(proc_handle, proc_info, buff, size, ref(size))
         )
@@ -340,7 +342,7 @@ def enum_processes():
     while status == STATUS_INFO_LENGTH_MISMATCH:
         size = ULONG(0)
         NtQuerySystemInformation(SystemProcessInformation, 0, 0, ref(size))
-        buf = ctypes.create_string_buffer(size.value)
+        buf = byte_buffer(size.value)
         status = NtQuerySystemInformation(
             SystemProcessInformation,
             ref(buf),
@@ -383,7 +385,7 @@ def proc_path_from_pid(pid):
     elif pid == 4:
         return "system"
 
-    buf = ctypes.create_unicode_buffer(512)
+    buf = string_buffer(512)
     size = ctypes.sizeof(SYSTEM_PROCESS_ID_INFORMATION)
     spii = SYSTEM_PROCESS_ID_INFORMATION()
     spii.ProcessId = ctypes.cast(pid, HANDLE)
@@ -402,7 +404,7 @@ def proc_path_from_pid(pid):
             break
 
         # Required length is stored in MaximumLength.
-        buf = ctypes.create_unicode_buffer(spii.ImageName.MaximumLength)
+        buf = string_buffer(spii.ImageName.MaximumLength)
         spii.ImageName.Buffer = ctypes.addressof(buf)
 
     raise_failed_status(status)
@@ -530,7 +532,7 @@ def get_directory_info(hdir, restart_scan):
     iosb = IO_STATUS_BLOCK()
     bsize = 256
     while True:
-        buf = ctypes.create_string_buffer(bsize)
+        buf = byte_buffer(bsize)
         stat = _NtQueryDirectoryFile(
             hdir,
             None,
@@ -613,9 +615,9 @@ def NtPowerInformation(pwr_info, in_bytes, out_len):
         iptr, ilen = ref(in_bytes), len(in_bytes)
 
     if out_len is None or out_len == 0:
-        out, optr, olen = ctypes.create_string_buffer(0), None, 0
+        out, optr, olen = byte_buffer(0), None, 0
     else:
-        out = ctypes.create_string_buffer(out_len)
+        out = byte_buffer(out_len)
         optr, olen = ref(out), out_len
 
     raise_failed_status(_NtPowerInformation(pwr_info, iptr, ilen, optr, olen))

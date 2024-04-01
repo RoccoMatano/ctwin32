@@ -27,6 +27,8 @@ from enum import IntEnum as _int_enum
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     BOOL,
     BYTE,
     CallbackContext,
@@ -296,7 +298,7 @@ def DeviceIoControl(hdl, ioctl, in_ctobj, out_len):
     if out_len is None or out_len == 0:
         out, optr, olen = None, None, 0
     else:
-        out = ctypes.create_string_buffer(out_len)
+        out = byte_buffer(out_len)
         optr, olen = ref(out), out_len
 
     raise_on_zero(
@@ -390,7 +392,7 @@ def GetModuleFileName(hmod):
     res = size
     while res >= size:
         size *= 2
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
         res = _GetModuleFileName(hmod, buf, size)
     raise_on_zero(res)
     return buf.value
@@ -451,7 +453,7 @@ _QueryDosDevice = fun_fact(
 
 def QueryDosDevice(device_name):
     size = 512
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     while True:
         if res := _QueryDosDevice(device_name, buf, size):
             if device_name is None:
@@ -459,7 +461,7 @@ def QueryDosDevice(device_name):
             return buf.value[:res]
         raise_if(GetLastError() != ERROR_INSUFFICIENT_BUFFER)
         size *= 2
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
 
 ################################################################################
 
@@ -591,11 +593,11 @@ _GetPrivateProfileSectionNames = fun_fact(
 
 def GetPrivateProfileSectionNames(filename):
     size = 512
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     res = _GetPrivateProfileSectionNames(buf, size, filename)
     while res == size - 2:
         size *= 2
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
         res = _GetPrivateProfileSectionNames(buf, size, filename)
     return multi_str_from_ubuf(buf, res)
 
@@ -608,11 +610,11 @@ _GetPrivateProfileSection = fun_fact(
 
 def GetPrivateProfileSection(secname, filename):
     size = 512
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     res = _GetPrivateProfileSection(secname, buf, size, filename)
     while res == size - 2:
         size *= 2
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
         res = _GetPrivateProfileSection(secname, buf, size, filename)
     entries = multi_str_from_ubuf(buf, res)
     d = _collections.OrderedDict()
@@ -644,7 +646,7 @@ def WritePrivateProfileSection(secname, secdata, filename):
     #    embedded nulls if the 'size' output parameter is NULL."
     # That's why we need to detour 'secdata' through a unicode buffer. Since
     # py310 that would no longer be necessary (ctypes was fixed).
-    buf = ctypes.create_unicode_buffer(secdata, len(secdata))
+    buf = string_buffer(secdata, len(secdata))
     raise_on_zero(_WritePrivateProfileSection(secname, buf, filename))
 
 ################################################################################
@@ -657,7 +659,7 @@ _GetEnvironmentVariable = fun_fact(
 def GetEnvironmentVariable(name):
     size = 512
     while True:
-        var = ctypes.create_unicode_buffer(size)
+        var = string_buffer(size)
         req = _GetEnvironmentVariable(name, var, size)
         raise_on_zero(req)
         if req <= size:
@@ -709,7 +711,7 @@ _SetEnvironmentStrings = fun_fact(
 
 def SetEnvironmentStrings(strings):
     # see comment on PyUnicode_AsWideCharString above
-    buf = ctypes.create_unicode_buffer(strings, len(strings))
+    buf = string_buffer(strings, len(strings))
     raise_on_zero(_SetEnvironmentStrings(buf))
 
 ################################################################################
@@ -722,7 +724,7 @@ _ExpandEnvironmentStrings = fun_fact(
 def ExpandEnvironmentStrings(template):
     size = len(template)
     while True:
-        var = ctypes.create_unicode_buffer(size)
+        var = string_buffer(size)
         req = _ExpandEnvironmentStrings(template, var, size)
         raise_on_zero(req)
         if req <= size:
@@ -836,7 +838,7 @@ class ProcThreadAttributeList:
     def __init__(self, attr_pairs):
         self.buf = None
         size = InitializeProcThreadAttributeList(None, len(attr_pairs), 0)
-        buf = ctypes.create_string_buffer(size)
+        buf = byte_buffer(size)
         InitializeProcThreadAttributeList(buf, 1, 0, size)
         try:
             for id, value in attr_pairs:
@@ -1020,7 +1022,7 @@ def ResumeThread(thdl):
 def _get_dir(func, order):
     buf_size = 256
     while True:
-        buf = ctypes.create_unicode_buffer(buf_size)
+        buf = string_buffer(buf_size)
         req_size = func(*((buf, buf_size) if order else (buf_size, buf)))
         if req_size <= buf_size:
             return buf.value
@@ -1124,7 +1126,7 @@ _GlobalGetAtomName = fun_fact(_k32.GlobalGetAtomNameW, (UINT, WORD, PWSTR, INT))
 def GlobalGetAtomName(atom):
     size = 512
     while True:
-        var = ctypes.create_unicode_buffer(size)
+        var = string_buffer(size)
         req = _GlobalGetAtomName(atom, var, size)
         raise_on_zero(req)
         if req <= size:
@@ -1695,7 +1697,7 @@ _GetLogicalDriveStrings = fun_fact(
 
 def GetLogicalDriveStrings():
     size = 256
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     raise_on_zero(res := _GetLogicalDriveStrings(size, buf))
     return multi_str_from_ubuf(buf, res)
 
@@ -1705,7 +1707,7 @@ _FindFirstVolume = fun_fact(_k32.FindFirstVolumeW, (HANDLE, PWSTR, DWORD))
 
 def FindFirstVolume():
     size = 256
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     hdl = _FindFirstVolume(buf, size)
     raise_if(hdl == INVALID_HANDLE_VALUE)
     return hdl, buf.value
@@ -1716,7 +1718,7 @@ _FindNextVolume = fun_fact(_k32.FindNextVolumeW, (BOOL, HANDLE, PWSTR, DWORD))
 
 def FindNextVolume(hdl):
     size = 256
-    buf = ctypes.create_unicode_buffer(size)
+    buf = string_buffer(size)
     raise_on_zero(_FindNextVolume(hdl, buf, size))
     return buf.value
 
@@ -1750,7 +1752,7 @@ _GetVolumePathNamesForVolumeName = fun_fact(
 def GetVolumePathNamesForVolumeName(vol):
     size = DWORD(256)
     while True:
-        buf = ctypes.create_unicode_buffer(size.value)
+        buf = string_buffer(size.value)
         ok = _GetVolumePathNamesForVolumeName(vol, buf, size, ref(size))
         if ok:
             return multi_str_from_ubuf(buf, size.value)
@@ -1765,7 +1767,7 @@ _ReadProcessMemory = fun_fact(
     )
 
 def ReadProcessMemory(hdl, addr, length):
-    buf = ctypes.create_string_buffer(length)
+    buf = byte_buffer(length)
     raise_on_zero(_ReadProcessMemory(hdl, addr, buf, length, None))
     return buf
 

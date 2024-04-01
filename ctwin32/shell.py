@@ -24,6 +24,7 @@
 
 import ctypes
 from .wtypes import (
+    string_buffer,
     BOOL,
     DWORD,
     HANDLE,
@@ -224,7 +225,7 @@ _SHGetFolderPath = fun_fact(
     )
 
 def SHGetFolderPath(csidl, flags=0, token=None):
-    buf = ctypes.create_unicode_buffer(MAX_PATH)
+    buf = string_buffer(MAX_PATH)
     raise_on_hr(_SHGetFolderPath(None, csidl, token, flags, buf))
     return buf.value
 

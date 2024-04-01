@@ -29,6 +29,7 @@ import base64
 
 import ctypes
 from .wtypes import (
+    string_buffer,
     HANDLE,
     HIWORD,
     HWND,
@@ -736,7 +737,7 @@ def dlg_item_template(
     # bytes = template + class + title + creation data
     cls = (
         _std_classes.get(cls.lower(), None) or
-        bytes(ctypes.create_unicode_buffer(cls))
+        bytes(string_buffer(cls))
         )
     cdata = (
         bytes(WORD(0)) if cdata is None
@@ -745,7 +746,7 @@ def dlg_item_template(
     bts = (
         bytes(user.DLGITEMTEMPLATE(style, 0, x, y, cx, cy, id)) +
         cls +
-        bytes(ctypes.create_unicode_buffer(title)) +
+        bytes(string_buffer(title)) +
         cdata
         )
     # align to DWORD for the following items
@@ -773,9 +774,9 @@ def dlg_template(
         bytes(tmpl),
         bytes(WORD(0)),     # no menu
         bytes(WORD(0)),     # default class
-        bytes(ctypes.create_unicode_buffer(title)),
+        bytes(string_buffer(title)),
         bytes(WORD(pointsize)),
-        bytes(ctypes.create_unicode_buffer(typeface))
+        bytes(string_buffer(typeface))
         ))
     return b"".join((
         bts,

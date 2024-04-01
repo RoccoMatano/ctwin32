@@ -24,6 +24,8 @@
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     DWORD,
     PCHAR,
     PDWORD,
@@ -120,6 +122,15 @@ def view_enum_records(view):
 
 ################################################################################
 
+_MsiRecordGetFieldCount = fun_fact(
+    _msi.MsiRecordGetFieldCount, (UINT, MSIHANDLE)
+    )
+
+def MsiRecordGetFieldCount(record):
+    return _MsiRecordGetFieldCount(record)
+
+################################################################################
+
 _MsiRecordGetString = fun_fact(
     _msi.MsiRecordGetStringW, (
         UINT,
@@ -134,7 +145,7 @@ def MsiRecordGetString(record, field_idx):
     size = DWORD(512)
     err = ERROR_MORE_DATA
     while err == ERROR_MORE_DATA:
-        buf = ctypes.create_unicode_buffer(size.value)
+        buf = string_buffer(size.value)
         err = _MsiRecordGetString(record, field_idx, buf, ref(size))
     raise_on_err(err)
     return buf.value
@@ -152,7 +163,7 @@ _MsiRecordReadStream = fun_fact(
     )
 
 def MsiRecordReadStream(record, field_idx, size):
-    res = ctypes.create_string_buffer(size)
+    res = byte_buffer(size)
     size = DWORD(size)
     raise_on_err(_MsiRecordReadStream(record, field_idx, res, ref(size)))
     return res.raw[:size.value]

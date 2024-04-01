@@ -27,6 +27,8 @@ from datetime import datetime as _dt
 import ctypes
 
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     ArgcArgvFromArgs,
     BOOL,
     BYTE,
@@ -330,7 +332,7 @@ _RegEnumKeyEx = fun_fact(
 
 def RegEnumKeyEx(key, index):
     name_len = DWORD(_MAX_KEY_LEN)
-    name = ctypes.create_unicode_buffer(_MAX_KEY_LEN)
+    name = string_buffer(_MAX_KEY_LEN)
     raise_on_err(
         _RegEnumKeyEx(
             key,
@@ -375,8 +377,8 @@ def RegEnumValue(key, index):
     info = RegQueryInfoKey(key)
     nlen = DWORD(info.max_value_name_len + 1)
     vlen = DWORD(info.max_value_len + 1)
-    name = ctypes.create_unicode_buffer(nlen.value)
-    value = ctypes.create_string_buffer(vlen.value)
+    name = string_buffer(nlen.value)
+    value = byte_buffer(vlen.value)
     typ = DWORD()
     while True:
         err = _RegEnumValue(
@@ -393,7 +395,7 @@ def RegEnumValue(key, index):
             break
         elif err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
-            value = ctypes.create_string_buffer(vlen.value)
+            value = byte_buffer(vlen.value)
         else:
             raise ctypes.WinError(err)
 
@@ -425,7 +427,7 @@ _RegQueryValueEx = fun_fact(
 
 def RegQueryValueEx(key, name):
     vlen = DWORD(256)
-    value = ctypes.create_string_buffer(vlen.value)
+    value = byte_buffer(vlen.value)
     typ = DWORD()
     while True:
         err = _RegQueryValueEx(
@@ -440,7 +442,7 @@ def RegQueryValueEx(key, name):
             break
         elif err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
-            value = ctypes.create_string_buffer(vlen.value)
+            value = byte_buffer(vlen.value)
         else:
             raise ctypes.WinError(err)
 
@@ -461,7 +463,7 @@ _RegSetValueEx = fun_fact(
     )
 
 def RegSetValueEx(key, name, typ, data):
-    dta = ctypes.create_string_buffer(data)
+    dta = byte_buffer(data)
     raise_on_err(
         _RegSetValueEx(
             key,
@@ -488,7 +490,7 @@ _RegSetKeyValue = fun_fact(
     )
 
 def RegSetKeyValue(parent, key_name, value_name, typ, data):
-    dta = ctypes.create_string_buffer(data)
+    dta = byte_buffer(data)
     raise_on_err(
         _RegSetKeyValue(
             parent,
@@ -506,7 +508,7 @@ def reg_set_str(key, name, string, typ=None):
     typ = REG_SZ if typ is None else typ
     if not is_registry_string(typ):
         raise ValueError(f"invalid registry type: {typ}")
-    value = ctypes.create_unicode_buffer(string, len(string))
+    value = string_buffer(string, len(string))
     raise_on_err(
         _RegSetValueEx(
             key,
@@ -571,7 +573,7 @@ _ConvertSidToStringSid = fun_fact(
     )
 
 def ConvertSidToStringSid(sid):
-    bin_sid = ctypes.create_string_buffer(sid)
+    bin_sid = byte_buffer(sid)
     str_sid = PWSTR()
     try:
         raise_on_zero(_ConvertSidToStringSid(ref(bin_sid), ref(str_sid)))
@@ -592,7 +594,7 @@ _CheckTokenMembership = fun_fact(
 
 def CheckTokenMembership(token_handle, sid_to_check):
     res = BOOL()
-    sid = ctypes.create_string_buffer(sid_to_check)
+    sid = byte_buffer(sid_to_check)
     raise_on_zero(_CheckTokenMembership(token_handle, ref(sid), ref(res)))
     return res.value != 0
 
@@ -651,7 +653,7 @@ def GetTokenInformation(hdl, cls):
     rlen = DWORD(256)
     while True:
         size = rlen.value
-        buf = ctypes.create_string_buffer(size)
+        buf = byte_buffer(size)
         if _GetTokenInformation(hdl, cls, buf, size, ref(rlen)):
             return buf.raw[:rlen.value]
         elif (err := GetLastError()) != ERROR_INSUFFICIENT_BUFFER:
@@ -831,8 +833,8 @@ def LookupAccountSid(sid, system_name=None):
     if err != ERROR_INSUFFICIENT_BUFFER:
         raise ctypes.WinError(err)
 
-    name = ctypes.create_unicode_buffer(name_size.value)
-    domain = ctypes.create_unicode_buffer(domain_size.value)
+    name = string_buffer(name_size.value)
+    domain = string_buffer(domain_size.value)
     raise_on_zero(
         _LookupAccountSid(
             system_name,
@@ -1110,7 +1112,7 @@ def CreateService(
         password=None
         ):
     if dependencies is not None:
-        dependencies = ctypes.create_unicode_buffer("\x00".join(dependencies))
+        dependencies = string_buffer("\x00".join(dependencies))
     res = SC_HANDLE(
         _CreateService(
             scm,
@@ -1248,7 +1250,7 @@ _EnumServicesStatusEx = fun_fact(
 
 def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
     stat_size = ctypes.sizeof(ENUM_SERVICE_STATUS_PROCESS)
-    buf = ctypes.create_string_buffer(16 * 1024)
+    buf = byte_buffer(16 * 1024)
     needed = DWORD()
     num_ret = DWORD()
     resume = DWORD()
@@ -1276,7 +1278,7 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
 
         if success:
             break
-        buf = ctypes.create_string_buffer(needed.value)
+        buf = byte_buffer(needed.value)
 
     return result
 
@@ -1314,7 +1316,7 @@ def QueryServiceConfig(svc):
         raise AssertionError("logic error in QueryServiceConfig")
     if err != ERROR_INSUFFICIENT_BUFFER:
         raise ctypes.WinError(err)
-    buf = ctypes.create_string_buffer(needed.value)
+    buf = byte_buffer(needed.value)
     pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
     raise_on_zero(_QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
     return ns_from_struct(pqsc.contents)
@@ -1617,7 +1619,7 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
     want = DWORD(size)
     while True:
         got = DWORD()
-        buf = ctypes.create_string_buffer(want.value)
+        buf = byte_buffer(want.value)
         ok = _ReadEventLog(hdl, flags, offs, buf, want, ref(got), ref(want))
         got = got.value
         if not ok:

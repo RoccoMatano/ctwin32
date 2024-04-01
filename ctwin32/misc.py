@@ -24,6 +24,8 @@
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
+    string_buffer,
     BOOL,
     BOOLEAN,
     DWORD,
@@ -62,7 +64,7 @@ _CallNtPowerInformation = fun_fact(
 
 def CallNtPowerInformation(level, outsize=0, input=None):
     src, slen = (None, 0) if not input else (ref(input), ULONG(len(input)))
-    dst, dlen = ctypes.create_string_buffer(outsize), ULONG(outsize)
+    dst, dlen = byte_buffer(outsize), ULONG(outsize)
     raise_failed_status(_CallNtPowerInformation(level, src, slen, dst, dlen))
     return dst.raw
 
@@ -208,7 +210,7 @@ _UnDecorateSymbolName = fun_fact(
 def UnDecorateSymbolName(sym_name, flags=UNDNAME_COMPLETE):
     size = 256
     while True:
-        buf = ctypes.create_unicode_buffer(size)
+        buf = string_buffer(size)
         result = _UnDecorateSymbolName(sym_name, buf, size, flags)
         raise_on_zero(result)
         if result <= size - 4:

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.QueryInformationJobObject
 - sample timeit.py
 - sample dump_proc_env.py
+- wtypes.byte_buffer and wtypes.string_buffer
 
 ### Changed
 
@@ -27,6 +28,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   instead of setupapi.SetupDiGetDeviceInterfaceDetail
 - support for addition and subtraction of FILETIME
 - add parameter 'inherit' to CreateEnvironmentBlock and create_env_block_as_dict
+- replaced ctypes.create_string|unicode_buffer with wtypes.byte_buffer and
+  wtypes.string_buffer
 
 ### Fixed
 
