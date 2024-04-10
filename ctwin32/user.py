@@ -1221,10 +1221,12 @@ def txt_to_clip(txt, hwnd=None):
         ctypes.memmove(kernel.GlobalLock(hcopy), buf, size)
         kernel.GlobalUnlock(hcopy)
         OpenClipboard(hwnd)
-        EmptyClipboard()
-        SetClipboardData(CF_UNICODETEXT, hcopy)
-        copied = True
-        CloseClipboard()
+        try:
+            EmptyClipboard()
+            SetClipboardData(CF_UNICODETEXT, hcopy)
+            copied = True
+        finally:
+            CloseClipboard()
     finally:
         if not copied:
             kernel.GlobalFree(hcopy)
@@ -1235,10 +1237,12 @@ def txt_from_clip(hwnd=None):
     if not IsClipboardFormatAvailable(CF_UNICODETEXT):
         raise OSError("no clipboard text available")
     OpenClipboard(hwnd)
-    hmem = GetClipboardData(CF_UNICODETEXT)
-    txt = ctypes.wstring_at(kernel.GlobalLock(hmem))
-    kernel.GlobalUnlock(hmem)
-    CloseClipboard()
+    try:
+        hmem = GetClipboardData(CF_UNICODETEXT)
+        txt = ctypes.wstring_at(kernel.GlobalLock(hmem))
+        kernel.GlobalUnlock(hmem)
+    finally:
+        CloseClipboard()
     return txt
 
 ################################################################################
