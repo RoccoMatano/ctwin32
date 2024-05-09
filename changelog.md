@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample timeit.py
 - sample dump_proc_env.py
 - wtypes.byte_buffer and wtypes.string_buffer
+- python 3.13 in pyproject.toml
 
 ### Changed
 
