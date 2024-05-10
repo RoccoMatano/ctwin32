@@ -129,10 +129,14 @@ def parse_version_resource(ver_res_bytes):
             while offs < end_translation:
                 key, offs, val_end, _ = parse_ver_node(ver_res_bytes, offs)
 
-                # buggy resource compilers often write the wrong value for
+                # Buggy resource compilers often write the wrong value for
                 # value_size. so we don't trust that and simply work with
-                # what's left.
-                val = ver_res_bytes[offs:val_end].decode("utf-16").rstrip("\0")
+                # what's left. But this remaining part has to have an even
+                # length if we want to decode it as utf-16.
+                size = (val_end - offs) & ~(0x1)
+                val = ver_res_bytes[offs : offs + size]
+                val = val.decode("utf-16").rstrip("\0")
+
                 # padding between nodes is not part of 'node_size'
                 offs = dword_align(val_end)
                 pairs[key] = val

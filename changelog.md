@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed string length handling in sample dump_ver_res.py
+
+
 ## [2.6.0] - 2024-05-09
 
 ### Added
