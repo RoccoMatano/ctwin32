@@ -57,6 +57,7 @@ from .wtypes import (
     UINT,
     UINT_PTR,
     WCHAR,
+    WinError,
     WPARAM,
     WORD,
     )
@@ -93,7 +94,7 @@ from .ntdll import (
     STATUS_BUFFER_TOO_SMALL,
     )
 
-_usr = ctypes.WinDLL("user32.dll")
+_usr = ctypes.WinDLL("user32.dll", use_last_error=True)
 
 ################################################################################
 
@@ -1203,7 +1204,7 @@ def GetClipboardFormatName(fmt_atom):
     bufsize = 1024
     buf = string_buffer(bufsize)
     if _GetClipboardFormatName(fmt_atom, buf, bufsize) == 0:
-        raise ctypes.WinError()
+        raise WinError()
     return buf.value
 
 ################################################################################
@@ -1528,7 +1529,7 @@ def EndDialog(hdlg, result):
 ################################################################################
 
 try:
-    _w32 = ctypes.WinDLL("win32u.dll")
+    _w32 = ctypes.WinDLL("win32u.dll", use_last_error=True)
     _NtUserBuildHwndList = fun_fact(
         _w32.NtUserBuildHwndList, (
             NTSTATUS,
@@ -1571,7 +1572,7 @@ try:
                 # avoid under-allocating due to newly added windows -> + 32
                 allocated = received + 32
             else:
-                raise ctypes.WinError(RtlNtStatusToDosError(status))
+                raise WinError(RtlNtStatusToDosError(status))
 
         return array[:received - 1]
 

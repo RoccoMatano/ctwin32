@@ -55,7 +55,7 @@ from . import (
 
 ################################################################################
 
-_popro = ctypes.WinDLL("powrprof.dll")
+_popro = ctypes.WinDLL("powrprof.dll", use_last_error=True)
 
 _CallNtPowerInformation = fun_fact(
     _popro.CallNtPowerInformation,
@@ -106,7 +106,7 @@ def SetSuspendState(hibernate, force, wakeup_events_disabled):
 
 ################################################################################
 
-_wts = ctypes.WinDLL("wtsapi32.dll")
+_wts = ctypes.WinDLL("wtsapi32.dll", use_last_error=True)
 
 class WTS_SESSION_INFO(ctypes.Structure):
     _fields_ = (
@@ -148,7 +148,7 @@ def WTSDisconnectSession(session_id, server=None, wait=True):
 
 ################################################################################
 
-_ue = ctypes.WinDLL("userenv.dll")
+_ue = ctypes.WinDLL("userenv.dll", use_last_error=True)
 
 _DestroyEnvironmentBlock = fun_fact(
     _ue.DestroyEnvironmentBlock, (BOOL, PVOID)
@@ -181,7 +181,7 @@ def create_env_block_as_dict(token=None, inherit=False):
 
 ################################################################################
 
-_dbghlp = ctypes.WinDLL("dbghelp.dll")
+_dbghlp = ctypes.WinDLL("dbghelp.dll", use_last_error=True)
 
 UNDNAME_COMPLETE = 0x0000
 UNDNAME_NO_LEADING_UNDERSCORES = 0x0001

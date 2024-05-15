@@ -33,6 +33,7 @@ from .wtypes import (
     POINTER,
     PVOID,
     PWSTR,
+    WinError,
     )
 from . import (
     ref,
@@ -45,7 +46,7 @@ from . import (
     ERROR_PARTIAL_COPY,
     )
 
-_psa = ctypes.WinDLL("psapi.dll")
+_psa = ctypes.WinDLL("psapi.dll", use_last_error=True)
 
 ################################################################################
 
@@ -62,7 +63,7 @@ def EnumProcessModulesEx(hdl, filter):
         mods = (HMODULE * (size.value // HSIZE))()
         if not _EnumProcessModulesEx(hdl, ref(mods), size, ref(needed), filter):
             if (err := kernel.GetLastError()) != ERROR_PARTIAL_COPY:
-                raise ctypes.WinError(err)
+                raise WinError(err)
     return mods[:needed.value // HSIZE]
 
 ################################################################################

@@ -100,6 +100,17 @@ def string_buffer(init, size=None):
 
 ################################################################################
 
+# error handling based on ctypes error shadow copy
+
+def WinError(code=None, descr=None):
+    if code is None:
+        code = ctypes.get_last_error()
+    if descr is None:
+        descr = ctypes.FormatError(code).strip()
+    return OSError(None, descr, None, code)
+
+################################################################################
+
 # some structure definitions
 
 class GUID(ULONG * 4):         # using ULONG for correct alignment
@@ -311,7 +322,9 @@ class LUID(ctypes.Structure):
         ("HighPart", LONG)
         )
 
-    def __init__(self, value):
+    def __init__(self, value=None):
+        if value is None:
+            value = 0
         self.LowPart = value & 0xffffffff
         self.HighPart = value >> 32
 
@@ -487,7 +500,7 @@ class ScdToBeClosed():
 
     def raise_on_invalid(self):
         if int(self) == self.invalid_value:
-            raise ctypes.WinError()
+            raise WinError()
 
 ################################################################################
 

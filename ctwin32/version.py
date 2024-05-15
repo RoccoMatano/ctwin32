@@ -44,7 +44,7 @@ from . import (
     ERROR_RESOURCE_TYPE_NOT_FOUND,
     )
 
-_ver = ctypes.WinDLL("version.dll")
+_ver = ctypes.WinDLL("version.dll", use_last_error=True)
 
 ################################################################################
 

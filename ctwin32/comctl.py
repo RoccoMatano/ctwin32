@@ -103,7 +103,9 @@ def _load_comctl():
 
     # activate context, load libray and and release the context
     kernel.ActivateActCtx(ctx)
-    comctl = ctypes.WinDLL("comctl32.dll")  # <- this calls LoadLibrary
+
+    # this calls LoadLibrary
+    comctl = ctypes.WinDLL("comctl32.dll", use_last_error=True)
 
     # Do NOT deactivate the context! Just decrement its ref-count by
     # releasing it.

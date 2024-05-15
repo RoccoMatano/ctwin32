@@ -54,6 +54,7 @@ from .wtypes import (
     UNICODE_STRING,
     WCHAR,
     WCHAR_SIZE,
+    WinError,
     WORD,
     )
 from . import (
@@ -73,7 +74,7 @@ from . import (
     ProcessWow64Information,
     )
 
-_nt = ctypes.WinDLL("ntdll.dll")
+_nt = ctypes.WinDLL("ntdll.dll", use_last_error=True)
 
 def _ntstatus(status):
     return LONG(status).value
@@ -103,7 +104,7 @@ def RtlNtStatusToDosError(status):
 
 def raise_failed_status(status):
     if status < 0:
-        raise ctypes.WinError(RtlNtStatusToDosError(status))
+        raise WinError(RtlNtStatusToDosError(status))
 
 ################################################################################
 

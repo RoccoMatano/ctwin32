@@ -53,6 +53,7 @@ from .wtypes import (
     PWSTR,
     ScdToBeClosed,
     WCHAR_SIZE,
+    WinError,
     WORD,
     )
 from . import (
@@ -80,6 +81,7 @@ from . import (
     SC_STATUS_PROCESS_INFO,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_ITEMS,
+    ERROR_NOT_ALL_ASSIGNED,
     ERROR_HANDLE_EOF,
     ERROR_INSUFFICIENT_BUFFER,
     CRED_TYPE_GENERIC,
@@ -97,7 +99,7 @@ from .kernel import (
     STARTUPINFO,
     )
 
-_adv = ctypes.WinDLL("advapi32.dll")
+_adv = ctypes.WinDLL("advapi32.dll", use_last_error=True)
 
 ################################################################################
 
@@ -397,7 +399,7 @@ def RegEnumValue(key, index):
             vlen = DWORD(vlen.value * 2)
             value = byte_buffer(vlen.value)
         else:
-            raise ctypes.WinError(err)
+            raise WinError(err)
 
     return (name.value, *registry_to_py(typ.value, value.raw[:vlen.value]))
 
@@ -444,7 +446,7 @@ def RegQueryValueEx(key, name):
             vlen = DWORD(vlen.value * 2)
             value = byte_buffer(vlen.value)
         else:
-            raise ctypes.WinError(err)
+            raise WinError(err)
 
     return registry_to_py(typ.value, value[:vlen.value])
 
@@ -657,7 +659,7 @@ def GetTokenInformation(hdl, cls):
         if _GetTokenInformation(hdl, cls, buf, size, ref(rlen)):
             return buf.raw[:rlen.value]
         elif (err := GetLastError()) != ERROR_INSUFFICIENT_BUFFER:
-            raise ctypes.WinError(err)
+            raise WinError(err)
 
 ################################################################################
 
@@ -766,9 +768,6 @@ class LUID_AND_ATTRIBUTES(ctypes.Structure):
         ("Attributes", DWORD)
         )
 
-_AdjustTokenPrivileges = _adv.AdjustTokenPrivileges
-_AdjustTokenPrivileges.restype = BOOL
-
 def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
     num_la = len(luids_and_attributes)
     if not num_la:
@@ -797,15 +796,18 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
         privs.Privileges[n].Luid = la.Luid
         privs.Privileges[n].Attributes = la.Attributes
 
-    suc = _AdjustTokenPrivileges(
-        token,
-        disable_all,
-        ref(privs),
-        0,
-        None,
-        None
+    raise_on_zero(
+        _AdjustTokenPrivileges(
+            token,
+            disable_all,
+            ref(privs),
+            0,
+            None,
+            None
+            )
         )
-    raise_if(not suc or ctypes.GetLastError())
+    if (err := GetLastError()) == ERROR_NOT_ALL_ASSIGNED:
+        raise WinError(err)
 
 ################################################################################
 
@@ -831,7 +833,7 @@ def LookupAccountSid(sid, system_name=None):
     if ok:
         raise AssertionError("logic error in LookupAccountSid")
     if err != ERROR_INSUFFICIENT_BUFFER:
-        raise ctypes.WinError(err)
+        raise WinError(err)
 
     name = string_buffer(name_size.value)
     domain = string_buffer(domain_size.value)
@@ -1315,7 +1317,7 @@ def QueryServiceConfig(svc):
     if ok:
         raise AssertionError("logic error in QueryServiceConfig")
     if err != ERROR_INSUFFICIENT_BUFFER:
-        raise ctypes.WinError(err)
+        raise WinError(err)
     buf = byte_buffer(needed.value)
     pqsc = ctypes.cast(buf, PQUERY_SERVICE_CONFIG)
     raise_on_zero(_QueryServiceConfig(svc, pqsc, needed.value, ref(needed)))
@@ -1630,7 +1632,7 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
             elif err == ERROR_INSUFFICIENT_BUFFER:
                 continue
             else:
-                raise ctypes.WinError(err)
+                raise WinError(err)
         else:
             break
 

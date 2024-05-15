@@ -62,6 +62,7 @@ from .wtypes import (
     USHORT,
     WCHAR,
     WIN32_FIND_DATA,
+    WinError,
     WORD,
     )
 from . import (
@@ -103,7 +104,7 @@ from . import (
     WAIT_FAILED,
     )
 
-_k32 = ctypes.WinDLL("kernel32.dll")
+_k32 = ctypes.WinDLL("kernel32.dll", use_last_error=True)
 
 ################################################################################
 
@@ -111,8 +112,13 @@ ExitProcess = fun_fact(_k32.ExitProcess, (None, UINT))
 
 ################################################################################
 
-GetLastError = fun_fact(_k32.GetLastError, (DWORD,))
-SetLastError = fun_fact(_k32.SetLastError, (None, DWORD))
+# Here we use the functions from ctypes instead of using GetLastError and
+# SetLastError directly. We do so to work with the copies that ctypes manages.
+# These are protected from being manipulated by the system calls of CPython
+# itself. This requires that all DLLs involved are created with
+# 'use_last_error=True'.
+GetLastError = ctypes.get_last_error
+SetLastError = ctypes.set_last_error
 
 ################################################################################
 
@@ -153,7 +159,7 @@ _GlobalUnlock = fun_fact(_k32.GlobalUnlock, (BOOL, HANDLE))
 def GlobalUnlock(hmem):
     res = _GlobalUnlock(hmem)
     if not res and (err := GetLastError()) != ERROR_SUCCESS:
-        raise ctypes.WinError(err)
+        raise WinError(err)
 
 ################################################################################
 
@@ -1186,7 +1192,7 @@ def EnumResourceNames(hmod, typ, callback, context):
     cbc = CallbackContext(callback, context)
     if not _EnumResourceNames(hmod, typ, _EnumResNameCb, ref(cbc)):
         if (err := GetLastError()) != ERROR_RESOURCE_ENUM_USER_STOP:
-            raise ctypes.WinError(err)
+            raise WinError(err)
 
 ################################################################################
 
@@ -1295,7 +1301,7 @@ def load_message_string(hmod, msg_id):
                             )
                     return msg.strip("\0")
 
-    raise ctypes.WinError(ERROR_RESOURCE_NAME_NOT_FOUND)
+    raise WinError(ERROR_RESOURCE_NAME_NOT_FOUND)
 
 ################################################################################
 
@@ -1368,7 +1374,7 @@ def GetFileType(hdl):
     res = _GetFileType(hdl)
     if res == FILE_TYPE_UNKNOWN:
         if (err := GetLastError()) != ERROR_SUCCESS:
-            raise ctypes.WinError(err)
+            raise WinError(err)
     return res
 
 ################################################################################
@@ -1550,7 +1556,7 @@ def FindFirstFile(name, ignore_not_found=False):
         err = GetLastError()
         if ignore_not_found and err == ERROR_FILE_NOT_FOUND:
             return None, None
-        raise ctypes.WinError(err)
+        raise WinError(err)
     return hdl, find_data
 
 ################################################################################
@@ -1566,7 +1572,7 @@ def FindNextFile(hdl):
         err = GetLastError()
         if err == ERROR_NO_MORE_FILES:
             return None
-        raise ctypes.WinError(err)
+        raise WinError(err)
     return find_data
 
 ################################################################################

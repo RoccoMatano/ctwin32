@@ -31,6 +31,7 @@ from .wtypes import (
     PWSTR,
     UINT,
     WCHAR_SIZE,
+    WinError,
     )
 ref = ctypes.byref
 
@@ -42,25 +43,25 @@ __version__ = "2.6.0"
 
 def raise_if(condition):
     if condition:
-        raise ctypes.WinError()
+        raise WinError()
 
 ################################################################################
 
 def raise_on_zero(value):
     if value == 0 or getattr(value, "value", 1) is None:
-        raise ctypes.WinError()
+        raise WinError()
 
 ################################################################################
 
 def raise_on_err(err):
     if err:
-        raise ctypes.WinError(err)
+        raise WinError(err)
 
 ################################################################################
 
 def raise_on_hr(hr):
     if hr < 0:
-        raise ctypes.WinError(hr)
+        raise WinError(hr)
 
 ################################################################################
 

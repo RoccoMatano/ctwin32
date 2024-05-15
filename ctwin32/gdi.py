@@ -47,7 +47,7 @@ from . import (
     HGDI_ERROR,
     )
 
-_gdi = ctypes.WinDLL("gdi32.dll")
+_gdi = ctypes.WinDLL("gdi32.dll", use_last_error=True)
 
 ################################################################################
 

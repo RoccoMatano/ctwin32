@@ -42,7 +42,7 @@ from .ntdll import raise_failed_status
 from .kernel import FileTimeToLocalFileTime, FileTimeToSystemTime
 from .advapi import GetLengthSid, ConvertSidToStringSid
 
-_sec = ctypes.WinDLL("secur32.dll")
+_sec = ctypes.WinDLL("secur32.dll", use_last_error=True)
 
 ################################################################################
 

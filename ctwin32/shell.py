@@ -56,7 +56,7 @@ from . import (
     ref,
     )
 
-_sh = ctypes.WinDLL("shell32.dll")
+_sh = ctypes.WinDLL("shell32.dll", use_last_error=True)
 
 ################################################################################
 

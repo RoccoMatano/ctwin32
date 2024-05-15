@@ -36,6 +36,7 @@ from .wtypes import (
     PWSTR,
     PULONG,
     ULONG,
+    WinError,
     )
 from . import (
     ref,
@@ -51,7 +52,7 @@ from . import (
     ERROR_CURRENT_DIRECTORY,
     )
 from .advapi import registry_to_py
-_cfg = ctypes.WinDLL("cfgmgr32.dll")
+_cfg = ctypes.WinDLL("cfgmgr32.dll", use_last_error=True)
 
 ################################################################################
 
@@ -61,7 +62,7 @@ def raise_on_cr(cfgret):
     if cfgret != CR_SUCCESS:
         # use an unlikely default value. anyone out there still using floppies?
         err = CM_MapCrToWin32Err(cfgret, ERROR_FLOPPY_UNKNOWN_ERROR)
-        raise ctypes.WinError(err)
+        raise WinError(err)
 
 ################################################################################
 

@@ -38,7 +38,7 @@ from . import ref, fun_fact, raise_on_err
 
 from .kernel import KHANDLE, PKHANDLE
 
-_vdisk = ctypes.WinDLL("virtdisk.dll")
+_vdisk = ctypes.WinDLL("virtdisk.dll", use_last_error=True)
 
 ################################################################################
 
