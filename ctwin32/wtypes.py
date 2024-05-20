@@ -141,7 +141,7 @@ class GUID(ULONG * 4):         # using ULONG for correct alignment
     def __eq__(self, other):
         try:
             return bytes(self) == bytes(other)
-        except Exception:
+        except Exception:   # noqa: BLE001
             return False
 
 ################################################################################

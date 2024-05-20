@@ -130,7 +130,7 @@ def _service_main(argc, argv):
         advapi.SetServiceStatus(hdl, svc_stat)
         kernel.dbg_print(f"returning from _service main: {tid}")
 
-    except BaseException:
+    except BaseException:                           # noqa: BLE001
         _print_and_exit(traceback.format_exc())
 
 ################################################################################
@@ -364,7 +364,7 @@ def _main():
                 break
         else:
             raise RuntimeError(f"invalid args: {sys.argv}")
-    except BaseException:
+    except BaseException:                                       # noqa: BLE001
         _print_and_exit(traceback.format_exc())
 
 ################################################################################

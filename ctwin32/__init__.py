@@ -147,7 +147,7 @@ def cmdline_from_args(args):
 ################################################################################
 
 def ns_from_struct(ctypes_struct):
-    # hack the class name for nicer repr
+    # modify the class name for nicer repr
     class HackedClassName(_namespace):
         pass
     HackedClassName.__name__ = type(ctypes_struct).__name__

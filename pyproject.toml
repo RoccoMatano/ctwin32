@@ -43,50 +43,79 @@ target-version = "py38"
 line-length = 80
 
 [tool.ruff.lint]
-select = [
-    "B",        # flake8-bugbear
-    "C4",       # flake8-comprehensions
-    "COM",      # flake8-commas
-    "E",        # pycodestyle errors
-    "F",        # Pyflakes
-    "INP",      # flake8-no-pep420
-    "ISC",      # flake8-implicit-str-concat
-    # "N",        # pep8-naming is not approprate for win32 API names
-    "PIE",      # flake8-pie
-    "PLE",      # pylint errors
-    "PLW",      # pylint warnings
-    "PTH",      # flake8-use-pathlib
-    "Q",        # flake8-quotes
-    "RET",      # flake8-return
-    "RSE",      # flake8-raise
-    "RUF",      # ruff-specific rules
-    "SIM",      # flake8-simplify
-    "UP",       # pyupgrade
-    "W",        # pycodestyle warnings
-    "YTT",      # flake8-2020
-    ]
+select = ["ALL"]
 ignore = [
+    "A001",     # shadowing a Python builtin
+    "A002",     # shadowing a Python builtin
+    "ANN001",   # no dorky typing!!!
+    "ANN002",   # no dorky typing!!!
+    "ANN003",   # no dorky typing!!!
+    "ANN101",   # no dorky typing!!!
+    "ANN102",   # no dorky typing!!!
+    "ANN201",   # no dorky typing!!!
+    "ANN202",   # no dorky typing!!!
+    "ANN204",   # no dorky typing!!!
+    "ANN205",   # no dorky typing!!!
+    "ANN206",   # no dorky typing!!!
+    "ANN401",   # no dorky typing!!!
+    "ARG001",   # not using a parameter of a win32 API is very common
+    "ARG002",   # not using a parameter of a win32 API is very common
+    "C901",     # complex-structure
     "COM812",   # Trailing comma missing
     "COM819",   # prohibited-trailing-comma
+    "D100",     # doc strings are optional
+    "D101",     # doc strings are optional
+    "D102",     # doc strings are optional
+    "D103",     # doc strings are optional
+    "D104",     # doc strings are optional
+    "D105",     # doc strings are optional
+    "D107",     # doc strings are optional
+    "D203",     # doc strings are optional
+    "D204",     # force doc string layout
+    "D205",     # force doc string layout
+    "D211",     # rule confusion
+    "D213",     # rule confusion
+    "D300",     # force doc string layout
+    "D400",     # force doc string layout
+    "D401",     # force doc string layout
+    "D403",     # force doc string layout
+    "D404",     # force doc string layout
+    "D415",     # force doc string layout
+    "EM101",    # total BS
+    "EM102",    # use of f-strings in exception constructors
+    "ERA001",   # Prone to false positives
+    "FBT002",   # boolean-default-value-positional-argument
+    "FBT003",   # boolean-positional-value-in-call
+    "I001",     # tastes differ
     "ISC003",   # Explicitly concatenated string should be implicitly concatenated
+    "N801",     # pep8 naming is not meant to be used everywhere
+    "N802",     # pep8 naming is not suitable for Win32
+    "N803",     # pep8 naming is not suitable for Win32
+    "N806",     # pep8 naming is not meant to be used everywhere
+    "N813",     # aliases are meant to assign differing names
+    "PERF203",  # try-except-in-loop
     "PLW1510",  # `subprocess.run` without explicit `check` argument
+    "PLR0912",  # too many branches
+    "PLR0913",  # some Win32 APIs have a lot of arguments
+    "PLR2004",  # avoiding magic values is good, banning them is bad
     "PTH123",   # open() should be replaced by Path.open()
+    "PYI024",   # no dorky typing!!!
     "RSE102",   # Unnecessary parentheses on raised exception
     "RET505",   # Unnecessary {branch} after return statement
     "RET508",   # Unnecessary {branch} after break statement
+    "S101",     # Prone to false positives
+    "S105",     # Prone to false positives
+    "S603",     # Prone to false positives
     "SIM102",   # Use a single if statement instead of nested if statements
     "SIM117",   # Use a single instead of nested `with` statements
+    "SLF001",   # ctypes requires accessing private members
+    "T201",     # Prone to false positives
+    "T203",     # Prone to false positives
+    "TRY003",   # do not bloat code with unnecessary exception classes
+    "TRY301",   # raise-within-try
     "UP015",    # redundant-open-modes
     "UP039",    # unnecessary-class-parentheses
-    "RUF013",   # implicit-optional -> no f..g typing!!!
+    "RUF013",   # implicit-optional -> no dorky typing!!!
     ]
-
-################################################################################
-
-[tool.flake8]
-# E305 expected %s blank lines after class or function definition, found %d
-# E221 multiple spaces before operator
-extend-ignore = ["E305", "E221"]
-max-line-length = 80
 
 ################################################################################

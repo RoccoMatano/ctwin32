@@ -450,7 +450,7 @@ class SimpleWnd(BaseWnd):
                 self.set_prop(_PROP_SELF, cparam)
                 return self.on_message(msg, wp, lp)
             raise TypeError("not derived from SimpleWnd")
-        except BaseException:
+        except BaseException:                                   # noqa: BLE001
             _exception_in_callback(traceback.format_exc())
 
     ############################################################################
@@ -639,7 +639,7 @@ class BaseDlg(BaseWnd):
                     self.set_prop(_PROP_SELF, lp)
                     return self.on_init_dialog()
                 raise TypeError("not derived from BaseDlg")
-        except BaseException:
+        except BaseException:                                   # noqa: BLE001
             _exception_in_callback(traceback.format_exc())
 
     ############################################################################

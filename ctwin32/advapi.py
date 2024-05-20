@@ -24,6 +24,7 @@
 
 from types import SimpleNamespace as _namespace
 from datetime import datetime as _dt
+from datetime import UTC as _UTC
 import ctypes
 
 from .wtypes import (
@@ -1596,8 +1597,8 @@ def _evt_from_buf(buf, offs):
         Sid=sid,
         SourceName=src_name,
         StringInserts=str_ins,
-        TimeGenerated=_dt.fromtimestamp(elr.TimeGenerated),
-        TimeWritten=_dt.fromtimestamp(elr.TimeWritten),
+        TimeGenerated=_dt.fromtimestamp(elr.TimeGenerated, tz=_UTC),
+        TimeWritten=_dt.fromtimestamp(elr.TimeWritten, tz=_UTC),
         )
 
 ################################################################################

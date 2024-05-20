@@ -95,7 +95,7 @@ def hex_dump(data, bytes_per_line=16):
 if __name__ == "__main__":
 
     try:
-        assert 1 == 2
+        assert 1 == 2 # noqa: PLR0133
     except AssertionError:
         pass
     else:

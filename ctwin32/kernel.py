@@ -1762,9 +1762,8 @@ def GetVolumePathNamesForVolumeName(vol):
         ok = _GetVolumePathNamesForVolumeName(vol, buf, size, ref(size))
         if ok:
             return multi_str_from_ubuf(buf, size.value)
-        else:
-            if (err := GetLastError()) != ERROR_MORE_DATA:
-                raise_on_err(err)
+        elif (err := GetLastError()) != ERROR_MORE_DATA:
+            raise_on_err(err)
 
 ################################################################################
 
