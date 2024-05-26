@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- advapi.RegFlushKey
+- advapi.get_token_user
+- advapi.get_token_groups
+
 ### Changed
 
 - switched to using ctypes' last error shadow copy

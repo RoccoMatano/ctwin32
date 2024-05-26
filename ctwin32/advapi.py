@@ -58,36 +58,38 @@ from .wtypes import (
     WORD,
     )
 from . import (
-    ref,
-    raise_if,
-    raise_on_zero,
-    raise_on_err,
-    suppress_winerr,
-    fun_fact,
-    ns_from_struct,
     cmdline_from_args,
+    CRED_TYPE_GENERIC,
+    DACL_SECURITY_INFORMATION,
+    ERROR_HANDLE_EOF,
+    ERROR_INSUFFICIENT_BUFFER,
+    ERROR_MORE_DATA,
+    ERROR_NOT_ALL_ASSIGNED,
+    ERROR_NO_MORE_ITEMS,
+    EVENTLOG_BACKWARDS_READ,
+    EVENTLOG_SEQUENTIAL_READ,
+    fun_fact,
+    GROUP_SECURITY_INFORMATION,
+    KEY_ALL_ACCESS,
+    KEY_READ,
+    KEY_WOW64_64KEY,
+    ns_from_struct,
+    OWNER_SECURITY_INFORMATION,
+    raise_if,
+    raise_on_err,
+    raise_on_zero,
+    ref,
     REG_DWORD,
-    REG_QWORD,
-    REG_SZ,
     REG_EXPAND_SZ,
     REG_MULTI_SZ,
-    KEY_READ,
-    KEY_ALL_ACCESS,
-    KEY_WOW64_64KEY,
-    OWNER_SECURITY_INFORMATION,
-    GROUP_SECURITY_INFORMATION,
-    DACL_SECURITY_INFORMATION,
+    REG_QWORD,
+    REG_SZ,
     SACL_SECURITY_INFORMATION,
     SC_ENUM_PROCESS_INFO,
     SC_STATUS_PROCESS_INFO,
-    ERROR_MORE_DATA,
-    ERROR_NO_MORE_ITEMS,
-    ERROR_NOT_ALL_ASSIGNED,
-    ERROR_HANDLE_EOF,
-    ERROR_INSUFFICIENT_BUFFER,
-    CRED_TYPE_GENERIC,
-    EVENTLOG_SEQUENTIAL_READ,
-    EVENTLOG_BACKWARDS_READ,
+    suppress_winerr,
+    TokenUser,
+    TokenGroups,
     )
 from .kernel import (
     LocalFree,
@@ -541,6 +543,13 @@ def reg_set_dword(key, name, dword):
 
 ################################################################################
 
+_RegFlushKey = fun_fact(_adv.RegFlushKey, (LONG, HKEY))
+
+def RegFlushKey(key):
+    raise_on_err(_RegFlushKey(key))
+
+################################################################################
+
 _IsValidSid = fun_fact(_adv.IsValidSid, (BOOL, PVOID))
 
 def IsValidSid(psid):
@@ -632,6 +641,12 @@ def DuplicateTokenEx(tok, acc, sattr, imp, typ):
 
 ################################################################################
 
+class SID_AND_ATTRIBUTES(ctypes.Structure):
+    _fields_ = (
+        ("Sid", PVOID),
+        ("Attributes", DWORD),
+        )
+
 class TOKEN_STATISTICS(ctypes.Structure):
     _fields_ = (
         ("TokenId", LUID),
@@ -672,6 +687,30 @@ def SetTokenInformation(hdl, cls, info):
     raise_on_zero(
         _SetTokenInformation(hdl, cls, ref(info), ctypes.sizeof(info))
         )
+
+################################################################################
+
+def _xform_saa(saa):
+    return (ctypes.string_at(saa.Sid, GetLengthSid(saa.Sid)), saa.Attributes)
+
+def get_token_user(hdl):
+    saa = SID_AND_ATTRIBUTES.from_buffer_copy(
+        GetTokenInformation(hdl, TokenUser)
+        )
+    return _xform_saa(saa)
+
+################################################################################
+
+def get_token_groups(hdl):
+    buf = GetTokenInformation(hdl, TokenGroups)
+    num_groups = DWORD.from_buffer_copy(buf).value
+    class TOKEN_GROUPS(ctypes.Structure):
+        _fields_ = (
+            ("GroupCount", DWORD),
+            ("Groups", SID_AND_ATTRIBUTES * num_groups),
+            )
+    tgroups = TOKEN_GROUPS.from_buffer_copy(buf)
+    return (_xform_saa(saa) for saa in tgroups.Groups)
 
 ################################################################################
 
