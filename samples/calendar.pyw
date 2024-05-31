@@ -114,11 +114,9 @@ class CalendarWnd(wndcls.SimpleWnd):
 
 if __name__ == "__main__":
 
-    wcp = wndcls.WndCreateParams()
-    wcp.name = "Calendar"
-    wcp.wnd_style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
-    wcp.cls.hIcon = wndcls.load_ctwin32_ico()
-    wnd = CalendarWnd(wcp)
+    icon = wndcls.load_ctwin32_ico()
+    style = WS_SYSMENU | WS_MINIMIZEBOX
+    wnd = CalendarWnd(wndcls.WndCreateParams("Calendar", icon, style))
     wnd.show()
 
     while msg := user.GetMessage():

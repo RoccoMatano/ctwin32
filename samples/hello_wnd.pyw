@@ -110,10 +110,8 @@ class HelloWnd(wndcls.SimpleWnd):
 
 if __name__ == "__main__":
 
-    wcp = wndcls.WndCreateParams()
-    wcp.name = "Hello Window"
-    wcp.cls.hIcon = wndcls.load_ctwin32_ico()
-    wnd = HelloWnd(wcp)
+    icon = wndcls.load_ctwin32_ico()
+    wnd = HelloWnd(wndcls.WndCreateParams("Hello Window", icon))
     wnd.show()
 
     while msg := user.GetMessage():

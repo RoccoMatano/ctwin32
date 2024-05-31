@@ -191,10 +191,8 @@ class KeyViewWnd(wndcls.SimpleWnd):
 
 if __name__ == "__main__":
 
-    wcp = wndcls.WndCreateParams()
-    wcp.name = "keyview"
-    wcp.cls.hIcon = wndcls.load_ctwin32_ico()
-    wnd = KeyViewWnd(wcp)
+    icon = wndcls.load_ctwin32_ico()
+    wnd = KeyViewWnd(wndcls.WndCreateParams("keyview", icon))
     wnd.show()
 
     while msg := user.GetMessage():
