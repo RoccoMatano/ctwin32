@@ -27,7 +27,8 @@ import argparse
 from ctwin32 import (
     ntdll,
     user,
-    misc,
+    powrprof,
+    wtsapi,
     EWX_POWEROFF,
     EWX_REBOOT,
     EWX_LOGOFF,
@@ -52,10 +53,10 @@ def parse_args():
 ################################################################################
 
 def disconnect_rdp():
-    for info in misc.WTSEnumerateSessions():
+    for info in wtsapi.WTSEnumerateSessions():
         if info.State == WTSActive:
             if info.pWinStationName.startswith("RDP-Tcp"):
-                misc.WTSDisconnectSession(info.SessionId)
+                wtsapi.WTSDisconnectSession(info.SessionId)
 
 ################################################################################
 
@@ -79,10 +80,10 @@ def main():
         user.ExitWindowsEx(EWX_LOGOFF, 0)
 
     elif args.hibernate:
-        misc.SetSuspendState(True, False, False)
+        powrprof.SetSuspendState(True, False, False)
 
     elif args.standby:
-        misc.SetSuspendState(False, False, False)
+        powrprof.SetSuspendState(False, False, False)
 
     elif args.lock:
         user.LockWorkStation()
