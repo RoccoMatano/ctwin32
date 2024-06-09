@@ -22,7 +22,6 @@
 #
 ################################################################################
 
-import pyaes
 from ctwin32.bcrypt import (
     BCRYPT_AES_ALGORITHM,
     BCRYPT_CHAINING_MODE,
@@ -37,22 +36,42 @@ from ctwin32.bcrypt import (
 ################################################################################
 
 CRYPT_BLOCK_LEN = 16
+IS_PYAES = False
+try:
+    import pyaes
+    IS_PYAES = True
+except ImportError:
+    from cryptography.hazmat.primitives.ciphers import (
+        Cipher,
+        algorithms,
+        modes
+        )
 
 ################################################################################
 
 def simple_py_aes_encrypt(data, key):
     blen = CRYPT_BLOCK_LEN
-    rng = range(0, len(data), blen)
-    aes = pyaes.AESModeOfOperationCBC(key, None)
-    return b"".join(aes.encrypt(data[i:i + blen]) for i in rng)
+    if IS_PYAES:
+        rng = range(0, len(data), blen)
+        aes = pyaes.AESModeOfOperationCBC(key, None)
+        return b"".join(aes.encrypt(data[i:i + blen]) for i in rng)
+    else:
+        aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
+        encryptor = aes.encryptor()
+        return encryptor.update(data) + encryptor.finalize()
 
 ################################################################################
 
 def simple_py_aes_decrypt(data, key):
     blen = CRYPT_BLOCK_LEN
-    rng = range(0, len(data), blen)
-    aes = pyaes.AESModeOfOperationCBC(key, None)
-    return b"".join(aes.decrypt(data[i:i + blen]) for i in rng)
+    if IS_PYAES:
+        rng = range(0, len(data), blen)
+        aes = pyaes.AESModeOfOperationCBC(key, None)
+        return b"".join(aes.decrypt(data[i:i + blen]) for i in rng)
+    else:
+        aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
+        decryptor = aes.decryptor()
+        return decryptor.update(data) + decryptor.finalize()
 
 ################################################################################
 

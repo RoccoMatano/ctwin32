@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - switched to using ctypes' last error shadow copy
 - support to supply name, icon and style when creating WndCreateParams
+- sample `simple_aes.py` also supports module `cryptography` in addition to
+  `pyaes`
 
 ### Fixed
 
