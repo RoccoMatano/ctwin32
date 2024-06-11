@@ -23,7 +23,6 @@
 ################################################################################
 
 import sys
-import traceback
 import lzma
 import base64
 
@@ -70,8 +69,6 @@ from . import (
     IDCANCEL,
     IDC_ARROW,
     IDOK,
-    MB_ICONERROR,
-    MB_OK,
     SS_CENTER,
     SWP_NOACTIVATE,
     SWP_NOMOVE,
@@ -378,34 +375,6 @@ class WndCreateParams:
 
 ################################################################################
 
-def _exception_in_callback(err_info):
-    # During a callback from C code into python code (through ctypes) an
-    # exception occured in that python code - described by the string
-    # 'err_info'. Since there is no possibility to propagate this exception
-    # to the python interpreter, we have to terminate the process. Before we
-    # do that, we try to inform the user.
-
-    if sys.stderr is None or not hasattr(sys.stderr, "mode"):
-        user.txt_to_clip(err_info)
-        err_info += "\nThe above text has been copied to the clipboard."
-        user.MessageBox(
-            None,
-            err_info,
-            "Terminating program",
-            MB_OK | MB_ICONERROR
-            )
-    else:
-        sys.stderr.write(err_info)
-
-    # Calling sys.exit() here won't help, since it depends on exception
-    # propagation. We could hope that this thread is pumping messages
-    # while watching for WM_QUIT messages and post such a message.
-    # Since this possibility seems too vague, we play it safe
-    # and call:
-    kernel.ExitProcess(1)
-
-################################################################################
-
 _PROP_SELF = kernel.global_add_atom("ctwin32:SimpleWnd:self")
 
 class SimpleWnd(BaseWnd):
@@ -429,8 +398,8 @@ class SimpleWnd(BaseWnd):
         # Since this is a python callback that ctypes calls when requested
         # by foreign C code, ctypes has no way of propagating any exception
         # back to the python interpreter - those would simply be ignored.
-        # Therefore we have to catch all unhandled exceptions here.
-        try:
+        # Therefore any exception has to terminate the process.
+        with user.terminate_on_exception():
             if msg != WM_NCCREATE:
                 if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
@@ -451,8 +420,6 @@ class SimpleWnd(BaseWnd):
                 self.set_prop(_PROP_SELF, cparam)
                 return self.on_message(msg, wp, lp)
             raise TypeError("not derived from SimpleWnd")
-        except BaseException:                                   # noqa: BLE001
-            _exception_in_callback(traceback.format_exc())
 
     ############################################################################
 
@@ -601,8 +568,8 @@ class BaseDlg(BaseWnd):
         # Since this is a python callback that ctypes calls when requested
         # by foreign C code, ctypes has no way of propagating any exception
         # back to the python interpreter - those would simply be ignored.
-        # Therefore we have to catch all unhandled exceptions here.
-        try:
+        # Therefore any exception has to terminate the process.
+        with user.terminate_on_exception():
             if msg != WM_INITDIALOG:
                 if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
@@ -640,8 +607,6 @@ class BaseDlg(BaseWnd):
                     self.set_prop(_PROP_SELF, lp)
                     return self.on_init_dialog()
                 raise TypeError("not derived from BaseDlg")
-        except BaseException:                                   # noqa: BLE001
-            _exception_in_callback(traceback.format_exc())
 
     ############################################################################
 

@@ -22,10 +22,13 @@
 #
 ################################################################################
 
+import sys
+import traceback
 from types import SimpleNamespace as _namespace
 
 import ctypes
 from .wtypes import (
+    byte_buffer,
     string_buffer,
     BOOL,
     BYTE,
@@ -63,6 +66,7 @@ from .wtypes import (
     )
 from . import (
     ref,
+    ntdll,
     kernel,
     raise_if,
     raise_on_zero,
@@ -75,6 +79,8 @@ from . import (
     INPUT_KEYBOARD,
     KEYEVENTF_KEYUP,
     LR_DEFAULTSIZE,
+    MB_OK,
+    MB_ICONERROR,
     MONITOR_DEFAULTTOPRIMARY,
     SPI_GETNONCLIENTMETRICS,
     SPI_SETNONCLIENTMETRICS,
@@ -85,13 +91,10 @@ from . import (
     SPIF_SENDCHANGE,
     SWP_NOSIZE,
     SWP_NOZORDER,
+    UOI_FLAGS,
     WAIT_FAILED,
     WM_QUIT,
-    )
-from .ntdll import (
-    RtlNtStatusToDosError,
-    proc_path_from_pid,
-    STATUS_BUFFER_TOO_SMALL,
+    WSF_VISIBLE,
     )
 
 _usr = ctypes.WinDLL("user32.dll", use_last_error=True)
@@ -194,10 +197,12 @@ _EnumWindowsCallback = ctypes.WINFUNCTYPE(
 
 @_EnumWindowsCallback
 def _EnumWndCb(hwnd, ctxt):
-    cbc = ctxt.contents
-    res = cbc.callback(hwnd, cbc.context)
-    # keep on enumerating if the callback fails to return a value
-    return res if res is not None else True
+    # cannot propagate exceptions from callback
+    with terminate_on_exception():
+        cbc = ctxt.contents
+        res = cbc.callback(hwnd, cbc.context)
+        # keep on enumerating if the callback fails to return a value
+        return res if res is not None else True
 
 ################################################################################
 
@@ -239,7 +244,7 @@ def _get_wnd_lst_cb(hwnd, wnd_lst):
         hwnd=hwnd,
         text=GetWindowText(hwnd),
         pid=pid,
-        pname=proc_path_from_pid(pid),
+        pname=ntdll.proc_path_from_pid(pid),
         cls=GetClassName(hwnd),
         style=GetWindowLong(hwnd, GWL_STYLE),
         exstyle=GetWindowLong(hwnd, GWL_EXSTYLE)
@@ -1119,10 +1124,12 @@ _EnumPropsCallback = ctypes.WINFUNCTYPE(
 
 @_EnumPropsCallback
 def _EnumPropsCb(hwnd, name, data, ctxt):
-    cbc = ctxt.contents
-    res = cbc.callback(hwnd, name, data, cbc.context)
-    # keep on enumerating if the callback fails to return a value
-    return res if res is not None else True
+    # cannot propagate exceptions from callback
+    with terminate_on_exception():
+        cbc = ctxt.contents
+        res = cbc.callback(hwnd, name, data, cbc.context)
+        # keep on enumerating if the callback fails to return a value
+        return res if res is not None else True
 
 ################################################################################
 
@@ -1568,16 +1575,110 @@ try:
             if status == 0:
                 break
 
-            if status == STATUS_BUFFER_TOO_SMALL:
+            if status == ntdll.STATUS_BUFFER_TOO_SMALL:
                 # avoid under-allocating due to newly added windows -> + 32
                 allocated = received + 32
             else:
-                raise WinError(RtlNtStatusToDosError(status))
+                raise WinError(ntdll.RtlNtStatusToDosError(status))
 
         return array[:received - 1]
 
 except (FileNotFoundError, AttributeError):
     def build_wnd_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
         raise NotImplementedError
+
+################################################################################
+
+_GetProcessWindowStation = fun_fact(_usr.GetProcessWindowStation, (HANDLE,))
+
+def GetProcessWindowStation():
+    res = _GetProcessWindowStation()
+    raise_on_zero(res)
+    return res
+
+################################################################################
+
+_GetThreadDesktop = fun_fact(_usr.GetThreadDesktop, (HANDLE, DWORD))
+
+def GetThreadDesktop(tid):
+    res = _GetThreadDesktop(tid)
+    raise_on_zero(res)
+    return res
+
+################################################################################
+
+_GetUserObjectInformation = fun_fact(
+    _usr.GetUserObjectInformationW,
+    (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
+    )
+
+def GetUserObjectInformation(hdl, idx):
+    size = DWORD()
+    _GetUserObjectInformation(hdl, idx, None, 0, ref(size))
+    buf = byte_buffer(size.value)
+    raise_on_zero(_GetUserObjectInformation(hdl, idx, buf, size, ref(size)))
+    return buf
+
+################################################################################
+
+class USEROBJECTFLAGS(ctypes.Structure):
+    _fields_ = (
+        ("fInherit", BOOL),
+        ("fReserved", BOOL),
+        ("dwFlags", DWORD),
+        )
+
+def is_interactive_process():
+    uof = USEROBJECTFLAGS.from_buffer(
+        GetUserObjectInformation(GetProcessWindowStation(), UOI_FLAGS)
+        )
+    return bool(uof.dwFlags & WSF_VISIBLE)
+
+################################################################################
+
+class terminate_on_exception:
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, typ, val, tb):
+        if typ is None:
+            return
+
+        # An exception has occurred which our caller would like to cause this
+        # process to be terminated. Most likely our caller wants this, because
+        # it is executing a callback from C code into python code (through
+        # ctypes). In such a situation there is no possibility to propagate
+        # this exception to the python interpreter and therefore the process
+        # has to be terminated.
+        # Before we do that, we try to inform the user.
+
+        err_info = "".join(traceback.format_exception(typ, val, tb))
+        try:
+            interactive = is_interactive_process()
+        except OSError:
+            interactive = False
+
+        if interactive:
+            if sys.stderr is None or not hasattr(sys.stderr, "mode"):
+                txt_to_clip(err_info)
+                err_info += "\nThe above text has been copied to the clipboard."
+                MessageBox(
+                    None,
+                    err_info,
+                    "Terminating program",
+                    MB_OK | MB_ICONERROR
+                    )
+            else:
+                sys.stderr.write(err_info)
+        else:
+            kernel.dbg_print(err_info)
+
+        # Calling sys.exit() here won't help, since it depends on exception
+        # propagation. We could hope that this thread is pumping messages
+        # while watching for WM_QUIT messages and post such a message.
+        # Since this possibility seems too vague, we play it safe
+        # and call:
+        kernel.ExitProcess(1)
 
 ################################################################################

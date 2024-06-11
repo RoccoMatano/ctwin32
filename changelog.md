@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - advapi.RegFlushKey
 - advapi.get_token_user
 - advapi.get_token_groups
+- user.GetProcessWindowStation
+- user.GetThreadDesktop
+- user.GetUserObjectInformation
+- user.is_interactive_process
+- user.terminate_on_exception
 
 ### Changed
 
@@ -19,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - support to supply name, icon and style when creating WndCreateParams
 - sample `simple_aes.py` also supports module `cryptography` in addition to
   `pyaes`
+- reworked handling of exceptions in callbacks
 
 ### Fixed
 

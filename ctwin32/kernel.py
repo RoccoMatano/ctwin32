@@ -76,6 +76,7 @@ from . import (
     raise_on_err,
     raise_on_zero,
     ref,
+    user,
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     ERROR_ACCESS_DENIED,
     ERROR_FILE_NOT_FOUND,
@@ -1176,12 +1177,14 @@ _EnumResNameCallback = ctypes.WINFUNCTYPE(
 
 @_EnumResNameCallback
 def _EnumResNameCb(hmod, typ, name, ctxt):
-    typ = typ if not (typ >> 16) else ctypes.wstring_at(typ)
-    name = name if not (name >> 16) else ctypes.wstring_at(name)
-    cbc = ctxt.contents
-    res = cbc.callback(hmod, typ, name, cbc.context)
-    # keep on enumerating if the callback fails to return a value
-    return res if res is not None else True
+    # cannot propagate exceptions from callback
+    with user.terminate_on_exception():
+        typ = typ if not (typ >> 16) else ctypes.wstring_at(typ)
+        name = name if not (name >> 16) else ctypes.wstring_at(name)
+        cbc = ctxt.contents
+        res = cbc.callback(hmod, typ, name, cbc.context)
+        # keep on enumerating if the callback fails to return a value
+        return res if res is not None else True
 
 _EnumResourceNames = fun_fact(
     _k32.EnumResourceNamesW,
@@ -1201,10 +1204,12 @@ def get_resource_names(hmod, typ):
 
     @_EnumResNameCallback
     def collect(not_used1, not_used2, name, not_used3):
-        if name >= 0x10000:
-            name = PWSTR(name).value
-        names.append(name)
-        return True
+        # cannot propagate exceptions from callback
+        with user.terminate_on_exception():
+            if name >= 0x10000:
+                name = PWSTR(name).value
+            names.append(name)
+            return True
 
     raise_on_zero(_EnumResourceNames(hmod, typ, collect, None))
     return names

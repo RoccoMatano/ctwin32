@@ -25,13 +25,13 @@
 import sys
 import time
 import uuid
-import traceback
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
 from ctwin32 import (
     advapi,
     cmdline_from_args,
     kernel,
+    user,
     wtypes,
     CREATE_NEW_CONSOLE,
     DELETE,
@@ -60,12 +60,6 @@ _FILE = Path(__file__).resolve()
 
 ################################################################################
 
-def _print_and_exit(err_str):
-    kernel.dbg_print(err_str)
-    kernel.ExitProcess(1)
-
-################################################################################
-
 def _load_func(file_name, func_name):
     dont_write_bytecode = sys.dont_write_bytecode
     sys.dont_write_bytecode = True
@@ -87,10 +81,10 @@ def _load_func(file_name, func_name):
 @advapi.SERVICE_MAIN_FUNCTION
 def _service_main(argc, argv):
     # Since this is a python callback that ctypes calls when requested
-    # by native code, ctypes has no way of propagating any exception
+    # by foreign C code, ctypes has no way of propagating any exception
     # back to the python interpreter - those would simply be ignored.
-    # Therefore we have to catch all unhandled exceptions here.
-    try:
+    # Therefore any exception has to terminate the process.
+    with user.terminate_on_exception():
         tid = kernel.GetCurrentThreadId()
         kernel.dbg_print(f"in service_main: {tid}")
 
@@ -129,9 +123,6 @@ def _service_main(argc, argv):
         svc_stat.dwCurrentState = SERVICE_STOPPED
         advapi.SetServiceStatus(hdl, svc_stat)
         kernel.dbg_print(f"returning from _service main: {tid}")
-
-    except BaseException:                           # noqa: BLE001
-        _print_and_exit(traceback.format_exc())
 
 ################################################################################
 
@@ -351,8 +342,9 @@ def running_as_trusted_installer():
 ################################################################################
 
 def _main():
-    kernel.dbg_print(f"starting {_FILE.name}: {sys.argv}")
-    try:
+    kernel.dbg_print("svc_util in main")
+    with user.terminate_on_exception():
+        kernel.dbg_print(f"starting {_FILE.name}: {sys.argv}")
         available_tasks = (
             # argv[1]/func          min len(argv)
             (_run_service,          2),
@@ -364,8 +356,6 @@ def _main():
                 break
         else:
             raise RuntimeError(f"invalid args: {sys.argv}")
-    except BaseException:                                       # noqa: BLE001
-        _print_and_exit(traceback.format_exc())
 
 ################################################################################
 
