@@ -531,7 +531,7 @@ _NtQueryDirectoryFile = fun_fact(
 
 def get_directory_info(hdir, restart_scan):
     iosb = IO_STATUS_BLOCK()
-    bsize = 256
+    bsize = 1024
     while True:
         buf = byte_buffer(bsize)
         stat = _NtQueryDirectoryFile(
@@ -553,29 +553,34 @@ def get_directory_info(hdir, restart_scan):
             break
     raise_failed_status(stat)
 
-    def la2dt(la):
-        return kernel.FileTimeToLocalSystemTime(
-            FILETIME(la)
-            ).to_datetime()
+    def extract_info(addr):
+        def la2dt(la):
+            return kernel.FileTimeToLocalSystemTime(
+                FILETIME(la)
+                ).to_datetime()
 
-    dinfo = FILE_DIRECTORY_INFORMATION.from_buffer(buf)
-    name = ctypes.wstring_at(
-        ctypes.addressof(buf) +
-        FILE_DIRECTORY_INFORMATION.FileName.offset,
-        dinfo.FileNameLength // WCHAR_SIZE
-        )
+        info = FILE_DIRECTORY_INFORMATION.from_address(addr)
+        name = ctypes.wstring_at(
+            addr + FILE_DIRECTORY_INFORMATION.FileName.offset,
+            info.FileNameLength // WCHAR_SIZE
+            )
+        nxt = addr + info.NextEntryOffset if info.NextEntryOffset else 0
+        return nxt, _namespace(
+            FileIndex=info.FileIndex,
+            CreationTime=la2dt(info.CreationTime),
+            LastAccessTime=la2dt(info.LastAccessTime),
+            LastWriteTime=la2dt(info.LastWriteTime),
+            ChangeTime=la2dt(info.ChangeTime),
+            EndOfFile=info.EndOfFile,
+            AllocationSize=info.AllocationSize,
+            FileAttributes=info.FileAttributes,
+            FileName=name,
+            )
 
-    return _namespace(
-        FileIndex=dinfo.FileIndex,
-        CreationTime=la2dt(dinfo.CreationTime),
-        LastAccessTime=la2dt(dinfo.LastAccessTime),
-        LastWriteTime=la2dt(dinfo.LastWriteTime),
-        ChangeTime=la2dt(dinfo.ChangeTime),
-        EndOfFile=dinfo.EndOfFile,
-        AllocationSize=dinfo.AllocationSize,
-        FileAttributes=dinfo.FileAttributes,
-        FileName=name,
-        )
+    addr = ctypes.addressof(buf)
+    while addr:
+        addr, info = extract_info(addr)
+        yield info
 
 ################################################################################
 
@@ -583,9 +588,8 @@ def enum_directory_info(hdir):
     restart_scan = True
     with suppress_winerr(ERROR_NO_MORE_FILES):
         while True:
-            info = get_directory_info(hdir, restart_scan)
+            yield from get_directory_info(hdir, restart_scan)
             restart_scan = False
-            yield info
 
 ################################################################################
 

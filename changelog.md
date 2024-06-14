@@ -17,6 +17,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - user.GetUserObjectInformation
 - user.is_interactive_process
 - user.terminate_on_exception
+- kernel.ReadFile
+- kernel.WriteFile
+- kernel.read_file_text
+- kernel.write_file_text
+- kernel.FlushFileBuffers
+- kernel.CreateNamedPipe
+- kernel.ConnectNamedPipe
+- kernel.DisconnectNamedPipe
+- kernel.create_named_pipe
+- sample named_pipe.py
 
 ### Changed
 
@@ -29,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 
 - fixed string length handling in sample dump_ver_res.py
+- fixed result processing in ntdll.get_directory_info
 
 
 ## [2.6.0] - 2024-05-09

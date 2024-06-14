@@ -61,6 +61,7 @@ from .wtypes import (
     ULONG_PTR,
     USHORT,
     WCHAR,
+    WCHAR_SIZE,
     WIN32_FIND_DATA,
     WinError,
     WORD,
@@ -83,6 +84,7 @@ from . import (
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_FILES,
+    ERROR_PIPE_CONNECTED,
     ERROR_RESOURCE_ENUM_USER_STOP,
     ERROR_RESOURCE_NAME_NOT_FOUND,
     ERROR_SUCCESS,
@@ -100,6 +102,11 @@ from . import (
     IMAGE_FILE_MACHINE_AMD64,
     IMAGE_FILE_MACHINE_I386,
     OPEN_EXISTING,
+    PIPE_ACCESS_DUPLEX,
+    PIPE_READMODE_MESSAGE,
+    PIPE_REJECT_REMOTE_CLIENTS,
+    PIPE_TYPE_MESSAGE,
+    PIPE_UNLIMITED_INSTANCES,
     RT_MESSAGETABLE,
     STD_OUTPUT_HANDLE,
     WAIT_FAILED,
@@ -253,6 +260,65 @@ def create_file(
 
 ################################################################################
 
+_ReadFile = fun_fact(
+    _k32.ReadFile, (BOOL, HANDLE, PVOID, DWORD, PDWORD, PVOID)
+    )
+
+def ReadFile(hdl, size_or_buf):
+    buf_created = isinstance(size_or_buf, int)
+    if buf_created:
+        buf = byte_buffer(size_or_buf)
+        size = size_or_buf
+    else:
+        buf = size_or_buf
+        size = ctypes.sizeof(buf)
+
+    num_read = DWORD()
+    raise_on_zero(_ReadFile(hdl, buf, size, ref(num_read), None))
+    if buf_created:
+        return buf.raw[:num_read.value], num_read.value
+    else:
+        return buf, num_read.value
+
+################################################################################
+
+def read_file_text(hdl, size):
+    buf, size = ReadFile(hdl, string_buffer(size))
+    return buf[: size // WCHAR_SIZE]
+
+################################################################################
+
+_WriteFile = fun_fact(
+    _k32.WriteFile,
+    (BOOL, HANDLE, PVOID, DWORD, PDWORD, PVOID)
+    )
+
+def WriteFile(hdl, data):
+    try:
+        ldata = ctypes.sizeof(data)
+        rdata = ref(data)
+    except TypeError:
+        rdata = byte_buffer(data)
+        ldata = len(data)
+
+    written = DWORD()
+    raise_on_zero(_WriteFile(hdl, rdata, ldata, ref(written), None))
+    return written.value
+
+################################################################################
+
+def write_file_text(hdl, txt):
+    return WriteFile(hdl, string_buffer(txt, len(txt)))
+
+################################################################################
+
+_FlushFileBuffers = fun_fact(_k32.FlushFileBuffers, (BOOL, HANDLE))
+
+def FlushFileBuffers(hdl):
+    raise_on_zero(_FlushFileBuffers(hdl))
+
+################################################################################
+
 class _DUMMY_OVRLPD_STRUCT(ctypes.Structure):
     _fields_ = (
         ("Offset", DWORD),
@@ -359,6 +425,91 @@ def GetQueuedCompletionStatus(port, timeout):
             timeout)
             )
     return num_bytes.value, key.value, ovrl
+
+################################################################################
+
+_CreateNamedPipe = fun_fact(
+    _k32.CreateNamedPipeW, (
+        HANDLE,
+        PWSTR,
+        DWORD,
+        DWORD,
+        DWORD,
+        DWORD,
+        DWORD,
+        DWORD,
+        PSECURITY_ATTRIBUTES,
+        )
+    )
+
+def CreateNamedPipe(
+        name,
+        open_mode,
+        pipe_mode,
+        num_inst,
+        out_buf_size,
+        in_buf_bsize,
+        default_timeout,
+        p_sec_attr
+        ):
+    hdl = FHANDLE(
+        _CreateNamedPipe(
+            name,
+            open_mode,
+            pipe_mode,
+            num_inst,
+            out_buf_size,
+            in_buf_bsize,
+            default_timeout,
+            p_sec_attr
+            )
+        )
+    hdl.raise_on_invalid()
+    return hdl
+
+DEFAULT_PIPE_MODE = (
+    PIPE_TYPE_MESSAGE |
+    PIPE_READMODE_MESSAGE |
+    PIPE_REJECT_REMOTE_CLIENTS
+    )
+
+def create_named_pipe(
+        name,
+        open_mode=PIPE_ACCESS_DUPLEX,
+        pipe_mode=DEFAULT_PIPE_MODE,
+        num_inst=PIPE_UNLIMITED_INSTANCES,
+        out_buf_size=0x400,
+        in_buf_bsize=0x400,
+        default_timeout=0,
+        p_sec_attr=None
+        ):
+    return CreateNamedPipe(
+        name,
+        open_mode,
+        pipe_mode,
+        num_inst,
+        out_buf_size,
+        in_buf_bsize,
+        default_timeout,
+        p_sec_attr
+        )
+
+################################################################################
+
+_ConnectNamedPipe = fun_fact(_k32.ConnectNamedPipe, (BOOL, HANDLE, PVOID))
+
+def ConnectNamedPipe(hdl):
+    if not _ConnectNamedPipe(hdl, None):
+        if (err := GetLastError()) == ERROR_PIPE_CONNECTED:
+            return
+        raise WinError(err)
+
+################################################################################
+
+_DisconnectNamedPipe = fun_fact(_k32.DisconnectNamedPipe, (BOOL, HANDLE))
+
+def DisconnectNamedPipe(hdl):
+    raise_on_zero(_DisconnectNamedPipe(hdl))
 
 ################################################################################
 
