@@ -94,6 +94,7 @@ from . import (
 from .kernel import (
     LocalFree,
     GetLastError,
+    get_local_tzinfo,
     KHANDLE,
     PSECURITY_ATTRIBUTES,
     PSTARTUPINFO,
@@ -1622,6 +1623,9 @@ def _evt_from_buf(buf, offs):
     src_name = ctypes.wstring_at(p_str)
     p_str += (len(src_name) + 1) * WCHAR_SIZE
     computer_name = ctypes.wstring_at(p_str)
+    ltz = get_local_tzinfo()
+    tgen = _dt.fromtimestamp(elr.TimeGenerated, tz=_UTC).astimezone(ltz)
+    twri = _dt.fromtimestamp(elr.TimeWritten, tz=_UTC).astimezone(ltz)
 
     return elr.Length, _namespace(
         ClosingRecordNumber=elr.ClosingRecordNumber,
@@ -1636,8 +1640,8 @@ def _evt_from_buf(buf, offs):
         Sid=sid,
         SourceName=src_name,
         StringInserts=str_ins,
-        TimeGenerated=_dt.fromtimestamp(elr.TimeGenerated, tz=_UTC),
-        TimeWritten=_dt.fromtimestamp(elr.TimeWritten, tz=_UTC),
+        TimeGenerated=tgen,
+        TimeWritten=twri,
         )
 
 ################################################################################

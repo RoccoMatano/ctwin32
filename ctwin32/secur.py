@@ -37,9 +37,13 @@ from .wtypes import (
     UNICODE_STRING,
     ULONG,
     )
+from .kernel import (
+    FileTimeToLocalFileTime,
+    FileTimeToSystemTime,
+    get_local_tzinfo,
+    )
 from . import ref, fun_fact, suppress_winerr, ERROR_INVALID_PARAMETER
 from .ntdll import raise_failed_status
-from .kernel import FileTimeToLocalFileTime, FileTimeToSystemTime
 from .advapi import GetLengthSid, ConvertSidToStringSid
 
 _sec = ctypes.WinDLL("secur32.dll", use_last_error=True)
@@ -99,6 +103,7 @@ _LsaGetLogonSessionData = fun_fact(
     )
 
 def LsaGetLogonSessionData(luid):
+    ltz = get_local_tzinfo()
     ptr = PSECURITY_LOGON_SESSION_DATA()
     raise_failed_status(_LsaGetLogonSessionData(ref(luid), ref(ptr)))
     try:
@@ -108,8 +113,9 @@ def LsaGetLogonSessionData(luid):
         def la2dt(la):
             st = FileTimeToSystemTime(FILETIME(0))
             with suppress_winerr(ERROR_INVALID_PARAMETER):
+                #convert utc to local time
                 st = FileTimeToSystemTime(FileTimeToLocalFileTime(FILETIME(la)))
-            return st.to_datetime()
+            return st.to_datetime(tzinfo=ltz)
 
         return _namespace(
             LogonId=int(lsd.LogonId),

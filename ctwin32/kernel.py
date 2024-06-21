@@ -22,6 +22,7 @@
 #
 ################################################################################
 
+import datetime as _dt
 import collections as _collections
 from enum import IntEnum as _int_enum
 
@@ -687,6 +688,13 @@ def AdjustTime(seconds_to_adjust):
     ft += int(seconds_to_adjust * 1e7)
     st = FileTimeToSystemTime(ft)
     raise_on_zero(_k32.SetSystemTime(ref(st)))
+
+################################################################################
+
+def get_local_tzinfo():
+    utc = GetSystemTimeAsFileTime()
+    local = FileTimeToLocalFileTime(utc)
+    return _dt.timezone(_dt.timedelta(0, int(local - utc) // 10_000_000))
 
 ################################################################################
 

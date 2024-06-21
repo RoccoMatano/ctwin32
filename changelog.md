@@ -3,7 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+and this project adheres somewhat to [Semantic Versioning](
+http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - kernel.DisconnectNamedPipe
 - kernel.create_named_pipe
 - sample named_pipe.py
+- kernel.get_local_tzinfo
 
 ### Changed
 
@@ -35,6 +37,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - sample `simple_aes.py` also supports module `cryptography` in addition to
   `pyaes`
 - reworked handling of exceptions in callbacks
+- reworked advapi.ReadEventLog and secur.LsaGetLogonSessionData to return
+  local timestamps with appropriate timezone
 
 ### Fixed
 
