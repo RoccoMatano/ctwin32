@@ -1480,7 +1480,7 @@ def _ns_from_cred(cred):
 
 ################################################################################
 
-def CreadRead(target_name, typ=CRED_TYPE_GENERIC, flags=0):
+def CredRead(target_name, typ=CRED_TYPE_GENERIC, flags=0):
     ptr = PCREDENTIAL()
     try:
         raise_on_zero(_CredRead(target_name, typ, flags, ref(ptr)))
