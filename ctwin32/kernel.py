@@ -82,6 +82,7 @@ from . import (
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     ERROR_ACCESS_DENIED,
     ERROR_FILE_NOT_FOUND,
+    ERROR_HANDLE_EOF,
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_FILES,
@@ -1773,6 +1774,59 @@ def find_file(name):
     hdl, info = FindFirstFile(name)
     hdl.close()
     return info
+
+################################################################################
+
+_FindFirstFileName = fun_fact(
+    _k32.FindFirstFileNameW, (HANDLE, PWSTR, DWORD, PDWORD, PWSTR)
+    )
+
+def FindFirstFileName(name):
+    size = DWORD(256)
+    while True:
+        size.value *= 2
+        buf = string_buffer(size.value)
+        hdl = FFHANDLE(_FindFirstFileName(name, 0, ref(size), buf))
+        if not hdl.is_valid():
+            err = GetLastError()
+            if err == ERROR_MORE_DATA:
+                continue
+            if err == ERROR_FILE_NOT_FOUND:
+                return None, None
+            raise WinError(err)
+        return hdl, buf.value
+
+################################################################################
+
+_FindNextFileName = fun_fact(
+    _k32.FindNextFileNameW, (BOOL, HANDLE, PDWORD, PWSTR)
+    )
+
+def FindNextFileName(hdl):
+    size = DWORD(256)
+    while True:
+        size.value *= 2
+        buf = string_buffer(size.value)
+        if not _FindNextFileName(hdl, ref(size), buf):
+            err = GetLastError()
+            if err == ERROR_MORE_DATA:
+                continue
+            if err == ERROR_HANDLE_EOF:
+                return None
+            raise WinError(err)
+        return buf.value
+
+################################################################################
+
+def find_all_filenames(name):
+    hdl, name = FindFirstFileName(name)
+    if hdl is not None:
+        with hdl:
+            while True:
+                yield name
+                name = FindNextFileName(hdl)
+                if name is None:
+                    break
 
 ################################################################################
 

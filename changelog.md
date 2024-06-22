@@ -29,6 +29,9 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.create_named_pipe
 - sample named_pipe.py
 - kernel.get_local_tzinfo
+- kernel.FindFirstFileName
+- kernel.FindNextFileName
+- kernel.find_all_filenames
 
 ### Changed
 
