@@ -32,6 +32,8 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.FindFirstFileName
 - kernel.FindNextFileName
 - kernel.find_all_filenames
+- kernel.GetFileInformationByHandle
+- sample hardlinks.py
 
 ### Changed
 

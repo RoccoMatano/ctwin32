@@ -2031,3 +2031,29 @@ def get_proc_env_as_dict(hdl):
     return env_str_to_dict(env)
 
 ################################################################################
+
+class BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("dwFileAttributes", DWORD),
+        ("ftCreationTime", FILETIME),
+        ("ftLastAccessTime", FILETIME),
+        ("ftLastWriteTime", FILETIME),
+        ("dwVolumeSerialNumber", DWORD),
+        ("nFileSizeHigh", DWORD),
+        ("nFileSizeLow", DWORD),
+        ("nNumberOfLinks", DWORD),
+        ("nFileIndexHigh", DWORD),
+        ("nFileIndexLow", DWORD),
+        )
+PBY_HANDLE_FILE_INFORMATION = POINTER(BY_HANDLE_FILE_INFORMATION)
+
+_GetFileInformationByHandle = fun_fact(
+    _k32.GetFileInformationByHandle, (BOOL, HANDLE, PBY_HANDLE_FILE_INFORMATION)
+    )
+
+def GetFileInformationByHandle(hdl):
+    info = BY_HANDLE_FILE_INFORMATION()
+    raise_on_zero(_GetFileInformationByHandle(hdl, ref(info)))
+    return ns_from_struct(info)
+
+################################################################################
