@@ -405,6 +405,9 @@ class WIN32_FIND_DATA(ctypes.Structure):
 
 # pointer types
 
+PTR_32_BIT = ctypes.sizeof(ctypes.c_void_p) == 4
+PTR_64_BIT = ctypes.sizeof(ctypes.c_void_p) == 8
+
 PWSTR = ctypes.c_wchar_p
 PSTR = ctypes.c_char_p
 PVOID = ctypes.c_void_p

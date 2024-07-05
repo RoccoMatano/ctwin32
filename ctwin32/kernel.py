@@ -43,6 +43,7 @@ from .wtypes import (
     PBOOL,
     PBYTE,
     PDWORD,
+    PLARGE_INTEGER,
     POINTER,
     PPWSTR,
     PSIZE_T,
@@ -2055,5 +2056,62 @@ def GetFileInformationByHandle(hdl):
     info = BY_HANDLE_FILE_INFORMATION()
     raise_on_zero(_GetFileInformationByHandle(hdl, ref(info)))
     return ns_from_struct(info)
+
+################################################################################
+
+_CreateFileMapping = fun_fact(
+    _k32.CreateFileMappingW, (
+        HANDLE,
+        HANDLE,
+        PSECURITY_ATTRIBUTES,
+        DWORD,
+        DWORD,
+        DWORD,
+        PWSTR
+        )
+    )
+
+def CreateFileMapping(fhdl, sec_attr, prot, maxsize, name=None):
+    hdl = KHANDLE(
+        _CreateFileMapping(
+            fhdl,
+            sec_attr,
+            prot,
+            maxsize >> 32,
+            maxsize & 0xffffffff,
+            name
+            )
+        )
+    hdl.raise_on_invalid()
+    return hdl
+
+################################################################################
+
+_MapViewOfFile = fun_fact(
+    _k32.MapViewOfFile, (PVOID, HANDLE, DWORD, DWORD, DWORD, SIZE_T)
+    )
+
+def MapViewOfFile(mapping, acc, offset, size):
+    addr = _MapViewOfFile(mapping, acc, offset >> 32, offset & 0xffffffff, size)
+    raise_on_zero(addr)
+    return addr
+
+################################################################################
+
+_UnmapViewOfFile = fun_fact(_k32.UnmapViewOfFile, (BOOL, PVOID))
+
+def UnmapViewOfFile(addr):
+    raise_on_zero(_UnmapViewOfFile(addr))
+
+################################################################################
+
+_GetFileSizeEx = fun_fact(_k32.GetFileSizeEx, (BOOL, HANDLE, PLARGE_INTEGER))
+
+def GetFileSizeEx(hdl):
+    size = LARGE_INTEGER()
+    raise_on_zero(_GetFileSizeEx(hdl, ref(size)))
+    return size.value
+
+GetFileSize = GetFileSizeEx
 
 ################################################################################

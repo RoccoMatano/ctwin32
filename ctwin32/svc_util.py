@@ -27,6 +27,9 @@ import time
 import uuid
 from pathlib import Path
 from importlib.util import spec_from_file_location, module_from_spec
+
+# Note: Since this file will not only serve as a module of its parent package
+#       but also as a standalone script, we cannot use 'from . import ('.
 from ctwin32 import (
     advapi,
     cmdline_from_args,

@@ -93,6 +93,8 @@ ignore = [
     "N803",     # pep8 naming is not suitable for Win32
     "N806",     # pep8 naming is not meant to be used everywhere
     "N813",     # aliases are meant to assign differing names
+    "N816",     # pep8 naming is not meant to be used everywhere
+    "N818",     # pep8 naming is not meant to be used everywhere
     "PERF203",  # try-except-in-loop
     "PLW1510",  # `subprocess.run` without explicit `check` argument
     "PLR0912",  # too many branches
@@ -115,6 +117,7 @@ ignore = [
     "TRY301",   # raise-within-try
     "UP015",    # redundant-open-modes
     "UP039",    # unnecessary-class-parentheses
+    "RUF012",   # ... should be annotated -> no dorky typing!!!
     "RUF013",   # implicit-optional -> no dorky typing!!!
     ]
 

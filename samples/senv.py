@@ -102,13 +102,12 @@ def persist_user_env_block(nv_dict, system=False):
 ################################################################################
 
 def get_env_block(system=False):
-    result = {}
     with env_var_root(system) as root:
         with env_var_key(root, KEY_READ) as key:
-            for name, value, typ in advapi.reg_enum_values(key):
-                if typ in (REG_SZ, REG_EXPAND_SZ):
-                    result[name] = value
-    return result
+            return {
+                nam: val for nam, val, typ in advapi.reg_enum_values(key)
+                if typ in (REG_SZ, REG_EXPAND_SZ)
+                }
 
 ################################################################################
 
@@ -143,8 +142,8 @@ def main(name, value, system, verbose):
     persist_env_var(name, value, system, True)
     if verbose:
         print(f"variables for {'system' if args.system else 'user'}:")
-        for name, value in get_env_block(args.system).items():
-            print(f"    {name} = {value}")
+        for k, v in get_env_block(args.system).items():
+            print(f"    {k} = {v}")
 
 ################################################################################
 

@@ -34,6 +34,13 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.find_all_filenames
 - kernel.GetFileInformationByHandle
 - sample hardlinks.py
+- kernel.CreateFileMapping
+- kernel.MapViewOfFile
+- kernel.UnmapViewOfFile
+- kernel.GetFileSize
+- kernel.GetFileSizeEx
+- module pemap
+- sample fimex.py
 
 ### Changed
 
@@ -44,6 +51,7 @@ http://semver.org/spec/v2.0.0.html).
 - reworked handling of exceptions in callbacks
 - reworked advapi.ReadEventLog and secur.LsaGetLogonSessionData to return
   local timestamps with appropriate timezone
+- moved class ApiSet from sample api_set.py to module pemap
 
 ### Fixed
 
