@@ -8,6 +8,8 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.7.0] - 2024-07-09
+
 ### Added
 
 - advapi.RegFlushKey
@@ -663,7 +665,8 @@ such an old version.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
-[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.6.0...master
+[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/2.7.0...master
+[2.7.0]: https://github.com/RoccoMatano/ctwin32/compare/2.6.0...2.7.0
 [2.6.0]: https://github.com/RoccoMatano/ctwin32/compare/2.5.0...2.6.0
 [2.5.0]: https://github.com/RoccoMatano/ctwin32/compare/2.4.0...2.5.0
 [2.4.0]: https://github.com/RoccoMatano/ctwin32/compare/2.3.0...2.4.0
