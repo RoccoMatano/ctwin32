@@ -169,6 +169,9 @@ class BaseWnd:
     def get_parent(self):
         return BaseWnd(user.GetParent(self.hwnd))
 
+    def get_menu(self):
+        return user.GetMenu(self.hwnd)
+
     def move(self, rc, repaint=True):
         user.MoveWindow(
             self.hwnd,
@@ -242,6 +245,15 @@ class BaseWnd:
 
     def client_rect(self):
         return user.GetClientRect(self.hwnd)
+
+    def adjust_window_rect(self, rc):
+        frame = user.AdjustWindowRectEx(
+            rc,
+            self.get_style(),
+            bool(self.get_menu()),
+            self.get_exstyle()
+            )
+        self.set_pos(None, 0, 0, frame.width, frame.height, SWP_NOMOVE)
 
     def window_rect_as_client(self):
         rc = self.window_rect()

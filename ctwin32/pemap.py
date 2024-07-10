@@ -224,8 +224,9 @@ dlattrRva = 0x1
 ################################################################################
 
 class NotPeError(OSError):
-    def __init__(self, name):
-        super().__init__(0, "not a PE file", str(name), ERROR_BAD_EXE_FORMAT)
+    def __init__(self, name, code=None):
+        code = code or ERROR_BAD_EXE_FORMAT
+        super().__init__(0, "not a PE file", str(name), code)
 
 ################################################################################
 
@@ -238,7 +239,7 @@ class pemap:
             f = kernel.create_file(str(fname), GENERIC_READ)
         except OSError as e:
             if convert_open_err:
-                raise NotPeError(fname) from e
+                raise NotPeError(fname, e.winerror) from e
             raise
 
         with f:
@@ -296,17 +297,17 @@ class pemap:
     ############################################################################
 
     def u16(self, offs, idx=0):
-        return ctypes.c_int16.from_address(self.view + offs + idx * 2).value
+        return ctypes.c_uint16.from_address(self.view + offs + idx * 2).value
 
     ############################################################################
 
     def u32(self, offs, idx=0):
-        return ctypes.c_int32.from_address(self.view + offs + idx * 4).value
+        return ctypes.c_uint32.from_address(self.view + offs + idx * 4).value
 
     ############################################################################
 
     def u64(self, offs, idx=0):
-        return ctypes.c_int64.from_address(self.view + offs + idx * 8).value
+        return ctypes.c_uint64.from_address(self.view + offs + idx * 8).value
 
     ############################################################################
 
@@ -361,7 +362,8 @@ class pemap:
 
     def section_from_rva(self, rva):
         for s in self.sections:
-            if s.VirtualAddress <= rva < s.VirtualAddress + s.VirtualSize:
+            size = s.VirtualSize or s.SizeOfRawData
+            if s.VirtualAddress <= rva < s.VirtualAddress + size:
                 return s
         return None
 

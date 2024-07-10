@@ -8,6 +8,10 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- fixed several bugs in pemap
+
 ## [2.7.0] - 2024-07-09
 
 ### Added

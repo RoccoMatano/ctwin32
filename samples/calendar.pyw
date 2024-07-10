@@ -74,29 +74,8 @@ class CalendarWnd(wndcls.SimpleWnd):
             self.cal.send_msg(MCM_GETMINREQRECT, 0, ctypes.addressof(control))
 
             # resize the control and parent
-            self.cal.set_pos(
-                None,
-                0,
-                0,
-                control.width,
-                control.height,
-                SWP_NOZORDER | SWP_NOMOVE
-                )
-            frame = user.AdjustWindowRectEx(
-                control,
-                self.get_style(),
-                False,
-                self.get_exstyle()
-                )
-            wrc = self.window_rect()
-            self.set_pos(
-                None,
-                wrc.left,
-                wrc.top,
-                frame.width,
-                frame.height,
-                SWP_NOZORDER
-                )
+            self.cal.set_pos(None, 0, 0, control.width, control.height, 0)
+            self.adjust_window_rect(control)
             return 0
 
         elif msg == WM_SETFOCUS:

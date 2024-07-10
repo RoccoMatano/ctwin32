@@ -961,6 +961,10 @@ GetParent = fun_fact(_usr.GetParent, (HWND, HWND))
 
 ################################################################################
 
+GetMenu = fun_fact(_usr.GetMenu, (HANDLE, HWND))
+
+################################################################################
+
 _InvalidateRect = fun_fact(_usr.InvalidateRect, (BOOL, HWND, PRECT, BOOL))
 
 def InvalidateRect(hwnd, rc, erase):
