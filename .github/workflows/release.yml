@@ -49,4 +49,4 @@ jobs:
         name: python-package-distributions
         path: dist/
     - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1.8
+      uses: pypa/gh-action-pypi-publish@release/v1.9
