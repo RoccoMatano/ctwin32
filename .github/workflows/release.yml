@@ -5,13 +5,9 @@ on: workflow_dispatch
 jobs:
   build:
     name: Build
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
-    - name: Set git to use LF
-      run: |
-        git config --global core.autocrlf false
-        git config --global core.eol lf
     - uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v5

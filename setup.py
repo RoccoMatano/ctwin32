@@ -5,12 +5,6 @@ from wheel.bdist_wheel import bdist_wheel
 
 ################################################################################
 
-# trying to build on non Windows OS is useless
-if sys.platform != "win32":
-    raise OSError("building ctwin32 on non Windows OS is futile")
-
-################################################################################
-
 # enable setting the platform tag from the outside
 
 parser = argparse.ArgumentParser(add_help=False)
