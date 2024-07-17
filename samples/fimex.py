@@ -235,8 +235,9 @@ def parse_fimex_args():
     g("-i", "--imp", action="store_true", help="imports only")
     g("-I", "--imo", action="store_true", help="imported modules only")
     g("-m", "--mod", action="store_true", help="imports of module only")
-    ape.add_argument("-p", "--path", help="path to search")
-    ape.add_argument("names", nargs="*")
+    ape.add_argument("-p", "--path", help="path to search (default: current)")
+    help="function names (default: any), in case of -m: module name"
+    ape.add_argument("names", nargs="*", help=help)
     args = ape.parse_args()
 
     mode = PM_STANDARD
