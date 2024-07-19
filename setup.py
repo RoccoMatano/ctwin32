@@ -1,7 +1,7 @@
 import sys
 import argparse
 from setuptools import setup
-from wheel.bdist_wheel import bdist_wheel
+from setuptools.command.bdist_wheel import bdist_wheel # setuptools >= 70.1.0
 
 ################################################################################
 

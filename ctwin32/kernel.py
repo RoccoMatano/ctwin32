@@ -1758,8 +1758,7 @@ def iter_dir(directory, ignore_access_denied=True):
             yield directory, info
             is_sub = (
                 bool(info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) and
-                info.cFileName != "." and
-                info.cFileName != ".."
+                info.cFileName not in (".", "..")
                 )
             if is_sub:
                 sub = rf"{directory}\{info.cFileName}"
