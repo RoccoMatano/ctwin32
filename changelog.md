@@ -8,6 +8,13 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- split up module `misc` into `dbghelp`, `powrprof`, `userenv` and
+  `wtsapi` (**_not backwards compatible_**)
+- replaced MIT license text with SPDX-License-Identifier in python files
+
+
 ## [2.7.1] - 2024-07-15
 
 ### Fixed
