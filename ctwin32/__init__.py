@@ -160,6 +160,15 @@ def CTL_CODE(dev_type, func, method, access):
 
 ################################################################################
 
+def LOWORD(dw):
+    return dw & 0xffff
+
+def HIWORD(dw):
+    return (dw >> 16) & 0xffff
+
+
+################################################################################
+
 INVALID_HANDLE_VALUE = HANDLE(-1).value
 HGDI_ERROR = INVALID_HANDLE_VALUE
 

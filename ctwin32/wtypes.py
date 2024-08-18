@@ -490,14 +490,6 @@ class ScdToBeClosed():
 
 ################################################################################
 
-def LOWORD(dw):
-    return dw & 0xffff
-
-def HIWORD(dw):
-    return (dw >> 16) & 0xffff
-
-################################################################################
-
 # c_void_p has a flaw: neither can c_void_p.from_param() process a py_object,
 # nor does cast() allow to convert a py_object to a c_void_p
 # (cast(py_object(obj), c_void_p) fails). Therefore we need this odd way of
