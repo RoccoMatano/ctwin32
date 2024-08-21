@@ -8,12 +8,17 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- advapi.RegLoadAppKey
+
 ### Changed
 
 - split up module `misc` into `dbghelp`, `powrprof`, `userenv` and
   `wtsapi` (**_not backwards compatible_**)
 - replaced MIT license text with SPDX-License-Identifier in python files
 - moved LOWORD and HIWORD from `wtypes` to `ctwin32`
+- let ctwin32.ns_from_struct work recursively
 
 
 ## [2.7.1] - 2024-07-15

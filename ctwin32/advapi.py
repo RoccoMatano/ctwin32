@@ -534,6 +534,21 @@ def RegFlushKey(key):
 
 ################################################################################
 
+_RegLoadAppKey = fun_fact(
+    _adv.RegLoadAppKeyW,
+    (LONG, PWSTR, PHKEY, DWORD, DWORD, DWORD)
+    )
+
+REG_PROCESS_APPKEY = 1
+
+def RegLoadAppKey(hive_name, acc=KEY_ALL_ACCESS, opt=REG_PROCESS_APPKEY):
+    key = HKEY()
+    raise_on_err(_RegLoadAppKey(hive_name, ref(key), acc, opt, 0))
+    key.raise_on_invalid()
+    return key
+
+################################################################################
+
 _IsValidSid = fun_fact(_adv.IsValidSid, (BOOL, PVOID))
 
 def IsValidSid(psid):

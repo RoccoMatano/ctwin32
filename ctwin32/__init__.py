@@ -129,14 +129,18 @@ def cmdline_from_args(args):
 
 ################################################################################
 
-def ns_from_struct(ctypes_struct):
+def ns_from_struct(ctypes_aggregation):
+    fields = {}
+    for k, *_ in ctypes_aggregation._fields_:
+        v = getattr(ctypes_aggregation, k)
+        if isinstance(v, (ctypes.Structure, ctypes.Union)):
+            v = ns_from_struct(v)
+        fields[k] = v
     # modify the class name for nicer repr
-    class HackedClassName(_namespace):
+    class NiceName(_namespace):
         pass
-    HackedClassName.__name__ = type(ctypes_struct).__name__
-    return HackedClassName(
-        **{f: getattr(ctypes_struct, f) for f, *_ in ctypes_struct._fields_}
-        )
+    NiceName.__name__ = type(ctypes_aggregation).__name__
+    return NiceName(**fields)
 
 ################################################################################
 
