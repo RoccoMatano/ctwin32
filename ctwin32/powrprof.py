@@ -42,6 +42,21 @@ def CallNtPowerInformation(level, outsize=0, input=None):
 
 ################################################################################
 
+_PowerInformationWithPrivileges = fun_fact(
+    _popro.PowerInformationWithPrivileges,
+    (LONG, LONG, PVOID, ULONG, PVOID, ULONG),
+    )
+
+def PowerInformationWithPrivileges(level, outsize=0, input=None):
+    src, slen = (None, 0) if not input else (ref(input), ULONG(len(input)))
+    dst, dlen = byte_buffer(outsize), ULONG(outsize)
+    raise_failed_status(
+        _PowerInformationWithPrivileges(level, src, slen, dst, dlen)
+        )
+    return dst
+
+################################################################################
+
 def get_system_execution_state():
     bts = CallNtPowerInformation(SystemExecutionState, ctypes.sizeof(ULONG))
     # result is a combination of ES_SYSTEM_REQUIRED, ES_DISPLAY_REQUIRED,

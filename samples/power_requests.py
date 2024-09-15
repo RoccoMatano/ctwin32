@@ -12,7 +12,7 @@ import ctypes
 from ctwin32 import (
     advapi,
     kernel,
-    ntdll,
+    powrprof,
     user,
     suppress_winerr,
     ERROR_INSUFFICIENT_BUFFER,
@@ -130,12 +130,15 @@ requester_types = {
 
 def get_power_requests():
     GetPowerRequestList = 45
-    size = 1024
+    size = 2048
     buf = None
     while buf is None:
         size *= 2
         with suppress_winerr(ERROR_INSUFFICIENT_BUFFER):
-            buf = ntdll.NtPowerInformation(GetPowerRequestList, None, size)
+            buf = powrprof.PowerInformationWithPrivileges(
+                GetPowerRequestList,
+                size
+                )
 
     count = ULONG.from_buffer(buf).value
 
@@ -223,7 +226,7 @@ if __name__ == "__main__":
         # create and activate a SystemRequired request
         print("with self created 'SystemRequired' request:")
         print(80 * "-")
-        reason = "demonstarting power requests"
+        reason = "demonstrating power requests"
         req = kernel.PowerRequest.SystemRequired
         with kernel.create_power_request(reason, req) as hdl:
             print_power_requests()

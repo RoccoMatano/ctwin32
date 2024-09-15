@@ -12,6 +12,11 @@ http://semver.org/spec/v2.0.0.html).
 
 - advapi.RegLoadAppKey
 - advapi.enum_event_log
+- powrprof.PowerInformationWithPrivileges
+- advapi.CreateWellKnownSid
+- advapi.SetThreadToken
+- advapi.enable_token_privileges
+- advapi.enable_privileges
 
 ### Changed
 
@@ -23,6 +28,8 @@ http://semver.org/spec/v2.0.0.html).
 - adapted sample `uptime_evt.py` to use advapi.enum_event_log
 - do not use the windows platform tags anymore when creating wheels as this
   was futile anyway (no more need for setup.py)
+- adapted sample `power_requests.py` to use
+  powrprof.PowerInformationWithPrivileges
 
 ## [2.7.1] - 2024-07-15
 

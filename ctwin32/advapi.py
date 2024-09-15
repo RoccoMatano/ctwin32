@@ -57,6 +57,7 @@ from . import (
     KEY_READ,
     KEY_WOW64_64KEY,
     ns_from_struct,
+    MAXIMUM_ALLOWED,
     OWNER_SECURITY_INFORMATION,
     raise_if,
     raise_on_err,
@@ -68,14 +69,17 @@ from . import (
     REG_QWORD,
     REG_SZ,
     SACL_SECURITY_INFORMATION,
+    SE_PRIVILEGE_ENABLED,
     SC_ENUM_PROCESS_INFO,
     SC_STATUS_PROCESS_INFO,
     suppress_winerr,
     TokenUser,
     TokenGroups,
+    WinBuiltinAdministratorsSid,
     )
 from .kernel import (
     LocalFree,
+    GetCurrentProcess,
     GetLastError,
     get_local_tzinfo,
     KHANDLE,
@@ -594,6 +598,21 @@ def ConvertSidToStringSid(sid):
 
 ################################################################################
 
+_CreateWellKnownSid = fun_fact(
+    _adv.CreateWellKnownSid, (BOOL, INT, PVOID, PVOID, PDWORD)
+    )
+
+def CreateWellKnownSid(sid_type, domain=None):
+    if domain is not None:
+       domain = byte_buffer(domain)
+    size = DWORD(0)
+    _CreateWellKnownSid(sid_type, domain, None, ref(size))
+    wks = byte_buffer(size.value)
+    raise_on_zero(_CreateWellKnownSid(sid_type, domain, wks, ref(size)))
+    return wks.raw[:size.value]
+
+################################################################################
+
 _CheckTokenMembership = fun_fact(
     _adv.CheckTokenMembership, (
         BOOL,
@@ -612,8 +631,10 @@ def CheckTokenMembership(token_handle, sid_to_check):
 ################################################################################
 
 def running_as_admin():
-    # well known sid of aministrators group
-    return CheckTokenMembership(None, ConvertStringSidToSid("S-1-5-32-544"))
+    return CheckTokenMembership(
+        None,
+        CreateWellKnownSid(WinBuiltinAdministratorsSid)
+        )
 
 ################################################################################
 
@@ -850,6 +871,20 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
 
 ################################################################################
 
+def enable_token_privileges(token, privileges):
+    laa = [
+        LUID_AND_ATTRIBUTES(LUID(p), SE_PRIVILEGE_ENABLED) for p in privileges
+    ]
+    AdjustTokenPrivileges(token, laa)
+
+################################################################################
+
+def enable_privileges(privileges):
+    with OpenProcessToken(GetCurrentProcess(), MAXIMUM_ALLOWED) as tok:
+        enable_token_privileges(tok, privileges)
+
+################################################################################
+
 _LookupAccountSid = fun_fact(
     _adv.LookupAccountSidW,
     (BOOL, PWSTR, PVOID, PWSTR, PDWORD, PWSTR, PDWORD, PDWORD)
@@ -888,6 +923,14 @@ def LookupAccountSid(sid, system_name=None):
             )
         )
     return name.value, domain.value, sid_use.value
+
+################################################################################
+
+_SetThreadToken = fun_fact(_adv.SetThreadToken, (BOOL, PHANDLE, HANDLE))
+
+def SetThreadToken(tok, thrd=None):
+    pht = None if thrd is None else ref(thrd)
+    raise_on_zero(_SetThreadToken(pht, tok))
 
 ################################################################################
 
