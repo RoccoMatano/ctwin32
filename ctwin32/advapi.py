@@ -1688,6 +1688,13 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
 
 ################################################################################
 
+def enum_event_log(name, flags=None, server=None):
+    with OpenEventLog(name, server) as log:
+        while some_events := ReadEventLog(log, flags):
+            yield from some_events
+
+################################################################################
+
 _EncryptFile = fun_fact(_adv.EncryptFileW, (BOOL, PWSTR))
 
 def EncryptFile(file_or_dir_name):

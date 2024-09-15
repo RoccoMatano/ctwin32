@@ -11,6 +11,7 @@ http://semver.org/spec/v2.0.0.html).
 ### Added
 
 - advapi.RegLoadAppKey
+- advapi.enum_event_log
 
 ### Changed
 
@@ -19,7 +20,7 @@ http://semver.org/spec/v2.0.0.html).
 - replaced MIT license text with SPDX-License-Identifier in python files
 - moved LOWORD and HIWORD from `wtypes` to `ctwin32`
 - let ctwin32.ns_from_struct work recursively
-
+- adapted sample `uptime_evt.py` to use advapi.enum_event_log
 
 ## [2.7.1] - 2024-07-15
 

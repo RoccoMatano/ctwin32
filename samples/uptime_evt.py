@@ -11,13 +11,9 @@ import datetime
 BOOT_EVENT_ID = 6009
 
 def boot_time():
-    with advapi.OpenEventLog("System") as log:
-        some_events = advapi.ReadEventLog(log)
-        while some_events:
-            for e in some_events:
-                if (e.EventID & 0xffff) == BOOT_EVENT_ID:
-                    return e.TimeGenerated
-            some_events = advapi.ReadEventLog(log)
+    for e in advapi.enum_event_log("System"):
+        if (e.EventID & 0xffff) == BOOT_EVENT_ID:
+            return e.TimeGenerated
     raise OSError("no boot event found")
 
 def up_time(time_boot=None):

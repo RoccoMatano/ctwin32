@@ -74,6 +74,7 @@ ignore = [
     "D204",     # force doc string layout
     "D205",     # force doc string layout
     "D211",     # rule confusion
+    "D212",     # force doc string layout
     "D213",     # rule confusion
     "D300",     # force doc string layout
     "D400",     # force doc string layout
@@ -86,6 +87,7 @@ ignore = [
     "ERA001",   # Prone to false positives
     "FBT002",   # boolean-default-value-positional-argument
     "FBT003",   # boolean-positional-value-in-call
+    "G004",     # logging f-strings is not that bad
     "I001",     # tastes differ
     "ISC003",   # Explicitly concatenated string should be implicitly concatenated
     "N801",     # pep8 naming is not meant to be used everywhere
@@ -107,7 +109,9 @@ ignore = [
     "RET508",   # Unnecessary {branch} after break statement
     "S101",     # Prone to false positives
     "S105",     # Prone to false positives
+    "S602",     # Prone to false positives
     "S603",     # Prone to false positives
+    "S607",     # sometimes partial paths are the right thing
     "SIM102",   # Use a single if statement instead of nested if statements
     "SIM117",   # Use a single instead of nested `with` statements
     "SLF001",   # ctypes requires accessing private members
