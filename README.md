@@ -31,9 +31,12 @@ for several instances of how ctwin32 can be used.
 -----
 
 Note: Even though ctwin32 is a pure Python module, it can of course only be used
-on Windows. Therefore, the
-[wheel packages provided](https://pypi.org/project/ctwin32/#files)
-are intentionally tagged with the x86, x64 and and arm64 Windows platform tags
-(in terms of content, those are the same). This is just to keep
-[pip](https://packaging.python.org/tutorials/installing-packages/)
-from installing them on a non-Windows OS.
+on Windows. For the first three years or so, packages were tagged with the
+Windows platform tags to prevent
+[pip](https://packaging.python.org/tutorials/installing-packages/) from using
+them on other operating systems. However, it became futile to try to prevent
+this when after only one year the `sdist` package was also released. In the
+absence of suitable wheel packages for other operating systems, this would mean
+that `pip install ctwin32` would now use the `sdist` package to install
+`ctwin32` anyway. Therefore, a universal wheel is now distributed and it is
+up to the user to be smart enough to use it on Windows only.

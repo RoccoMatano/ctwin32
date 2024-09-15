@@ -21,6 +21,8 @@ http://semver.org/spec/v2.0.0.html).
 - moved LOWORD and HIWORD from `wtypes` to `ctwin32`
 - let ctwin32.ns_from_struct work recursively
 - adapted sample `uptime_evt.py` to use advapi.enum_event_log
+- do not use the windows platform tags anymore when creating wheels as this
+  was futile anyway (no more need for setup.py)
 
 ## [2.7.1] - 2024-07-15
 
