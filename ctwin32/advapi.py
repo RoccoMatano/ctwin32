@@ -69,9 +69,9 @@ from . import (
     REG_QWORD,
     REG_SZ,
     SACL_SECURITY_INFORMATION,
-    SE_PRIVILEGE_ENABLED,
     SC_ENUM_PROCESS_INFO,
     SC_STATUS_PROCESS_INFO,
+    SE_PRIVILEGE_ENABLED,
     suppress_winerr,
     TokenUser,
     TokenGroups,
@@ -661,6 +661,17 @@ def DuplicateTokenEx(tok, acc, sattr, imp, typ):
 
 ################################################################################
 
+_AllocateLocallyUniqueId = fun_fact(
+    _adv.AllocateLocallyUniqueId, (BOOL, PLUID)
+    )
+
+def AllocateLocallyUniqueId():
+    luid = LUID()
+    raise_on_zero(_AllocateLocallyUniqueId(ref(luid)))
+    return int(luid)
+
+################################################################################
+
 class SID_AND_ATTRIBUTES(ctypes.Structure):
     _fields_ = (
         ("Sid", PVOID),
@@ -731,6 +742,23 @@ def get_token_groups(hdl):
             )
     tgroups = TOKEN_GROUPS.from_buffer_copy(buf)
     return (_xform_saa(saa) for saa in tgroups.Groups)
+
+################################################################################
+
+def make_token_groups(sids_and_attrs):
+    num_groups = len(sids_and_attrs)
+    class TOKEN_GROUPS(ctypes.Structure):
+        _fields_ = (
+            ("GroupCount", DWORD),
+            ("Groups", SID_AND_ATTRIBUTES * num_groups),
+            ("sid_bufs", ctypes.py_object),
+            )
+    tgroups = TOKEN_GROUPS(num_groups, sid_bufs=[None] * num_groups)
+    for i, (s, a) in enumerate(sids_and_attrs):
+        tgroups.sid_bufs[i] = byte_buffer(s)
+        tgroups.Groups[i].Sid = ctypes.addressof(tgroups.sid_bufs[i])
+        tgroups.Groups[i].Attributes = a
+    return tgroups
 
 ################################################################################
 

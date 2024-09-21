@@ -71,10 +71,13 @@ def byte_buffer(init, size=None):
         return (CHAR * init)()
     raise TypeError(init)
 
+def wchar_len_sz(wstr):
+    return 1 + sum(2 if ord(c) > 0xFFFF else 1 for c in wstr)
+
 def string_buffer(init, size=None):
     if isinstance(init, str):
         if size is None:
-            size = 1 + sum(2 if ord(c) > 0xFFFF else 1 for c in init)
+            size = wchar_len_sz(init)
         (buf := (WCHAR * size)()).value = init
         return buf
     elif isinstance(init, int):
@@ -284,21 +287,6 @@ class RECT(ctypes.Structure):
 
 ################################################################################
 
-class UNICODE_STRING(ctypes.Structure):
-    _fields_ = (
-        ("Length", WORD),
-        ("MaximumLength", WORD),
-        ("Buffer", ctypes.c_wchar_p),
-        )
-
-    def __str__(self):
-        return ctypes.wstring_at(
-            self.Buffer,
-            self.Length // WCHAR_SIZE
-            )
-
-################################################################################
-
 class LUID(ctypes.Structure):
     _fields_ = (
         ("LowPart", DWORD),
@@ -417,7 +405,6 @@ PSYSTEMTIME = POINTER(SYSTEMTIME)
 PPOINT = POINTER(POINT)
 PRECT = POINTER(RECT)
 PULONGLONG = POINTER(ULONGLONG)
-PUNICODE_STRING = POINTER(UNICODE_STRING)
 PLUID = POINTER(LUID)
 PPLUID = POINTER(PLUID)
 CallbackContextPtr = POINTER(CallbackContext)
@@ -534,5 +521,42 @@ class ArgcArgvFromArgs():
     @property
     def argv(self):
         return self._argv
+
+################################################################################
+
+class UNICODE_STRING(ctypes.Structure):
+    _fields_ = (
+        ("Length", WORD),
+        ("MaximumLength", WORD),
+        ("Buffer", PWSTR),
+        )
+
+    def __str__(self):
+        return ctypes.wstring_at(
+            self.Buffer,
+            self.Length // WCHAR_SIZE
+            )
+
+PUNICODE_STRING = POINTER(UNICODE_STRING)
+
+def UnicodeStrFromStr(init):
+    ws = wchar_len_sz(init)
+
+    class SELF_CONTAINED_US(ctypes.Structure):
+        _fields_ = (
+            ("us", UNICODE_STRING),
+            ("buf", WCHAR * ws),
+            )
+
+        def __init__(self, init):
+            li = ws * WCHAR_SIZE
+            baddr = ctypes.addressof(self) + __class__.buf.offset
+            super().__init__((li - WCHAR_SIZE, li, baddr), init)
+
+        @property
+        def ptr(self):
+            return PUNICODE_STRING(self.us)
+
+    return SELF_CONTAINED_US(init)
 
 ################################################################################

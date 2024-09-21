@@ -7,27 +7,49 @@
 
 from types import SimpleNamespace as _namespace
 import ctypes
+from . import (
+    ERROR_INVALID_PARAMETER,
+    fun_fact,
+    ns_from_struct,
+    ref,
+    suppress_winerr,
+    )
 from .wtypes import (
+    CHAR,
     FILETIME,
+    HANDLE,
+    INT,
     LARGE_INTEGER,
+    LONG,
     LUID,
     NTSTATUS,
+    PHANDLE,
+    PLONG,
     PLUID,
     POINTER,
     PPLUID,
+    PPVOID,
+    PSTR,
     PVOID,
     PULONG,
-    UNICODE_STRING,
+    SIZE_T,
     ULONG,
+    UNICODE_STRING,
+    WORD,
     )
+from .ntdll import raise_failed_status
 from .kernel import (
     FileTimeToLocalFileTime,
     FileTimeToSystemTime,
+    KHANDLE,
+    get_ansi_encoding,
     get_local_tzinfo,
     )
-from . import ref, fun_fact, suppress_winerr, ERROR_INVALID_PARAMETER
-from .ntdll import raise_failed_status
-from .advapi import GetLengthSid, ConvertSidToStringSid
+from .advapi import (
+    AllocateLocallyUniqueId,
+    GetLengthSid,
+    ConvertSidToStringSid,
+    )
 
 _sec = ctypes.WinDLL("secur32.dll", use_last_error=True)
 
@@ -152,5 +174,184 @@ def LsaEnumerateLogonSessions():
             ]
     finally:
         LsaFreeReturnBuffer(pluid)
+
+################################################################################
+
+_LsaDeregisterLogonProcess = fun_fact(
+    _sec.LsaDeregisterLogonProcess, (NTSTATUS, HANDLE)
+    )
+
+def LsaDeregisterLogonProcess(hdl):
+    raise_failed_status(_LsaDeregisterLogonProcess(hdl))
+
+################################################################################
+
+_LsaConnectUntrusted = fun_fact(_sec.LsaConnectUntrusted, (NTSTATUS, PHANDLE))
+
+def LsaConnectUntrusted():
+    hdl = HANDLE()
+    raise_failed_status(_LsaConnectUntrusted(ref(hdl)))
+    return hdl
+
+################################################################################
+
+class LSA_STRING(ctypes.Structure):
+    _fields_ = (
+        ("Length", WORD),
+        ("MaximumLength", WORD),
+        ("Buffer", PSTR),
+        )
+
+    def __str__(self):
+        return ctypes.string_at(
+            self.Buffer,
+            self.Length
+            ).decode(get_ansi_encoding())
+
+PLSA_STRING = POINTER(LSA_STRING)
+
+def LsaStrFromStr(init):
+    if isinstance(init, str):
+        init = init.encode(get_ansi_encoding())
+
+    class SELF_CONTAINED_LSAS(ctypes.Structure):
+        _fields_ = (
+            ("ls", LSA_STRING),
+            ("buf", CHAR * (1 + len(init))),
+            )
+
+        def __init__(self, init):
+            li = len(init)
+            baddr = ctypes.addressof(self) + __class__.buf.offset
+            super().__init__((li, 1 + li, baddr), init)
+
+        @property
+        def ptr(self):
+            return PLSA_STRING(self.ls)
+
+    return SELF_CONTAINED_LSAS(init)
+
+################################################################################
+
+_LsaLookupAuthenticationPackage = fun_fact(
+    _sec.LsaLookupAuthenticationPackage, (NTSTATUS, HANDLE, PLSA_STRING, PULONG)
+    )
+
+def LsaLookupAuthenticationPackage(hlsa, name):
+    name = LsaStrFromStr(name.encode(get_ansi_encoding()))
+    auth_pkg = ULONG()
+    raise_failed_status(
+        _LsaLookupAuthenticationPackage(
+            hlsa,
+            name.ptr,
+            ref(auth_pkg)
+            )
+        )
+    return auth_pkg.value
+
+################################################################################
+
+TOKEN_SOURCE_LENGTH = 8
+
+class TOKEN_SOURCE(ctypes.Structure):
+    _fields_ = (
+        ("SourceName", CHAR * TOKEN_SOURCE_LENGTH),
+        ("SourceIdentifier", LUID),
+        )
+
+PTOKEN_SOURCE = POINTER(TOKEN_SOURCE)
+
+################################################################################
+
+class QUOTA_LIMITS(ctypes.Structure):
+    _fields_ = (
+        ("PagedPoolLimit", SIZE_T),
+        ("NonPagedPoolLimit", SIZE_T),
+        ("MinimumWorkingSetSize", SIZE_T),
+        ("MaximumWorkingSetSize", SIZE_T),
+        ("PagefileLimit", SIZE_T),
+        ("TimeLimit", LARGE_INTEGER),
+        )
+
+PQUOTA_LIMITS = POINTER(QUOTA_LIMITS)
+
+################################################################################
+
+_LsaLogonUser = fun_fact(
+    _sec.LsaLogonUser, (
+        NTSTATUS,
+        HANDLE,
+        PLSA_STRING,
+        INT,
+        ULONG,
+        PVOID,
+        ULONG,
+        PVOID,
+        PTOKEN_SOURCE,
+        PPVOID,
+        PULONG,
+        PLUID,
+        PHANDLE,
+        PQUOTA_LIMITS,
+        PLONG
+        )
+    )
+
+def LsaLogonUser(
+        lsa_hdl,
+        origin_name,
+        logon_type,
+        auth_pkg,
+        auth_info,
+        local_groups=None,
+        src_name=None,
+        ):
+
+    origin_name = LsaStrFromStr(origin_name)
+    pgroups = None
+    if local_groups is not None:
+        pgroups = ref(local_groups)
+    if src_name is None:
+        src_name = "ctwin32"
+    token_src = TOKEN_SOURCE(
+        src_name.encode(get_ansi_encoding()),
+        LUID(AllocateLocallyUniqueId())
+        )
+
+    profile = PVOID()
+    plen = ULONG()
+    lid = LUID()
+    tok = KHANDLE()
+    qlim = QUOTA_LIMITS()
+    subs = LONG(0)
+
+    status = _LsaLogonUser(
+        lsa_hdl,
+        origin_name.ptr,
+        logon_type,
+        auth_pkg,
+        ref(auth_info),
+        ctypes.sizeof(auth_info),
+        pgroups,
+        ref(token_src),
+        ref(profile),
+        ref(plen),
+        ref(lid),
+        ref(tok),
+        ref(qlim),
+        ref(subs)
+        )
+    if status < 0:
+        raise_failed_status(subs if subs.value < 0 else status)
+
+    try:
+        sundries = _namespace(
+            ProfileBuffer=ctypes.string_at(profile.value, plen.value),
+            LogonId=int(lid),
+            Quotas=ns_from_struct(qlim)
+            )
+        return tok, sundries
+    finally:
+        LsaFreeReturnBuffer(profile)
 
 ################################################################################

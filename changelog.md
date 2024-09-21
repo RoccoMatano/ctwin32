@@ -17,6 +17,15 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.SetThreadToken
 - advapi.enable_token_privileges
 - advapi.enable_privileges
+- advapi.AllocateLocallyUniqueId
+- advapi.make_token_groups
+- secur.LsaDeregisterLogonProcess
+- secur.LsaConnectUntrusted
+- secur.LsaStrFromStr
+- secur.LsaLookupAuthenticationPackage
+- secur.LsaLogonUser
+- wtypes.wchar_len_sz
+- wtypes.UnicodeStrFromStr
 
 ### Changed
 
