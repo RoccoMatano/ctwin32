@@ -26,6 +26,7 @@ http://semver.org/spec/v2.0.0.html).
 - secur.LsaLogonUser
 - wtypes.wchar_len_sz
 - wtypes.UnicodeStrFromStr
+- sample run_s4u.py
 
 ### Changed
 
