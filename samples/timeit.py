@@ -31,15 +31,12 @@ if __name__ == "__main__":
 
     arglist = ["cmd", "/c", *sys.argv[1:]]
     job = kernel.CreateJobObject()
-    pi = kernel.create_process(arglist, CREATE_SUSPENDED)
-    kernel.AssignProcessToJobObject(job, pi.hProcess)
-
-    create_time = kernel.GetSystemTimeAsFileTime()
-    kernel.ResumeThread(pi.hThread)
-    kernel.WaitForSingleObject(pi.hProcess, INFINITE)
-    exit_time = kernel.GetSystemTimeAsFileTime()
-    kernel.CloseHandle(pi.hThread)
-    kernel.CloseHandle(pi.hProcess)
+    with kernel.create_process(arglist, CREATE_SUSPENDED) as pi:
+        kernel.AssignProcessToJobObject(job, pi.hProcess)
+        create_time = kernel.GetSystemTimeAsFileTime()
+        kernel.ResumeThread(pi.hThread)
+        kernel.WaitForSingleObject(pi.hProcess, INFINITE)
+        exit_time = kernel.GetSystemTimeAsFileTime()
 
     info_cls = JobObjectBasicAccountingInformation
     info = kernel.JOBOBJECT_BASIC_ACCOUNTING_INFORMATION()
