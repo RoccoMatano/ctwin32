@@ -73,9 +73,12 @@ from . import (
     SC_STATUS_PROCESS_INFO,
     SE_PRIVILEGE_ENABLED,
     suppress_winerr,
+    TokenElevationType,
+    TokenElevationTypeFull,
     TokenUser,
     TokenGroups,
     WinBuiltinAdministratorsSid,
+    WinLocalSystemSid,
     )
 from .kernel import (
     LocalFree,
@@ -613,6 +616,16 @@ def CreateWellKnownSid(sid_type, domain=None):
 
 ################################################################################
 
+_IsWellKnownSid = fun_fact(
+    _adv.IsWellKnownSid, (BOOL, PVOID, INT)
+    )
+
+def IsWellKnownSid(sid, sid_type):
+    bin_sid = byte_buffer(sid)
+    return _IsWellKnownSid(ref(bin_sid), sid_type) != 0
+
+################################################################################
+
 _CheckTokenMembership = fun_fact(
     _adv.CheckTokenMembership, (
         BOOL,
@@ -646,6 +659,30 @@ def OpenProcessToken(proc_handle, desired_acc):
     token = KHANDLE()
     raise_on_zero(_OpenProcessToken(proc_handle, desired_acc, ref(token)))
     return token
+
+################################################################################
+
+_OpenThreadToken = fun_fact(
+    _adv.OpenThreadToken, (BOOL, HANDLE, DWORD, BOOL, PHANDLE)
+    )
+
+def OpenThreadToken(proc_handle, desired_acc, as_self):
+    token = KHANDLE()
+    raise_on_zero(
+        _OpenThreadToken(proc_handle, desired_acc, as_self, ref(token))
+        )
+    return token
+
+################################################################################
+
+def GetCurrentProcessToken():
+    return HANDLE(-4)
+
+def GetCurrentThreadToken():
+    return HANDLE(-5)
+
+def GetCurrentThreadEffectiveToken():
+    return HANDLE(-6)
 
 ################################################################################
 
@@ -759,6 +796,30 @@ def make_token_groups(sids_and_attrs):
         tgroups.Groups[i].Sid = ctypes.addressof(tgroups.sid_bufs[i])
         tgroups.Groups[i].Attributes = a
     return tgroups
+
+################################################################################
+
+def running_as_system(consider_impersonation=False):
+    token = (
+        GetCurrentThreadEffectiveToken() if consider_impersonation
+        else GetCurrentProcessToken()
+        )
+    sid, _ = get_token_user(token)
+    return IsWellKnownSid(sid, WinLocalSystemSid)
+
+################################################################################
+
+def get_token_elevation_type(hdl):
+    return int.from_bytes(
+        GetTokenInformation(hdl, TokenElevationType),
+        "little"
+        )
+
+################################################################################
+
+def is_elevated_via_uac():
+    ele_type = get_token_elevation_type(GetCurrentProcessToken())
+    return ele_type == TokenElevationTypeFull
 
 ################################################################################
 

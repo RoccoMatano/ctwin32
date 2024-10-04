@@ -24,6 +24,7 @@ from ctwin32 import (
     ERROR_SERVICE_EXISTS,
     MAXIMUM_ALLOWED,
     NORMAL_PRIORITY_CLASS,
+    PROCESS_QUERY_LIMITED_INFORMATION,
     SC_MANAGER_CONNECT,
     SC_MANAGER_CREATE_SERVICE,
     SecurityIdentification,
@@ -197,7 +198,8 @@ def func_as_system(file_name, func_name, arglist=None):
 ################################################################################
 
 def create_process_in_session_copy_token(session, pid, arglist, flags=None):
-    with kernel.OpenProcess(MAXIMUM_ALLOWED, False, pid) as hproc:
+    pqli = PROCESS_QUERY_LIMITED_INFORMATION
+    with kernel.OpenProcess(pqli, False, pid) as hproc:
         with advapi.OpenProcessToken(hproc, TOKEN_DUPLICATE) as htok:
             # Cannot set the session ID of a token that is in use by a process.
             # Therefore we have to duplicate the token.

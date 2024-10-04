@@ -412,6 +412,9 @@ PLOGFONT = POINTER(LOGFONT)
 POSVERSIONINFOEX = POINTER(OSVERSIONINFOEX)
 PWIN32_FIND_DATA = POINTER(WIN32_FIND_DATA)
 
+def ptr_addr(ct_obj):
+    return PVOID.from_buffer(ct_obj).value
+
 ################################################################################
 
 # A class that allows to create types (by multiple inheritance) that are based
@@ -485,6 +488,10 @@ class ScdToBeClosed():
 def pvoid_from_obj(obj):
     return PVOID.from_buffer(ctypes.py_object(obj))
 
+# On the other hand: As long as CPython keeps using the object address as the
+# return value for `id()`, you can simply use `id(obj)` instead of
+# `pvoid_from_obj(obj)`.
+
 ################################################################################
 
 class ArgcArgvFromArgs():
@@ -539,6 +546,8 @@ class UNICODE_STRING(ctypes.Structure):
 
 PUNICODE_STRING = POINTER(UNICODE_STRING)
 
+################################################################################
+
 def UnicodeStrFromStr(init):
     ws = wchar_len_sz(init)
 
@@ -558,5 +567,34 @@ def UnicodeStrFromStr(init):
             return PUNICODE_STRING(self.us)
 
     return SELF_CONTAINED_US(init)
+
+################################################################################
+
+def UnicodeStrArray(strings):
+    num_strings = len(strings)
+    chain = "\0".join(strings)
+    buf_len = wchar_len_sz(chain)
+
+    class SELF_CONTAINED_USA(ctypes.Structure):
+        _fields_ = (
+            ("us", UNICODE_STRING * num_strings),
+            ("buf", WCHAR * buf_len),
+            )
+
+        def __init__(self, strings, chain):
+            super().__init__(buf=chain)
+            addr = ctypes.addressof(self) + __class__.buf.offset
+            for i, s in enumerate(strings):
+                max_len = wchar_len_sz(s) * WCHAR_SIZE
+                self.us[i].Length = max_len - WCHAR_SIZE
+                self.us[i].MaximumLength = max_len
+                self.us[i].Buffer = addr
+                addr += max_len
+
+        @property
+        def ptr(self):
+            return PUNICODE_STRING(self.us)
+
+    return SELF_CONTAINED_USA(strings, chain)
 
 ################################################################################

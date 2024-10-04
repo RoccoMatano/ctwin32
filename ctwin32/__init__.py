@@ -652,6 +652,10 @@ SidTypeLabel = 10
 TokenPrimary = 1
 TokenImpersonation = 2
 
+TokenElevationTypeDefault = 1
+TokenElevationTypeFull = 2
+TokenElevationTypeLimited = 3
+
 TokenUser = 1
 TokenGroups = 2
 TokenPrivileges = 3

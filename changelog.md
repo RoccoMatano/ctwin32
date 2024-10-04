@@ -27,6 +27,14 @@ http://semver.org/spec/v2.0.0.html).
 - wtypes.wchar_len_sz
 - wtypes.UnicodeStrFromStr
 - sample run_s4u.py
+- advapi.IsWellKnownSid
+- advapi.OpenThreadToken
+- advapi.GetCurrentProcessToken
+- advapi.GetCurrentThreadToken
+- advapi.GetCurrentThreadEffectiveToken
+- advapi.running_as_system
+- advapi.get_token_elevation_type
+- advapi.is_elevated_via_uac
 
 ### Changed
 
