@@ -507,6 +507,10 @@ GetCurrentProcessId = fun_fact(_k32.GetCurrentProcessId, (DWORD,))
 
 ################################################################################
 
+GetCurrentThread = fun_fact(_k32.GetCurrentThread, (HANDLE,))
+
+################################################################################
+
 _ProcessIdToSessionId = fun_fact(
     _k32.ProcessIdToSessionId, (BOOL, DWORD, PDWORD)
     )

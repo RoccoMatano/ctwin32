@@ -26,6 +26,7 @@ http://semver.org/spec/v2.0.0.html).
 - secur.LsaLogonUser
 - wtypes.wchar_len_sz
 - wtypes.UnicodeStrFromStr
+- wtypes.UnicodeStrArray
 - sample run_s4u.py
 - advapi.IsWellKnownSid
 - advapi.OpenThreadToken
@@ -35,6 +36,11 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.running_as_system
 - advapi.get_token_elevation_type
 - advapi.is_elevated_via_uac
+- kernel.GetCurrentThread
+- ntdll.NtQueryInformationThread
+- ntdll.get_thread_basic_info
+- ntdll.NtGetNextThread
+- psapi.GetProcessImageFileName
 
 ### Changed
 

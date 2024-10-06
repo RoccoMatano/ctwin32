@@ -51,6 +51,7 @@ from . import (
     SystemProcessInformation,
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
+    ThreadBasicInformation,
     ProcessCommandLineInformation,
     ProcessImageFileName,
     ProcessBasicInformation,
@@ -434,7 +435,7 @@ def get_grouped_handles(pid=-1):
 
 _NtGetNextProcess = fun_fact(
     _nt.NtGetNextProcess,
-    (NTSTATUS, PVOID, UINT, UINT, INT, PVOID)
+    (NTSTATUS, PVOID, ULONG, ULONG, ULONG, PVOID)
     )
 
 def NtGetNextProcess(current, access, attribs=0, flags=0):
@@ -628,5 +629,55 @@ def get_wow64_proc_env_blk(proc_handle):
     peb32 = ULONG_PTR()
     _fixed_size_proc_info(proc_handle, ProcessWow64Information, peb32)
     return peb32.value
+
+################################################################################
+
+class THREAD_BASIC_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("ExitStatus", LONG),
+        ("TebBaseAddress", PVOID),
+        ("ClientId", CLIENT_ID),
+        ("AffinityMask", ULONG_PTR),
+        ("Priority", LONG),
+        ("BasePriority", LONG),
+        )
+
+################################################################################
+
+_NtQueryInformationThread = fun_fact(
+    _nt.NtQueryInformationThread,
+    (NTSTATUS, PVOID, LONG, PVOID, ULONG, PVOID)
+    )
+
+def NtQueryInformationThread(hdl, tinfo, buf, buf_size, p_ret_len):
+    return _NtQueryInformationThread(hdl, tinfo, buf, buf_size, p_ret_len)
+
+################################################################################
+
+def get_thread_basic_info(hdl):
+    tbi = THREAD_BASIC_INFORMATION()
+    size = ctypes.sizeof(tbi)
+    raise_failed_status(
+        NtQueryInformationThread(
+            hdl,
+            ThreadBasicInformation,
+            ref(tbi),
+            size,
+            None
+            )
+        )
+    return tbi
+
+################################################################################
+
+_NtGetNextThread = fun_fact(
+    _nt.NtGetNextThread,
+    (NTSTATUS, PVOID, PVOID, ULONG, ULONG, ULONG, PVOID)
+    )
+
+def NtGetNextThread(proc, cur_thrd, access, attribs=0, flags=0):
+    nxt = HANDLE()
+    _NtGetNextThread(proc, cur_thrd, access, attribs, flags, ref(nxt))
+    return nxt.value
 
 ################################################################################

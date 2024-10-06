@@ -113,3 +113,8 @@ def GetModuleInformation(hdl, mod):
     return ns_from_struct(info)
 
 ################################################################################
+
+def GetProcessImageFileName(hdl):
+    return ntdll.proc_path_from_handle(hdl)
+
+################################################################################
