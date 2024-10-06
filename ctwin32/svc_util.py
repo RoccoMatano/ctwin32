@@ -17,7 +17,6 @@ from ctwin32 import (
     advapi,
     cmdline_from_args,
     kernel,
-    user,
     wtypes,
     CREATE_NEW_CONSOLE,
     DELETE,
@@ -71,7 +70,7 @@ def _service_main(argc, argv):
     # by foreign C code, ctypes has no way of propagating any exception
     # back to the python interpreter - those would simply be ignored.
     # Therefore any exception has to terminate the process.
-    with user.terminate_on_exception():
+    with kernel.terminate_on_exception():
         tid = kernel.GetCurrentThreadId()
         kernel.dbg_print(f"in service_main: {tid}")
 
@@ -331,7 +330,7 @@ def running_as_trusted_installer():
 
 def _main():
     kernel.dbg_print("svc_util in main")
-    with user.terminate_on_exception():
+    with kernel.terminate_on_exception():
         kernel.dbg_print(f"starting {_FILE.name}: {sys.argv}")
         available_tasks = (
             # argv[1]/func          min len(argv)

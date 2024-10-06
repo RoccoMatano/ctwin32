@@ -5,8 +5,6 @@
 #
 ################################################################################
 
-import sys
-import traceback
 from types import SimpleNamespace as _namespace
 
 import ctypes
@@ -62,8 +60,6 @@ from . import (
     INPUT_KEYBOARD,
     KEYEVENTF_KEYUP,
     LR_DEFAULTSIZE,
-    MB_OK,
-    MB_ICONERROR,
     MONITOR_DEFAULTTOPRIMARY,
     SPI_GETNONCLIENTMETRICS,
     SPI_SETNONCLIENTMETRICS,
@@ -181,7 +177,7 @@ _EnumWindowsCallback = ctypes.WINFUNCTYPE(
 @_EnumWindowsCallback
 def _EnumWndCb(hwnd, ctxt):
     # cannot propagate exceptions from callback
-    with terminate_on_exception():
+    with kernel.terminate_on_exception():
         cbc = ctxt.contents
         res = cbc.callback(hwnd, cbc.context)
         # keep on enumerating if the callback fails to return a value
@@ -1112,7 +1108,7 @@ _EnumPropsCallback = ctypes.WINFUNCTYPE(
 @_EnumPropsCallback
 def _EnumPropsCb(hwnd, name, data, ctxt):
     # cannot propagate exceptions from callback
-    with terminate_on_exception():
+    with kernel.terminate_on_exception():
         cbc = ctxt.contents
         res = cbc.callback(hwnd, name, data, cbc.context)
         # keep on enumerating if the callback fails to return a value
@@ -1620,52 +1616,5 @@ def is_interactive_process():
         GetUserObjectInformation(GetProcessWindowStation(), UOI_FLAGS)
         )
     return bool(uof.dwFlags & WSF_VISIBLE)
-
-################################################################################
-
-class terminate_on_exception:
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, typ, val, tb):
-        if typ is None:
-            return
-
-        # An exception has occurred which our caller would like to cause this
-        # process to be terminated. Most likely our caller wants this, because
-        # it is executing a callback from C code into python code (through
-        # ctypes). In such a situation there is no possibility to propagate
-        # this exception to the python interpreter and therefore the process
-        # has to be terminated.
-        # Before we do that, we try to inform the user.
-
-        err_info = "".join(traceback.format_exception(typ, val, tb))
-        try:
-            interactive = is_interactive_process()
-        except OSError:
-            interactive = False
-
-        if interactive:
-            if sys.stderr is None or not hasattr(sys.stderr, "mode"):
-                txt_to_clip(err_info)
-                err_info += "\nThe above text has been copied to the clipboard."
-                MessageBox(
-                    None,
-                    err_info,
-                    "Terminating program",
-                    MB_OK | MB_ICONERROR
-                    )
-            else:
-                sys.stderr.write(err_info)
-        else:
-            kernel.dbg_print(err_info)
-
-        # Calling sys.exit() here won't help, since it depends on exception
-        # propagation. We could hope that this thread is pumping messages
-        # while watching for WM_QUIT messages and post such a message.
-        # Since this possibility seems too vague, we play it safe
-        # and call:
-        kernel.ExitProcess(1)
 
 ################################################################################

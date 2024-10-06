@@ -394,7 +394,7 @@ class SimpleWnd(BaseWnd):
         # by foreign C code, ctypes has no way of propagating any exception
         # back to the python interpreter - those would simply be ignored.
         # Therefore any exception has to terminate the process.
-        with user.terminate_on_exception():
+        with kernel.terminate_on_exception():
             if msg != WM_NCCREATE:
                 if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
@@ -564,7 +564,7 @@ class BaseDlg(BaseWnd):
         # by foreign C code, ctypes has no way of propagating any exception
         # back to the python interpreter - those would simply be ignored.
         # Therefore any exception has to terminate the process.
-        with user.terminate_on_exception():
+        with kernel.terminate_on_exception():
             if msg != WM_INITDIALOG:
                 if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value

@@ -5,6 +5,8 @@
 #
 ################################################################################
 
+import sys
+import traceback
 import datetime as _dt
 import collections as _collections
 from enum import IntEnum as _int_enum
@@ -62,7 +64,6 @@ from . import (
     raise_on_err,
     raise_on_zero,
     ref,
-    user,
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     ERROR_ACCESS_DENIED,
     ERROR_FILE_NOT_FOUND,
@@ -87,6 +88,8 @@ from . import (
     IMAGE_FILE_MACHINE_UNKNOWN,
     IMAGE_FILE_MACHINE_AMD64,
     IMAGE_FILE_MACHINE_I386,
+    MB_OK,
+    MB_ICONERROR,
     OPEN_EXISTING,
     PIPE_ACCESS_DUPLEX,
     PIPE_READMODE_MESSAGE,
@@ -1315,6 +1318,56 @@ def LoadLibrary(filename):
 
 ################################################################################
 
+class terminate_on_exception:
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, typ, val, tb):
+        if typ is None:
+            return
+
+        # An exception has occurred, which our caller would like to be taken
+        # as a reason to terminate this process. Most likely our caller wants
+        # this, because it is executing a callback from C code into python code
+        # (through ctypes). In such a situation there is no possibility to
+        # propagate this exception to the python interpreter and therefore the
+        # process has to be terminated.
+        # Before we do that, we try to inform the user.
+
+        try:
+            from ctwin32 import user
+            info = "".join(traceback.format_exception(typ, val, tb))
+            try:
+                interactive = user.is_interactive_process()
+            except OSError:
+                interactive = False
+
+            if interactive:
+                if sys.stderr is None or not hasattr(sys.stderr, "mode"):
+                    user.txt_to_clip(info)
+                    info += "\nThe above text has been copied to the clipboard."
+                    user.MessageBox(
+                        None,
+                        info,
+                        "Terminating program",
+                        MB_OK | MB_ICONERROR
+                        )
+                else:
+                    sys.stderr.write(info)
+            else:
+                dbg_print(info)
+
+        finally:
+            # Calling sys.exit() here won't help, since it depends on exception
+            # propagation. We could hope that this thread is pumping messages
+            # while watching for WM_QUIT messages and post such a message.
+            # Since this possibility seems too vague, we play it safe
+            # and call:
+            ExitProcess(1)
+
+################################################################################
+
 _EnumResNameCallback = ctypes.WINFUNCTYPE(
     BOOL,
     HANDLE,
@@ -1326,7 +1379,7 @@ _EnumResNameCallback = ctypes.WINFUNCTYPE(
 @_EnumResNameCallback
 def _EnumResNameCb(hmod, typ, name, ctxt):
     # cannot propagate exceptions from callback
-    with user.terminate_on_exception():
+    with terminate_on_exception():
         typ = typ if not (typ >> 16) else ctypes.wstring_at(typ)
         name = name if not (name >> 16) else ctypes.wstring_at(name)
         cbc = ctxt.contents
@@ -1353,7 +1406,7 @@ def get_resource_names(hmod, typ):
     @_EnumResNameCallback
     def collect(not_used1, not_used2, name, not_used3):
         # cannot propagate exceptions from callback
-        with user.terminate_on_exception():
+        with terminate_on_exception():
             if name >= 0x10000:
                 name = PWSTR(name).value
             names.append(name)

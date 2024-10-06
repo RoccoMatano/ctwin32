@@ -31,7 +31,6 @@ from .wtypes import (
 from . import (
     ref,
     kernel,
-    user,
     raise_on_zero,
     raise_on_hr,
     fun_fact,
@@ -172,7 +171,7 @@ _TaskDialogCallback = ctypes.WINFUNCTYPE(
 @_TaskDialogCallback
 def _TskDlgCb(hwnd, msg, wp, lp, ctxt):
     # cannot propagate exceptions from callback
-    with user.terminate_on_exception():
+    with kernel.terminate_on_exception():
         cbc = ctxt.contents
         res = cbc.callback(hwnd, msg, wp, lp, cbc.context)
         # return S_OK if the callback fails to return a value

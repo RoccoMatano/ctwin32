@@ -29,7 +29,6 @@ from .wtypes import (
     PULONG,
     PUNICODE_STRING,
     PVOID,
-    UINT,
     UINT_PTR,
     ULARGE_INTEGER,
     ULONG,

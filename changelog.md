@@ -54,6 +54,7 @@ http://semver.org/spec/v2.0.0.html).
   was futile anyway (no more need for setup.py)
 - adapted sample `power_requests.py` to use
   powrprof.PowerInformationWithPrivileges
+- moved `terminate_on_exception` from user to kernel
 
 ## [2.7.1] - 2024-07-15
 
