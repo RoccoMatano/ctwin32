@@ -666,10 +666,10 @@ _OpenThreadToken = fun_fact(
     _adv.OpenThreadToken, (BOOL, HANDLE, DWORD, BOOL, PHANDLE)
     )
 
-def OpenThreadToken(proc_handle, desired_acc, as_self):
+def OpenThreadToken(thrd_handle, desired_acc, as_self):
     token = KHANDLE()
     raise_on_zero(
-        _OpenThreadToken(proc_handle, desired_acc, as_self, ref(token))
+        _OpenThreadToken(thrd_handle, desired_acc, as_self, ref(token))
         )
     return token
 

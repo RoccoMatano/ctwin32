@@ -8,6 +8,14 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- kernel.GetNumberOfConsoleInputEvents
+- kernel.ReadConsoleInput
+- user.RegisterRawInputDevices
+- user.GetRawInputData
+- sample raw_input.py
+
 ## [3.0.0] - 2024-10-09
 
 ### Added

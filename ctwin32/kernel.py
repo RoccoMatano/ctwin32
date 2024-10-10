@@ -1721,6 +1721,82 @@ def enable_virt_term(hdl=None):
 
 ################################################################################
 
+_GetNumberOfConsoleInputEvents  = fun_fact(
+    _k32.GetNumberOfConsoleInputEvents, (BOOL, HANDLE, PDWORD)
+    )
+
+def GetNumberOfConsoleInputEvents(hdl):
+    num = DWORD()
+    raise_on_zero(_GetNumberOfConsoleInputEvents(hdl, ref(num)))
+    return num.value
+
+################################################################################
+
+class FOCUS_EVENT_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("bSetFocus", BOOL),
+        )
+
+class KEY_EVENT_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("bKeyDown", BOOL),
+        ("wRepeatCount", WORD),
+        ("wVirtualKeyCode", WORD),
+        ("wVirtualScanCode", WORD),
+        ("UnicodeChar", WCHAR),
+        ("dwControlKeyState", DWORD),
+        )
+
+class MENU_EVENT_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("dwCommandId", UINT),
+        )
+
+class MOUSE_EVENT_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("dwMousePosition", COORD),
+        ("dwButtonState", DWORD),
+        ("dwControlKeyState", DWORD),
+        ("dwEventFlags", DWORD),
+        )
+
+class WINDOW_BUFFER_SIZE_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("dwSize", COORD),
+        )
+
+class INPUT_RECORD_EVENT_UNION(ctypes.Union):
+    _fields_ = (
+        ("KeyEvent", KEY_EVENT_RECORD),
+        ("MouseEvent", MOUSE_EVENT_RECORD),
+        ("WindowBufferSizeEvent", WINDOW_BUFFER_SIZE_RECORD),
+        ("MenuEvent", MENU_EVENT_RECORD),
+        ("FocusEvent", FOCUS_EVENT_RECORD),
+        )
+
+class INPUT_RECORD(ctypes.Structure):
+    _fields_ = (
+        ("EventType", WORD),
+        ("Event", INPUT_RECORD_EVENT_UNION),
+        )
+
+PINPUT_RECORD = POINTER(INPUT_RECORD)
+
+################################################################################
+
+_ReadConsoleInput  = fun_fact(
+    _k32.ReadConsoleInputW , (BOOL, HANDLE, PINPUT_RECORD, DWORD, PDWORD)
+    )
+
+def ReadConsoleInput(hdl, num_records=1):
+    num_records = max(num_records, 1)
+    ir = (INPUT_RECORD * num_records)()
+    num_read = DWORD()
+    raise_on_zero(_ReadConsoleInput(hdl, ir, num_records, ref(num_read)))
+    return ir[:num_read.value]
+
+################################################################################
+
 SetErrorMode = fun_fact(_k32.SetErrorMode, (UINT, UINT))
 
 ################################################################################

@@ -34,12 +34,14 @@ from .wtypes import (
     PPVOID,
     PPWSTR,
     PRECT,
+    PUINT,
     PVOID,
     PWSTR,
     SHORT,
     RECT,
     UINT,
     UINT_PTR,
+    ULONG,
     WCHAR,
     WinError,
     WPARAM,
@@ -61,6 +63,8 @@ from . import (
     KEYEVENTF_KEYUP,
     LR_DEFAULTSIZE,
     MONITOR_DEFAULTTOPRIMARY,
+    RID_INPUT,
+    RIM_TYPEHID,
     SPI_GETNONCLIENTMETRICS,
     SPI_SETNONCLIENTMETRICS,
     SPI_GETWHEELSCROLLLINES,
@@ -1616,5 +1620,148 @@ def is_interactive_process():
         GetUserObjectInformation(GetProcessWindowStation(), UOI_FLAGS)
         )
     return bool(uof.dwFlags & WSF_VISIBLE)
+
+################################################################################
+
+class RAWINPUTHEADER(ctypes.Structure):
+    _fields_ = (
+        ("dwType", DWORD),
+        ("dwSize", DWORD),
+        ("hDevice", HANDLE),
+        ("wParam", WPARAM),
+        )
+
+class ButtonFlagsData(ctypes.Structure):
+    _fields_ = (
+        ("usButtonFlags", WORD),
+        ("usButtonData", SHORT),
+        )
+
+class ButtonFlagsDataUnion(ctypes.Union):
+    _anonymous_ = ("anon",)
+    _fields_ = (
+        ("ulButtons", ULONG),
+        ("anon", ButtonFlagsData),
+        )
+
+class RAWMOUSE(ctypes.Structure):
+    _anonymous_ = ("anon",)
+    _fields_ = (
+        ("usFlags", WORD),
+        ("anon", ButtonFlagsDataUnion),
+        ("ulRawButtons", ULONG),
+        ("lLastX", LONG),
+        ("lLastY", LONG),
+        ("ulExtraInformation", ULONG),
+        )
+class RAWKEYBOARD(ctypes.Structure):
+    _fields_ = (
+        ("MakeCode", WORD),
+        ("Flags", WORD),
+        ("Reserved", WORD),
+        ("VKey", WORD),
+        ("Message", UINT),
+        ("ExtraInformation", ULONG),
+        )
+
+class RAWHID(ctypes.Structure):
+    _fields_ = (
+        ("dwSizeHid", DWORD),
+        ("dwCount", DWORD),
+        ("bRawData", BYTE * 1),
+        )
+
+class RAWINPUTDATA(ctypes.Union):
+    _fields_ = (
+        ("mouse", RAWMOUSE),
+        ("keyboard", RAWKEYBOARD),
+        ("hid", RAWHID),
+        )
+
+class RAWINPUT(ctypes.Structure):
+    _fields_ = (
+        ("header", RAWINPUTHEADER),
+        ("data", RAWINPUTDATA),
+        )
+
+class RAWINPUTDEVICE(ctypes.Structure):
+    _fields_ = (
+        ("usUsagePage", WORD),
+        ("usUsage", WORD),
+        ("dwFlags", DWORD),
+        ("hwndTarget", HWND),
+        )
+
+################################################################################
+
+_RegisterRawInputDevices = fun_fact(
+    _usr.RegisterRawInputDevices, (BOOL, PVOID, UINT, UINT)
+    )
+
+def RegisterRawInputDevices(raw_imp_devs):
+    size = len(raw_imp_devs)
+    arr = (RAWINPUTDEVICE * size)(*raw_imp_devs)
+    raise_on_zero(
+        _RegisterRawInputDevices(ref(arr), size, ctypes.sizeof(RAWINPUTDEVICE))
+        )
+
+################################################################################
+
+def _make_raw_hid_input(buf, size, count):
+    class REAL_RAWHID(ctypes.Structure):
+        _fields_ = (
+            ("dwSizeHid", DWORD),
+            ("dwCount", DWORD),
+            ("bRawData", BYTE * (size * count)),
+            )
+    class REAL_RAWINPUTDATA(ctypes.Union):
+        _fields_ = (
+            ("mouse", RAWMOUSE),
+            ("keyboard", RAWKEYBOARD),
+            ("hid", REAL_RAWHID),
+            )
+
+    class REAL_RAWINPUT(ctypes.Structure):
+        _fields_ = (
+            ("header", RAWINPUTHEADER),
+            ("data", REAL_RAWINPUTDATA),
+            )
+
+    return REAL_RAWINPUT.from_buffer_copy(buf)
+
+################################################################################
+
+_GetRawInputData = fun_fact(
+    _usr.GetRawInputData, (UINT, HANDLE, UINT, PVOID, PUINT, UINT)
+    )
+
+def GetRawInputData(hRaw):
+    size = UINT(0)
+    res = _GetRawInputData(
+        hRaw,
+        RID_INPUT,
+        None,
+        ref(size),
+        ctypes.sizeof(RAWINPUTHEADER)
+        )
+    raise_if(res != 0)
+
+    # use at least enough as needed by RAWINPUT (keyboard data will be shorter)
+    size.value = max(size.value, ctypes.sizeof(RAWINPUT))
+    buf = byte_buffer(size.value)
+    res = _GetRawInputData(
+        hRaw,
+        RID_INPUT,
+        ref(buf),
+        ref(size),
+        ctypes.sizeof(RAWINPUTHEADER)
+        )
+    raise_if(res < 1)
+
+    ri = RAWINPUT.from_buffer_copy(buf)
+    if ri.header.dwType == RIM_TYPEHID:
+        size, count = ri.data.hid.dwSizeHid, ri.data.hid.dwCount
+        ri = _make_raw_hid_input(buf, size, count)
+    return ri
 
 ################################################################################
