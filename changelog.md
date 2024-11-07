@@ -16,6 +16,10 @@ http://semver.org/spec/v2.0.0.html).
 - user.GetRawInputData
 - sample raw_input.py
 
+### Fixed
+
+- fix structure alignment in setupapi
+
 ## [3.0.0] - 2024-10-09
 
 ### Added

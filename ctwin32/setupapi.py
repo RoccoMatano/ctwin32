@@ -19,6 +19,7 @@ from .wtypes import (
     PDWORD,
     PGUID,
     POINTER,
+    PTR_64_BIT,
     PVOID,
     PWSTR,
     ScdToBeClosed,
@@ -53,9 +54,13 @@ from .advapi import registry_to_py
 
 _sua = ctypes.WinDLL("setupapi.dll", use_last_error=True)
 
+# SetupAPI.h packs structures differently in 64 and 32 bit mode!
+_SUA_PACK = 8 if PTR_64_BIT else 1
+
 ################################################################################
 
 class SP_DEVINFO_DATA(ctypes.Structure):
+    _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
         ("ClassGuid", GUID),
@@ -71,6 +76,7 @@ PSP_DEVINFO_DATA = POINTER(SP_DEVINFO_DATA)
 ################################################################################
 
 class SP_CLASSINSTALL_HEADER(ctypes.Structure):
+    _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
         ("InstallFunction", DWORD),
@@ -79,6 +85,7 @@ class SP_CLASSINSTALL_HEADER(ctypes.Structure):
 ################################################################################
 
 class SP_PROPCHANGE_PARAMS(ctypes.Structure):
+    _pack_ = _SUA_PACK
     _fields_ = (
         ("ClassInstallHeader", SP_CLASSINSTALL_HEADER),
         ("StateChange", DWORD),
@@ -98,6 +105,7 @@ PSP_PROPCHANGE_PARAMS = POINTER(SP_PROPCHANGE_PARAMS)
 ################################################################################
 
 class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
+    _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
         ("InterfaceClassGuid", GUID),
@@ -110,11 +118,21 @@ class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
 
 PSP_DEVICE_INTERFACE_DATA = POINTER(SP_DEVICE_INTERFACE_DATA)
 
+################################################################################
+
 class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
+    _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
         ("DevicePath", WCHAR * 1),
        )
+
+def make_dev_iface_detail(size):
+    buf = byte_buffer(size)
+    ifd = SP_DEVICE_INTERFACE_DETAIL_DATA.from_buffer(buf)
+    ifd.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
+    offs = SP_DEVICE_INTERFACE_DETAIL_DATA.DevicePath.offset
+    return buf, ctypes.addressof(buf) + offs
 
 ################################################################################
 
@@ -556,30 +574,18 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
         None
         )
 
-    strlen = (
-        req_size.value - ctypes.sizeof(DWORD) + WCHAR_SIZE - 1
-        ) // WCHAR_SIZE
-
-    class LOCAL_SPDIDD(ctypes.Structure):
-        _fields_ = (
-            ("cbSize", DWORD),
-            ("DevicePath", WCHAR * strlen),
-            )
-
-    ifdetail = LOCAL_SPDIDD()
-    ifdetail.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
+    buf, addr = make_dev_iface_detail(req_size.value)
     deinda = SP_DEVINFO_DATA()
-
     raise_on_zero(
         _SetupDiGetDeviceInterfaceDetail(
             info_set,
             ref(did),
-            ref(ifdetail),
+            ref(buf),
             req_size,
             ref(req_size),
             ref(deinda),
             )
         )
-    return ifdetail.DevicePath, deinda
+    return ctypes.wstring_at(addr), deinda
 
 ################################################################################
