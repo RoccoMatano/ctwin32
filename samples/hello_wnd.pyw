@@ -12,13 +12,10 @@ from ctwin32 import (
     wndcls,
     comctl,
     shell,
+    WM_CONTEXTMENU,
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
-    WM_SETICON,
-    WM_QUIT,
-    WM_RBUTTONUP,
-    SW_SHOW,
     DT_CENTER,
     DT_SINGLELINE,
     DT_VCENTER,
@@ -68,7 +65,7 @@ class HelloWnd(wndcls.SimpleWnd):
             user.PostQuitMessage(0)
             return 0
 
-        elif msg == WM_RBUTTONUP:
+        elif msg == WM_CONTEXTMENU:
             tdi = "TaskDialogIndirect"
             url = f"https://www.google.com/search?q={tdi}"
             tdc = comctl.TASKDIALOGCONFIG()

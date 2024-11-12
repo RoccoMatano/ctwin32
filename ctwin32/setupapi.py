@@ -25,7 +25,6 @@ from .wtypes import (
     ScdToBeClosed,
     ULONG_PTR,
     WCHAR,
-    WCHAR_SIZE,
     )
 from . import (
     ref,

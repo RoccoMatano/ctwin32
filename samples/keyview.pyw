@@ -16,7 +16,6 @@ from ctwin32 import (
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
-    WM_QUIT,
     WM_SIZE,
     WM_KEYFIRST,
     WM_KEYLAST,
@@ -24,8 +23,6 @@ from ctwin32 import (
     WM_SYSCHAR,
     WM_DEADCHAR,
     WM_SYSDEADCHAR,
-    WM_SETICON,
-    SW_SHOW,
     DEFAULT_CHARSET,
     SYSTEM_FONT,
     SWP_NOMOVE,
@@ -90,9 +87,9 @@ class KeyViewWnd(wndcls.SimpleWnd):
         gdi.SelectObject(hdc, gdi.GetStockObject(SYSTEM_FONT))
         self.release_dc(hdc)
 
-        self.char_height = tm.tmHeight;
+        self.char_height = tm.tmHeight
         size = (len(self.underline) + 4) * tm.tmAveCharWidth
-        self.set_pos(None, 0, 0, size, size, SWP_NOMOVE);
+        self.set_pos(None, 0, 0, size, size, SWP_NOMOVE)
 
         self.max_lines = (
             user.GetSystemMetrics(SM_CYMAXIMIZED) // self.char_height
@@ -145,7 +142,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
         elif msg == WM_SIZE:
             self.y_lines = ((lp >> 16) & 0xffff) // self.char_height - 1
             self.scroll_rect.right  = lp & 0xffff
-            self.scroll_rect.top    = self.char_height;
+            self.scroll_rect.top    = self.char_height
             self.scroll_rect.bottom = self.char_height * (self.y_lines + 1)
             self.invalidate_rect(erase=True)
             return 0
@@ -154,7 +151,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
             self.history.pop()
             self.history.insert(0, HistoryEntry(msg, wp, lp))
 
-            self.num_lines = min(self.num_lines + 1, self.max_lines);
+            self.num_lines = min(self.num_lines + 1, self.max_lines)
             rc = self.scroll_rect
             user.ScrollWindow(self.hwnd, 0, -self.char_height, rc, rc)
             return self.def_win_proc(msg, wp, lp)

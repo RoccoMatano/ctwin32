@@ -7,22 +7,17 @@
 
 from ctwin32 import (
     ctypes,
-    comctl,     # for initialization of common controls
+    comctl,     # noqa: F401 for initialization of common controls
     user,
     wndcls,
     WM_CREATE,
     WM_SETFOCUS,
     WM_DESTROY,
-    WM_QUIT,
     WS_BORDER,
     WS_CHILD,
     WS_VISIBLE,
-    WS_OVERLAPPED,
-    WS_CAPTION,
     WS_SYSMENU,
     WS_MINIMIZEBOX,
-    SWP_NOMOVE,
-    SWP_NOZORDER,
     )
 from ctwin32.wtypes import RECT
 
