@@ -234,6 +234,7 @@ class pemap:
 
         if fhaddr := self._file_header_addr():
             self.name = fname
+            self.key = str(fname).split("\\")[-1].lower()
             self.file_hdr = IMAGE_FILE_HEADER.from_address(fhaddr)
             ohaddr = fhaddr + ctypes.sizeof(IMAGE_FILE_HEADER)
             self.opt_hdr = IMAGE_OPTIONAL_HEADER64.from_address(ohaddr)
@@ -364,6 +365,12 @@ class pemap:
             dd = self.opt_hdr.DataDirectory[idx]
             return dd.VirtualAddress, dd.Size
         raise IndexError
+
+    ############################################################################
+
+    def is_wow(self):
+        host_arch = kernel.get_wow64_info(kernel.GetCurrentProcess())[0]
+        return host_arch != self.file_hdr.Machine
 
 ################################################################################
 

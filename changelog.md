@@ -17,6 +17,16 @@ http://semver.org/spec/v2.0.0.html).
 - sample raw_input.py
 - UnicodeStrFromStr can be initialized with a size now and gains the `str`
   property.
+- ntdll.NtOpenDirectoryObject
+- ntdll.NtQueryDirectoryObject
+- ntdll.NtOpenSymbolicLinkObject
+- ntdll.NtQuerySymbolicLinkObject
+- kernel.GetWindowsDirectory
+- kernel.GetSystemWow64Directory
+- kernel.GetNativeSystemInfo
+- kernel.AddDllDirectory
+- kernel.RemoveDllDirectory
+- sample dep_tree.py
 
 ### Fixed
 
