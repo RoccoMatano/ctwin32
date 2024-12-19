@@ -234,6 +234,7 @@ class pemap:
 
         if fhaddr := self._file_header_addr():
             self.name = fname
+            self.key = str(fname).split("\\")[-1].lower()
             self.file_hdr = IMAGE_FILE_HEADER.from_address(fhaddr)
             ohaddr = fhaddr + ctypes.sizeof(IMAGE_FILE_HEADER)
             self.opt_hdr = IMAGE_OPTIONAL_HEADER64.from_address(ohaddr)
@@ -365,6 +366,12 @@ class pemap:
             return dd.VirtualAddress, dd.Size
         raise IndexError
 
+    ############################################################################
+
+    def is_wow(self):
+        host_arch = kernel.get_wow64_info(kernel.GetCurrentProcess())[0]
+        return host_arch != self.file_hdr.Machine
+
 ################################################################################
 
 class API_SET_NAMESPACE(SizedStruct):
@@ -426,14 +433,16 @@ class ApiSet():
     ############################################################################
 
     def _enum_values(self, entry):
+        result = []
         value_addr = self.base + entry.ValueOffset
         for _ in range(entry.ValueCount):
             value = API_SET_VALUE_ENTRY.from_address(value_addr)
             if value.ValueLength:
                 res_len = value.ValueLength // WCHAR_SIZE
                 res_addr = self.base + value.ValueOffset
-                yield ctypes.wstring_at(res_addr, res_len)
+                result.append(ctypes.wstring_at(res_addr, res_len))
             value_addr += ctypes.sizeof(API_SET_VALUE_ENTRY)
+        return result
 
     ############################################################################
 
@@ -455,8 +464,7 @@ class ApiSet():
                 curi = (mini + maxi) // 2
                 entry, name = self._get_entry_info(curi, True)
                 if dllname.startswith(name):
-                    for value in self._enum_values(entry):
-                        return value
+                    return self._enum_values(entry)[-1]
                 if dllname < name:
                     maxi = curi - 1
                 else:
