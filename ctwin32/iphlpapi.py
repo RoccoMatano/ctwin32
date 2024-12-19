@@ -243,7 +243,7 @@ def _best_prefix_len(ip, prefixes):
         skip = (
             ip.version != pfx.version or
             best_len > plen or
-            best_len and plen == ip.max_prefixlen
+            (best_len and plen == ip.max_prefixlen)
             )
         if not skip:
             mask = -1 << (ip.max_prefixlen - plen)

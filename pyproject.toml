@@ -54,8 +54,6 @@ ignore = [
     "ANN001",   # no dorky typing!!!
     "ANN002",   # no dorky typing!!!
     "ANN003",   # no dorky typing!!!
-    "ANN101",   # no dorky typing!!!
-    "ANN102",   # no dorky typing!!!
     "ANN201",   # no dorky typing!!!
     "ANN202",   # no dorky typing!!!
     "ANN204",   # no dorky typing!!!

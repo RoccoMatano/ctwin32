@@ -15,6 +15,8 @@ http://semver.org/spec/v2.0.0.html).
 - user.RegisterRawInputDevices
 - user.GetRawInputData
 - sample raw_input.py
+- rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
+  a size and add the `str` property.
 
 ### Fixed
 

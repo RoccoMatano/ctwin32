@@ -548,8 +548,12 @@ PUNICODE_STRING = POINTER(UNICODE_STRING)
 
 ################################################################################
 
-def UnicodeStrFromStr(init):
-    ws = wchar_len_sz(init)
+def UnicodeStrBuffer(init):
+    if isinstance(init, str):
+        ws = wchar_len_sz(init)
+    else:
+        ws = init
+        init = "\0" * init
 
     class SELF_CONTAINED_US(ctypes.Structure):
         _fields_ = (
@@ -565,6 +569,10 @@ def UnicodeStrFromStr(init):
         @property
         def ptr(self):
             return PUNICODE_STRING(self.us)
+
+        @property
+        def str(self):
+            return str(self.us)
 
     return SELF_CONTAINED_US(init)
 
