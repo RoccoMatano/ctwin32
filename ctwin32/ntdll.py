@@ -354,9 +354,9 @@ def _resolve_device_prefix(fname):
         with suppress_winerr(ERROR_FILE_NOT_FOUND):
             dos_devices[kernel.QueryDosDevice(dn)] = dn
 
-    for ddk in dos_devices:
-        if fname.startswith(ddk):
-            fname = fname.replace(ddk, dos_devices[ddk], 1)
+    for native, dos in dos_devices.items():
+        if fname.startswith(native):
+            fname = fname.replace(native, dos, 1)
             break
     return fname
 

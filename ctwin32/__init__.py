@@ -133,7 +133,7 @@ def ns_from_struct(ctypes_aggregation):
     fields = {}
     for k, *_ in ctypes_aggregation._fields_:
         v = getattr(ctypes_aggregation, k)
-        if isinstance(v, (ctypes.Structure, ctypes.Union)):
+        if isinstance(v, ctypes.Structure | ctypes.Union):
             v = ns_from_struct(v)
         fields[k] = v
     # modify the class name for nicer repr

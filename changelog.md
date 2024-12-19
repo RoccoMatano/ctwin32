@@ -15,6 +15,8 @@ http://semver.org/spec/v2.0.0.html).
 - user.RegisterRawInputDevices
 - user.GetRawInputData
 - sample raw_input.py
+- UnicodeStrFromStr can be initialized with a size now and gains the `str`
+  property.
 
 ### Fixed
 

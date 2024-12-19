@@ -173,7 +173,7 @@ def _prepare_service_args(file_name, func_name, arglist):
         arglist = []
     service_args = []
     for arg in [file_name, func_name, *arglist]:
-        if isinstance(arg, (int, Path)):
+        if isinstance(arg, int | Path):
             service_args.append(str(arg))
         elif not isinstance(arg, str):
             raise TypeError("need str, got '{arg}' ({type(arg).__name__})")
