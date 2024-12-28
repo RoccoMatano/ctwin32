@@ -190,16 +190,16 @@ class IMAGE_IMPORT_DESCRIPTOR(SizedStruct):
 
 ################################################################################
 
-class ImgDelayDescr(SizedStruct):
+class IMAGE_DELAYLOAD_DESCRIPTOR(SizedStruct):
     _fields_ = (
-        ("grAttrs", DWORD),
-        ("rvaDLLName", DWORD),
-        ("rvaHmod", DWORD),
-        ("rvaIAT", DWORD),
-        ("rvaINT", DWORD),
-        ("rvaBoundIAT", DWORD),
-        ("rvaUnloadIAT", DWORD),
-        ("dwTimeStamp", DWORD),
+        ("Attributes", DWORD),
+        ("DllNameRVA", DWORD),
+        ("ModuleHandleRVA", DWORD),
+        ("ImportAddressTableRVA", DWORD),
+        ("ImportNameTableRVA", DWORD),
+        ("BoundImportAddressTableRVA", DWORD),
+        ("UnloadInformationTableRVA", DWORD),
+        ("TimeDateStamp", DWORD),
         )
 
 dlattrRva = 0x1

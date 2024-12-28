@@ -25,7 +25,7 @@ from ctwin32.pemap import (
     dlattrRva,
     IMAGE_EXPORT_DIRECTORY,
     IMAGE_IMPORT_DESCRIPTOR,
-    ImgDelayDescr,
+    IMAGE_DELAYLOAD_DESCRIPTOR,
     NotPeError,
     pemap,
     )
@@ -136,20 +136,19 @@ def find_delay_imports(pe, mode, names):
     offs = pe.offs_from_rva(rva)
     if not offs:
         return result
-    for i in range(size // ImgDelayDescr._size_):
-        idd = pe.ctypes_obj(ImgDelayDescr, offs, i)
-        if not idd.rvaDLLName:
+    idx = 0
+    while True:
+        idd = pe.ctypes_obj(IMAGE_DELAYLOAD_DESCRIPTOR, offs, idx)
+        idx += 1
+        if idd.DllNameRVA == 0 or (idd.Attributes & dlattrRva) == 0:
             break
-        if not (idd.grAttrs & dlattrRva):
-            continue
-
         result.extend(
             find_imports_one_mod(
                 pe,
                 mode,
                 names,
-                idd.rvaDLLName,
-                idd.rvaINT,
+                idd.DllNameRVA,
+                idd.ImportNameTableRVA,
                 src
                 )
             )

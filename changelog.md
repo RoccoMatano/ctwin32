@@ -18,6 +18,10 @@ http://semver.org/spec/v2.0.0.html).
 - rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
   a size and add the `str` property.
 
+### Changed
+
+- renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR
+
 ### Fixed
 
 - fix structure alignment in setupapi
