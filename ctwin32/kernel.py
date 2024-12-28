@@ -1195,6 +1195,14 @@ def GetSystemDirectory():
 
 ################################################################################
 
+_GetWindowsDirectory = fun_fact(_k32.GetWindowsDirectoryW, (UINT, PWSTR, UINT))
+
+def GetWindowsDirectory():
+    return _get_dir(_GetWindowsDirectory, 1)
+
+
+################################################################################
+
 _GetCurrentDirectory = fun_fact(
     _k32.GetCurrentDirectoryW,
     (DWORD, DWORD, PWSTR)
@@ -1202,6 +1210,16 @@ _GetCurrentDirectory = fun_fact(
 
 def GetCurrentDirectory():
     return _get_dir(_GetCurrentDirectory, 0)
+
+################################################################################
+
+_GetSystemWow64Directory = fun_fact(
+    _k32.GetSystemWow64DirectoryW,
+    (UINT, PWSTR, UINT)
+    )
+
+def GetSystemWow64Directory():
+    return _get_dir(_GetSystemWow64Directory, 1)
 
 ################################################################################
 
@@ -1532,6 +1550,15 @@ _GetSystemInfo = fun_fact(_k32.GetSystemInfo, (None, PSYSTEM_INFO))
 def GetSystemInfo():
     si = SYSTEM_INFO()
     _GetSystemInfo(ref(si))
+    return ns_from_struct(si)
+
+################################################################################
+
+_GetNativeSystemInfo = fun_fact(_k32.GetNativeSystemInfo, (None, PSYSTEM_INFO))
+
+def GetNativeSystemInfo():
+    si = SYSTEM_INFO()
+    _GetNativeSystemInfo(ref(si))
     return ns_from_struct(si)
 
 ################################################################################
@@ -2228,5 +2255,21 @@ def GetFileSizeEx(hdl):
     return size.value
 
 GetFileSize = GetFileSizeEx
+
+################################################################################
+
+_AddDllDirectory = fun_fact(_k32.AddDllDirectory, (PVOID, PWSTR))
+
+def AddDllDirectory(dir_name):
+    cookie = _AddDllDirectory(dir_name)
+    raise_if(cookie is None)
+    return cookie
+
+################################################################################
+
+_RemoveDllDirectory = fun_fact(_k32.RemoveDllDirectory, (BOOL, PVOID))
+
+def RemoveDllDirectory(cookie):
+    raise_on_zero(_RemoveDllDirectory(cookie))
 
 ################################################################################

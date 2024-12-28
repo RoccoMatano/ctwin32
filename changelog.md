@@ -17,6 +17,16 @@ http://semver.org/spec/v2.0.0.html).
 - sample raw_input.py
 - rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
   a size and add the `str` property.
+- ntdll.NtOpenDirectoryObject
+- ntdll.NtQueryDirectoryObject
+- ntdll.NtOpenSymbolicLinkObject
+- ntdll.NtQuerySymbolicLinkObject
+- kernel.GetWindowsDirectory
+- kernel.GetSystemWow64Directory
+- kernel.GetNativeSystemInfo
+- kernel.AddDllDirectory
+- kernel.RemoveDllDirectory
+- sample dep_tree.py
 
 ### Changed
 

@@ -34,6 +34,7 @@ from .wtypes import (
     ULONG,
     ULONG_PTR,
     UNICODE_STRING,
+    UnicodeStrBuffer,
     WCHAR,
     WCHAR_SIZE,
     WinError,
@@ -72,6 +73,7 @@ STATUS_INFO_LENGTH_MISMATCH = _ntstatus(0xC0000004)
 STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
 STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 STATUS_INVALID_SIGNATURE = _ntstatus(0xC000A000)
+STATUS_MORE_ENTRIES = _ntstatus(0x00000105)
 
 ################################################################################
 
@@ -218,7 +220,8 @@ class OBJECT_ATTRIBUTES(ctypes.Structure):
         ("SecurityQualityOfService", PVOID)
         )
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.Length = ctypes.sizeof(self)
 
 ################################################################################
@@ -678,5 +681,96 @@ def NtGetNextThread(proc, cur_thrd, access, attribs=0, flags=0):
     nxt = HANDLE()
     _NtGetNextThread(proc, cur_thrd, access, attribs, flags, ref(nxt))
     return nxt.value
+
+################################################################################
+
+_NtOpenDirectoryObject = fun_fact(
+    _nt.NtOpenDirectoryObject,
+    (NTSTATUS, PVOID, ULONG, PVOID)
+    )
+
+def NtOpenDirectoryObject(acc, obj_attr):
+    hdl = kernel.KHANDLE()
+    raise_failed_status(_NtOpenDirectoryObject(ref(hdl), acc, ref(obj_attr)))
+    return hdl
+
+################################################################################
+
+class OBJECT_DIRECTORY_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("Name", UNICODE_STRING),
+        ("TypeName", UNICODE_STRING),
+        )
+
+################################################################################
+
+_NtQueryDirectoryObject = fun_fact(
+    _nt.NtQueryDirectoryObject,
+    (NTSTATUS, HANDLE, PVOID, ULONG, BOOLEAN, BOOLEAN, PULONG, PULONG)
+    )
+
+def NtQueryDirectoryObject(hdir):
+    res = []
+    bsize = 4096
+    buf = byte_buffer(bsize)
+    context = ULONG()
+    rlen = ULONG()
+    restart = True
+    while True:
+        stat = _NtQueryDirectoryObject(
+            hdir,
+            buf,
+            bsize,
+            False,
+            restart,
+            ref(context),
+            ref(rlen)
+            )
+        if stat >= 0:
+            addr = ctypes.addressof(buf)
+            while True:
+                info = OBJECT_DIRECTORY_INFORMATION.from_address(addr)
+                if info.Name.Length == 0:
+                    break
+                res.append((str(info.Name), str(info.TypeName)))
+                addr += ctypes.sizeof(OBJECT_DIRECTORY_INFORMATION)
+            restart = False
+            if stat != STATUS_MORE_ENTRIES:
+                break
+        else:
+            raise_failed_status(stat)
+    return res
+
+################################################################################
+
+_NtOpenSymbolicLinkObject = fun_fact(
+    _nt.NtOpenSymbolicLinkObject,
+    (NTSTATUS, PVOID, ULONG, PVOID)
+    )
+
+def NtOpenSymbolicLinkObject(acc, obj_attr):
+    hdl = kernel.KHANDLE()
+    raise_failed_status(_NtOpenSymbolicLinkObject(ref(hdl), acc, ref(obj_attr)))
+    return hdl
+
+################################################################################
+
+_NtQuerySymbolicLinkObject = fun_fact(
+    _nt.NtQuerySymbolicLinkObject,
+    (NTSTATUS, HANDLE, PUNICODE_STRING, PULONG)
+    )
+
+def NtQuerySymbolicLinkObject(hdl):
+    size = 256
+    us = UnicodeStrBuffer(size)
+    rlen = ULONG()
+    while True:
+        stat = _NtQuerySymbolicLinkObject(hdl, us.ptr, ref(rlen))
+        if stat == STATUS_BUFFER_TOO_SMALL:
+            size *= 2
+            us = UnicodeStrBuffer(size)
+        else:
+            raise_failed_status(stat)
+            return us.str
 
 ################################################################################

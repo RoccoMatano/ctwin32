@@ -234,6 +234,7 @@ class pemap:
 
         if fhaddr := self._file_header_addr():
             self.name = fname
+            self.key = str(fname).split("\\")[-1].lower()
             self.file_hdr = IMAGE_FILE_HEADER.from_address(fhaddr)
             ohaddr = fhaddr + ctypes.sizeof(IMAGE_FILE_HEADER)
             self.opt_hdr = IMAGE_OPTIONAL_HEADER64.from_address(ohaddr)
@@ -365,6 +366,12 @@ class pemap:
             return dd.VirtualAddress, dd.Size
         raise IndexError
 
+    ############################################################################
+
+    def is_wow(self):
+        host_arch = kernel.get_wow64_info(kernel.GetCurrentProcess())[0]
+        return host_arch != self.file_hdr.Machine
+
 ################################################################################
 
 class API_SET_NAMESPACE(SizedStruct):
@@ -455,8 +462,9 @@ class ApiSet():
                 curi = (mini + maxi) // 2
                 entry, name = self._get_entry_info(curi, True)
                 if dllname.startswith(name):
-                    for value in self._enum_values(entry):
-                        return value
+                    if lst := list(self._enum_values(entry)):
+                        return lst[-1]
+                    break
                 if dllname < name:
                     maxi = curi - 1
                 else:
