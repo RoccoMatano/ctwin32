@@ -27,6 +27,7 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.AddDllDirectory
 - kernel.RemoveDllDirectory
 - sample dep_tree.py
+- gdi.GetObject
 
 ### Changed
 

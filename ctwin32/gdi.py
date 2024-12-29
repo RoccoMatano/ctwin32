@@ -9,6 +9,7 @@ import ctypes
 from .wtypes import (
     BOOL,
     BYTE,
+    byte_buffer,
     DWORD,
     HANDLE,
     INT,
@@ -17,6 +18,7 @@ from .wtypes import (
     PLOGFONT,
     POINTER,
     PRECT,
+    PVOID,
     PWSTR,
     UINT,
     WCHAR,
@@ -150,5 +152,15 @@ def fill_solid_rect(hdc, rect, colorref):
     oldclr = SetBkColor(hdc, colorref)
     ExtTextOut(hdc, 0, 0, ETO_OPAQUE, rect, None, None)
     SetBkColor(hdc, oldclr)
+
+################################################################################
+
+_GetObject = fun_fact(_gdi.GetObjectW, (INT, HANDLE, INT, PVOID))
+
+def GetObject(hdl):
+    raise_on_zero(size := _GetObject(hdl, 0, None))
+    buf = byte_buffer(size)
+    raise_on_zero(_GetObject(hdl, size, buf))
+    return buf
 
 ################################################################################

@@ -356,12 +356,13 @@ class BaseWnd:
 
 class WndCreateParams:
     def __init__(self, name="", icon=0, style=WS_OVERLAPPEDWINDOW, parent=0):
-        self.cls = user.WNDCLASS()
-        self.cls.hbrBackground = COLOR_WINDOW + 1
-        self.cls.hInstance = kernel.GetModuleHandle(None)
-        self.cls.hCursor = user.LoadCursor(None, IDC_ARROW)
-        self.cls.hIcon = icon
-        self.cls.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS
+        self.cls = user.WNDCLASS(
+            style=CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS,
+            hInstance=kernel.GetModuleHandle(None),
+            hIcon=icon,
+            hCursor=user.LoadCursor(None, IDC_ARROW),
+            hbrBackground=COLOR_WINDOW + 1,
+            )
         self.wnd_style = style
         self.ex_style = 0
         self.left = self.top = self.width = self.height = CW_USEDEFAULT
