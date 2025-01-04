@@ -48,6 +48,7 @@ from . import (
     ERROR_INSUFFICIENT_BUFFER,
     ERROR_MORE_DATA,
     ERROR_NOT_ALL_ASSIGNED,
+    ERROR_NOT_FOUND,
     ERROR_NO_MORE_ITEMS,
     EVENTLOG_BACKWARDS_READ,
     EVENTLOG_SEQUENTIAL_READ,
@@ -59,6 +60,7 @@ from . import (
     ns_from_struct,
     MAXIMUM_ALLOWED,
     OWNER_SECURITY_INFORMATION,
+    PROCESS_QUERY_LIMITED_INFORMATION,
     raise_if,
     raise_on_err,
     raise_on_zero,
@@ -73,25 +75,30 @@ from . import (
     SC_STATUS_PROCESS_INFO,
     SE_PRIVILEGE_ENABLED,
     suppress_winerr,
+    TOKEN_QUERY,
     TokenElevationType,
     TokenElevationTypeFull,
-    TokenUser,
     TokenGroups,
+    TokenSessionId,
+    TokenUser,
     WinBuiltinAdministratorsSid,
     WinLocalSystemSid,
     )
 from .kernel import (
-    LocalFree,
+    CloseHandle,
     GetCurrentProcess,
     GetLastError,
     get_local_tzinfo,
     KHANDLE,
+    LocalFree,
+    OpenProcess,
     PSECURITY_ATTRIBUTES,
     PSTARTUPINFO,
     PPROCESS_INFORMATION,
     PROCESS_INFORMATION,
     STARTUPINFO,
     )
+from .ntdll import enum_processes
 
 _adv = ctypes.WinDLL("advapi32.dll", use_last_error=True)
 
@@ -806,6 +813,28 @@ def running_as_system(consider_impersonation=False):
         )
     sid, _ = get_token_user(token)
     return IsWellKnownSid(sid, WinLocalSystemSid)
+
+################################################################################
+
+def open_system_token_for_session(access, session):
+    # Most likely the only process that can be used to retrieve the requested
+    # token will be "winlogon.exe".
+    if not (access & TOKEN_QUERY):
+        access = access | TOKEN_QUERY
+    for p in enum_processes():
+        open_args = (PROCESS_QUERY_LIMITED_INFORMATION, False, p.pid)
+        try:
+            with OpenProcess(*open_args) as proc:
+                token = OpenProcessToken(proc, access)
+        except OSError:
+            continue
+        sid, _ = get_token_user(token)
+        if IsWellKnownSid(sid, WinLocalSystemSid):
+            buf = GetTokenInformation(token, TokenSessionId)
+            if session == DWORD.from_buffer_copy(buf).value:
+                return token
+        CloseHandle(token)
+    raise WinError(ERROR_NOT_FOUND)
 
 ################################################################################
 

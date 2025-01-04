@@ -28,10 +28,12 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.RemoveDllDirectory
 - sample dep_tree.py
 - gdi.GetObject
+- advapi.open_system_token_for_session
 
 ### Changed
 
 - renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR
+- adapted sample run_s4u.py to use advapi.open_system_token_for_session
 
 ### Fixed
 

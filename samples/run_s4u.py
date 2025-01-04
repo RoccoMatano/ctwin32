@@ -11,13 +11,11 @@
 
 import sys
 import ctypes
-from ctwin32 import advapi, kernel, ntdll, secur, user
+from ctwin32 import advapi, kernel, secur, user
 from ctwin32 import (
     CREATE_NEW_CONSOLE,
-    ERROR_NOT_FOUND,
     MAXIMUM_ALLOWED,
     Network,
-    PROCESS_QUERY_LIMITED_INFORMATION,
     SE_ASSIGNPRIMARYTOKEN_PRIVILEGE,
     SE_GROUP_ENABLED,
     SE_GROUP_ENABLED_BY_DEFAULT,
@@ -35,19 +33,9 @@ from ctwin32.wtypes import (
     WCHAR,
     wchar_len_sz,
     WCHAR_SIZE,
-    WinError,
     ULONG,
     UNICODE_STRING,
     )
-
-################################################################################
-
-def proc_by_name(name, desired_acc, inherit=False):
-    name = name.lower()
-    for p in ntdll.enum_processes():
-        if name == p.name.lower():
-            return kernel.OpenProcess(desired_acc, inherit, p.pid)
-    raise WinError(ERROR_NOT_FOUND)
 
 ################################################################################
 
@@ -65,19 +53,18 @@ def enable_s4u_privileges():
     # ... or we need to run in a process that is somewhat privileged (e.g.
     # administrator) so we can fetch and impersonate the SYSTEM identity
     advapi.enable_privileges([SE_IMPERSONATE_PRIVILEGE])
-    wlo, qli = ("winlogon.exe", PROCESS_QUERY_LIMITED_INFORMATION)
-    with proc_by_name(wlo, qli) as proc:
-        with advapi.OpenProcessToken(proc, TOKEN_DUPLICATE) as tok:
-            dup_tok_args = (
-                tok,
-                MAXIMUM_ALLOWED,
-                kernel.SECURITY_ATTRIBUTES(),
-                SecurityImpersonation,
-                TokenImpersonation,
-                )
-            with advapi.DuplicateTokenEx(*dup_tok_args) as dup:
-                advapi.enable_token_privileges(dup, required)
-                advapi.SetThreadToken(dup)
+    session = kernel.ProcessIdToSessionId(kernel.GetCurrentProcessId())
+    with advapi.open_system_token_for_session(TOKEN_DUPLICATE, session) as tok:
+        dup_tok_args = (
+            tok,
+            MAXIMUM_ALLOWED,
+            kernel.SECURITY_ATTRIBUTES(),
+            SecurityImpersonation,
+            TokenImpersonation,
+            )
+        with advapi.DuplicateTokenEx(*dup_tok_args) as dup:
+            advapi.enable_token_privileges(dup, required)
+            advapi.SetThreadToken(dup)
 
 ################################################################################
 
