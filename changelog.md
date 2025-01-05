@@ -29,6 +29,7 @@ http://semver.org/spec/v2.0.0.html).
 - sample dep_tree.py
 - gdi.GetObject
 - advapi.open_system_token_for_session
+- module kuser_shared_data
 
 ### Changed
 
