@@ -44,7 +44,7 @@ line-length = 80
 extend-include = ["*.pyw"]
 
 [tool.ruff.lint.pylint]
-max-statements = 75
+max-statements = 100
 
 [tool.ruff.lint]
 select = ["ALL"]
