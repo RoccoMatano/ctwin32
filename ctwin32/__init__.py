@@ -55,7 +55,7 @@ class suppress_winerr():
         self._err_codes = err_codes
 
     def __enter__(self):
-        pass
+        return self
 
     def __exit__(self, exctype, excinst, exctb):
         return (
