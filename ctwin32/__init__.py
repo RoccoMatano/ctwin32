@@ -135,6 +135,11 @@ def ns_from_struct(ctypes_aggregation):
         v = getattr(ctypes_aggregation, k)
         if isinstance(v, ctypes.Structure | ctypes.Union):
             v = ns_from_struct(v)
+        elif isinstance(v, ctypes.Array):
+            if len(v) and isinstance(v[0], ctypes.Structure | ctypes.Union):
+                v = [ns_from_struct(e) for e in v]
+            else:
+                v = list(v)
         fields[k] = v
     # modify the class name for nicer repr
     class NiceName(_namespace):
