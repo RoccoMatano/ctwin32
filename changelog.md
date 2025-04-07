@@ -36,6 +36,7 @@ http://semver.org/spec/v2.0.0.html).
 
 - renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR
 - adapted sample run_s4u.py to use advapi.open_system_token_for_session
+- let sample dep_tree.py handle imports with missing extension (.dll)
 
 ### Fixed
 
