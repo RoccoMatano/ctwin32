@@ -79,6 +79,7 @@ from . import (
     TokenElevationType,
     TokenElevationTypeFull,
     TokenGroups,
+    TokenPrivileges,
     TokenSessionId,
     TokenUser,
     WinBuiltinAdministratorsSid,
@@ -786,6 +787,19 @@ def get_token_groups(hdl):
             )
     tgroups = TOKEN_GROUPS.from_buffer_copy(buf)
     return (_xform_saa(saa) for saa in tgroups.Groups)
+
+################################################################################
+
+def get_token_privileges(hdl):
+    buf = GetTokenInformation(hdl, TokenPrivileges)
+    num_privs = DWORD.from_buffer_copy(buf).value
+    class TOKEN_PRIVILEGES(ctypes.Structure):
+        _fields_ = (
+            ("PrivilegeCount", DWORD),
+            ("Privileges", LUID_AND_ATTRIBUTES * num_privs)
+            )
+    tp = TOKEN_PRIVILEGES.from_buffer_copy(buf)
+    return [(p.Luid, p.Attributes) for p in tp.Privileges]
 
 ################################################################################
 

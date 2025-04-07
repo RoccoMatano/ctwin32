@@ -13,8 +13,6 @@ from .wtypes import (
     LARGE_INTEGER,
     LONG,
     LONGLONG,
-    POINTER,
-    PVOID,
     ULONG,
     ULONGLONG,
     USHORT,

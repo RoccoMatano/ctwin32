@@ -30,6 +30,7 @@ http://semver.org/spec/v2.0.0.html).
 - gdi.GetObject
 - advapi.open_system_token_for_session
 - module kuser_shared_data
+- advapi.get_token_privileges
 
 ### Changed
 
