@@ -14,7 +14,7 @@ https://learn.microsoft.com/en-us/windows/win32/api/)) by using
 playground, the selection of supported APIs and the way those are wrapped are
 solely dictated by my needs and preferences.
 
-ctwin32 is *__definitely__* not a replacement for
+ctwin32 is not a replacement for
 [pywin32](https://pypi.org/project/pywin32/), although it serves that purpose
 for me (in conjunction with [comtypes](https://pypi.org/project/comtypes/)).
 Compared with pywin32 the coverage of ctwin32 is downright tiny.
