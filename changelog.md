@@ -15,8 +15,6 @@ http://semver.org/spec/v2.0.0.html).
 - user.RegisterRawInputDevices
 - user.GetRawInputData
 - sample raw_input.py
-- rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
-  a size and add the `str` property.
 - ntdll.NtOpenDirectoryObject
 - ntdll.NtQueryDirectoryObject
 - ntdll.NtOpenSymbolicLinkObject
@@ -36,13 +34,15 @@ http://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR
+- rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
+  a size and add the `str` property (**_not backwards compatible_**).
+- renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR (**_not backwards compatible_**)
 - adapted sample run_s4u.py to use advapi.open_system_token_for_session
 - let sample dep_tree.py handle imports with missing extension (.dll)
-- renamed user.get_wnd_center -> user.get_window_center
-- renamed user.center_wnd -> user.center_window
-- renamed user.build_wnd_list -> user.build_window_list
-- discontinue support for python 3.8 and 3.9
+- renamed user.get_wnd_center -> user.get_window_center (**_not backwards compatible_**)
+- renamed user.center_wnd -> user.center_window (**_not backwards compatible_**)
+- renamed user.build_wnd_list -> user.build_window_list (**_not backwards compatible_**)
+- discontinue support for python 3.8 and 3.9 (**_not backwards compatible_**)
 
 ### Fixed
 
