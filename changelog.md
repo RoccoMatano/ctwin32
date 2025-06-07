@@ -42,6 +42,7 @@ http://semver.org/spec/v2.0.0.html).
 - renamed user.get_wnd_center -> user.get_window_center
 - renamed user.center_wnd -> user.center_window
 - renamed user.build_wnd_list -> user.build_window_list
+- discontinue support for python 3.8 and 3.9
 
 ### Fixed
 
