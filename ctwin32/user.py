@@ -95,6 +95,13 @@ def GetWindowThreadProcessId(hwnd):
 
 ################################################################################
 
+_IsWindowVisible = fun_fact(_usr.IsWindowVisible, (BOOL, HWND))
+
+def IsWindowVisible(hwnd):
+    return bool(_IsWindowVisible(hwnd))
+
+################################################################################
+
 _GetWindowTextLength = fun_fact(
     _usr.GetWindowTextLengthW, (INT, HWND)
     )
@@ -605,15 +612,15 @@ def GetMonitorInfo(hmon):
 
 ################################################################################
 
-def get_wnd_center(hwnd=None):
+def get_window_center(hwnd=None):
     if hwnd is None:
         return GetMonitorInfo(MonitorFromWindow(None)).rcMonitor.center
     return GetWindowRect(hwnd).center
 
 ################################################################################
 
-def center_wnd(to_be_centered, center_on=None):
-    center_x, center_y = get_wnd_center(center_on)
+def center_window(to_be_centered, center_on=None):
+    center_x, center_y = get_window_center(center_on)
     rc = GetWindowRect(to_be_centered)
     SetWindowPos(
         to_be_centered,
@@ -629,7 +636,7 @@ def center_wnd(to_be_centered, center_on=None):
 
 def start_centered(arglist):
     def center_wnd_cb(hwnd, _):
-        center_wnd(hwnd)
+        center_window(hwnd)
         return True
 
     with kernel.create_process(arglist) as pi:
@@ -1538,11 +1545,11 @@ try:
             )
         )
 
-    # build_wnd_list(0, 0) -> EnumWindows(...)
-    # build_wnd_list(parent, 0) -> EnumChildWindows(parent, ...)
-    # build_wnd_list(0, tid) -> EnumThreadWindows(tid, ...)
+    # build_window_list(0, 0) -> EnumWindows(...)
+    # build_window_list(parent, 0) -> EnumChildWindows(parent, ...)
+    # build_window_list(0, tid) -> EnumThreadWindows(tid, ...)
 
-    def build_wnd_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
+    def build_window_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
         enum_children = bool(parent_wnd)
         allocated = 512
         while True:
@@ -1571,8 +1578,30 @@ try:
         return array[:received - 1]
 
 except (FileNotFoundError, AttributeError):
-    def build_wnd_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
+    def build_window_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
         raise NotImplementedError
+
+################################################################################
+
+class _WINDOWCOMPOSITIONATTRIBDATA(ctypes.Structure):
+    _fields_ = (
+        ("Attrib", UINT),
+        ("pvData", PVOID),
+        ("cbData", UINT),
+        )
+
+def is_window_cloaked(hwnd):
+    res = BOOL(0)
+    wcad = _WINDOWCOMPOSITIONATTRIBDATA(
+        0x12, # counterpart for DWMWA_CLOAKED, no need for a detour via DWM
+        ctypes.addressof(res),
+        ctypes.sizeof(res)
+        )
+    try: # noqa: SIM105
+        raise_on_zero(_usr.GetWindowCompositionAttribute(hwnd, ref(wcad)))
+    except AttributeError:
+        pass
+    return res.value != 0
 
 ################################################################################
 

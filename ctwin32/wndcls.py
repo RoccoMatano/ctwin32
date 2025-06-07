@@ -177,7 +177,7 @@ class BaseWnd:
             )
 
     def center(self, center_on=None):
-        user.center_wnd(self.hwnd, center_on.hwnd if center_on else None)
+        user.center_window(self.hwnd, center_on.hwnd if center_on else None)
 
     def set_topmost(self):
         self.set_pos(

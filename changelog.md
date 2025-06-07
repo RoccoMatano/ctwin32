@@ -31,12 +31,17 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.open_system_token_for_session
 - module kuser_shared_data
 - advapi.get_token_privileges
+- user.IsWindowVisible
+- user.is_window_cloaked
 
 ### Changed
 
 - renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR
 - adapted sample run_s4u.py to use advapi.open_system_token_for_session
 - let sample dep_tree.py handle imports with missing extension (.dll)
+- renamed user.get_wnd_center -> user.get_window_center
+- renamed user.center_wnd -> user.center_window
+- renamed user.build_wnd_list -> user.build_window_list
 
 ### Fixed
 
