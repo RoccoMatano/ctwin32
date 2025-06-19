@@ -31,6 +31,13 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.get_token_privileges
 - user.IsWindowVisible
 - user.is_window_cloaked
+- kernel.GetPriorityClass
+- kernel.SetPriorityClass
+- kernel.GetThreadPriority
+- kernel.SetThreadPriority
+- ntdll.NtSetInformationThread
+- ntdll.set_abs_thread_priority
+- ntdll.get_abs_thread_priority
 
 ### Changed
 

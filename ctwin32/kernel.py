@@ -98,6 +98,7 @@ from . import (
     PIPE_UNLIMITED_INSTANCES,
     RT_MESSAGETABLE,
     STD_OUTPUT_HANDLE,
+    THREAD_PRIORITY_ERROR_RETURN,
     WAIT_FAILED,
     )
 
@@ -1174,6 +1175,37 @@ def ResumeThread(thdl):
     scnt = _ResumeThread(thdl)
     raise_if(scnt == 0xffffffff)
     return scnt
+
+################################################################################
+
+_GetPriorityClass = fun_fact(_k32.GetPriorityClass, (DWORD, HANDLE))
+
+def GetPriorityClass(phdl):
+    raise_on_zero(result := _GetPriorityClass(phdl))
+    return result
+
+################################################################################
+
+_SetPriorityClass = fun_fact(_k32.SetPriorityClass, (BOOL, HANDLE, DWORD))
+
+def SetPriorityClass(phdl, prio):
+    raise_on_zero(_SetPriorityClass(phdl, prio))
+
+################################################################################
+
+_GetThreadPriority = fun_fact(_k32.GetThreadPriority, (INT, HANDLE))
+
+def GetThreadPriority(thdl):
+    result = _GetThreadPriority(thdl)
+    raise_if(result == THREAD_PRIORITY_ERROR_RETURN)
+    return result
+
+################################################################################
+
+_SetThreadPriority = fun_fact(_k32.SetThreadPriority, (BOOL, HANDLE, INT))
+
+def SetThreadPriority(thdl, prio):
+    raise_on_zero(_SetThreadPriority(thdl, prio))
 
 ################################################################################
 

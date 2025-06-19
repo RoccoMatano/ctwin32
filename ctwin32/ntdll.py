@@ -52,6 +52,7 @@ from . import (
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
     ThreadBasicInformation,
+    ThreadPriority,
     ProcessCommandLineInformation,
     ProcessImageFileName,
     ProcessBasicInformation,
@@ -651,17 +652,17 @@ _NtQueryInformationThread = fun_fact(
     (NTSTATUS, PVOID, LONG, PVOID, ULONG, PVOID)
     )
 
-def NtQueryInformationThread(hdl, tinfo, buf, buf_size, p_ret_len):
-    return _NtQueryInformationThread(hdl, tinfo, buf, buf_size, p_ret_len)
+def NtQueryInformationThread(thdl, tinfo, buf, buf_size, p_ret_len):
+    return _NtQueryInformationThread(thdl, tinfo, buf, buf_size, p_ret_len)
 
 ################################################################################
 
-def get_thread_basic_info(hdl):
+def get_thread_basic_info(thdl):
     tbi = THREAD_BASIC_INFORMATION()
     size = ctypes.sizeof(tbi)
     raise_failed_status(
         NtQueryInformationThread(
-            hdl,
+            thdl,
             ThreadBasicInformation,
             ref(tbi),
             size,
@@ -669,6 +670,37 @@ def get_thread_basic_info(hdl):
             )
         )
     return tbi
+
+################################################################################
+
+_NtSetInformationThread = fun_fact(
+    _nt.NtSetInformationThread,
+    (NTSTATUS, PVOID, LONG, PVOID, ULONG)
+    )
+
+def NtSetInformationThread(thdl, tinfo, ct_info_obj):
+    raise_failed_status(
+        _NtSetInformationThread(
+            thdl,
+            tinfo,
+            ref(ct_info_obj),
+            ctypes.sizeof(ct_info_obj)
+            )
+        )
+
+################################################################################
+
+# requires SeIncreaseBasePriorityPrivilege
+
+def set_abs_thread_priority(thdl, prio):
+    prio = ULONG(prio)
+    NtSetInformationThread(thdl, ThreadPriority, prio)
+
+################################################################################
+
+def get_abs_thread_priority(thdl):
+    tbi = get_thread_basic_info(thdl)
+    return tbi.Priority
 
 ################################################################################
 
