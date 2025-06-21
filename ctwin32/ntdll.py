@@ -48,6 +48,8 @@ from . import (
     suppress_winerr,
     ERROR_FILE_NOT_FOUND,
     ERROR_NO_MORE_FILES,
+    DIRECTORY_QUERY,
+    GENERIC_READ,
     SystemProcessInformation,
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
@@ -221,8 +223,8 @@ class OBJECT_ATTRIBUTES(ctypes.Structure):
         ("SecurityQualityOfService", PVOID)
         )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.Length = ctypes.sizeof(self)
 
 ################################################################################
@@ -352,16 +354,18 @@ def enum_processes():
 ################################################################################
 
 def _resolve_device_prefix(fname):
-    dos_devices = {}
-    for dc in "abcdefghijklmnopqrstuvwxyz":
-        dn = dc + ":"
-        with suppress_winerr(ERROR_FILE_NOT_FOUND):
-            dos_devices[kernel.QueryDosDevice(dn)] = dn
-
-    for native, dos in dos_devices.items():
-        if fname.startswith(native):
-            fname = fname.replace(native, dos, 1)
-            break
+    gstr = UnicodeStrBuffer(r"\GLOBAL??")
+    gattr = OBJECT_ATTRIBUTES(ObjectName=gstr.ptr)
+    with NtOpenDirectoryObject(DIRECTORY_QUERY, gattr) as glob:
+        for prefix, typ in NtQueryDirectoryObject(glob):
+            if len(prefix) != 2 or prefix[1] != ":" or typ != "SymbolicLink":
+                continue
+            lstr = UnicodeStrBuffer(prefix)
+            lattr = OBJECT_ATTRIBUTES(0, glob, lstr.ptr)
+            with NtOpenSymbolicLinkObject(GENERIC_READ, lattr) as hsl:
+                link = NtQuerySymbolicLinkObject(hsl)
+                if fname.startswith(link):
+                    return fname.replace(link, prefix, 1)
     return fname
 
 ################################################################################
