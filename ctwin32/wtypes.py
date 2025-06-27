@@ -511,7 +511,7 @@ class ArgcArgvFromArgs():
             class ArgumentBuffer(ctypes.Structure):
                 _fields_ = (
                     ("pointers", PWSTR * self._argc),
-                    ("strings", WCHAR * len(chain)),
+                    ("strings", WCHAR * wchar_len_sz(chain)),
                     )
 
             self._buffer = ArgumentBuffer(strings=chain)
@@ -519,7 +519,7 @@ class ArgcArgvFromArgs():
             str_addr = self._argv + ArgumentBuffer.strings.offset
             for i, arg in enumerate(args):
                 self._buffer.pointers[i] = str_addr
-                str_addr += WCHAR_SIZE * (len(arg) + 1)
+                str_addr += WCHAR_SIZE * (wchar_len_sz(arg) + 1)
 
     @property
     def argc(self):
