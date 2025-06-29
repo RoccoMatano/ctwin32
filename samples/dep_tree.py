@@ -20,7 +20,6 @@ from ctwin32 import (
     IMAGE_DIRECTORY_ENTRY_IMPORT,
     kernel,
     ntdll,
-    wtypes,
     )
 from ctwin32.pemap import (
     ApiSet,
@@ -39,9 +38,7 @@ def get_known_dlls(for_wow=False):
         kernel.GetSystemDirectory() if not for_wow
         else kernel.GetSystemWow64Directory()
         )
-    odir = r"\KnownDlls32" if for_wow else r"\KnownDlls"
-    kd = wtypes.UnicodeStrBuffer(odir)
-    oa = ntdll.OBJECT_ATTRIBUTES(ObjectName = kd.ptr)
+    oa = ntdll.obj_attr(r"\KnownDlls32" if for_wow else r"\KnownDlls")
     with ntdll.NtOpenDirectoryObject(DIRECTORY_QUERY, oa) as hdir:
         name_type_lst = ntdll.NtQueryDirectoryObject(hdir)
     return {

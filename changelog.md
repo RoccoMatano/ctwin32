@@ -38,6 +38,8 @@ http://semver.org/spec/v2.0.0.html).
 - ntdll.NtSetInformationThread
 - ntdll.set_abs_thread_priority
 - ntdll.get_abs_thread_priority
+- ntdll.obj_attr
+- sample obj_dir.py
 
 ### Changed
 

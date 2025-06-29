@@ -46,7 +46,7 @@ from . import (
     fun_fact,
     ns_from_struct,
     suppress_winerr,
-    ERROR_FILE_NOT_FOUND,
+    wtypes,
     ERROR_NO_MORE_FILES,
     DIRECTORY_QUERY,
     GENERIC_READ,
@@ -77,6 +77,7 @@ STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
 STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
 STATUS_INVALID_SIGNATURE = _ntstatus(0xC000A000)
 STATUS_MORE_ENTRIES = _ntstatus(0x00000105)
+STATUS_NO_MORE_ENTRIES= _ntstatus(0x8000001A)
 
 ################################################################################
 
@@ -227,6 +228,10 @@ class OBJECT_ATTRIBUTES(ctypes.Structure):
         super().__init__(*args, **kwargs)
         self.Length = ctypes.sizeof(self)
 
+def obj_attr(name, root=None, attr=0):
+    name = wtypes.UnicodeStrBuffer(name).ptr if name else None
+    return OBJECT_ATTRIBUTES(0, root, name, attr)
+
 ################################################################################
 
 def _make_handle_info(num_entries):
@@ -354,14 +359,12 @@ def enum_processes():
 ################################################################################
 
 def _resolve_device_prefix(fname):
-    gstr = UnicodeStrBuffer(r"\GLOBAL??")
-    gattr = OBJECT_ATTRIBUTES(ObjectName=gstr.ptr)
+    gattr = obj_attr("\\GLOBAL??")
     with NtOpenDirectoryObject(DIRECTORY_QUERY, gattr) as glob:
         for prefix, typ in NtQueryDirectoryObject(glob):
             if len(prefix) != 2 or prefix[1] != ":" or typ != "SymbolicLink":
                 continue
-            lstr = UnicodeStrBuffer(prefix)
-            lattr = OBJECT_ATTRIBUTES(0, glob, lstr.ptr)
+            lattr = obj_attr(prefix, glob)
             with NtOpenSymbolicLinkObject(GENERIC_READ, lattr) as hsl:
                 link = NtQuerySymbolicLinkObject(hsl)
                 if fname.startswith(link):
@@ -773,6 +776,8 @@ def NtQueryDirectoryObject(hdir):
             restart = False
             if stat != STATUS_MORE_ENTRIES:
                 break
+        elif stat == STATUS_NO_MORE_ENTRIES:
+            break
         else:
             raise_failed_status(stat)
     return res
