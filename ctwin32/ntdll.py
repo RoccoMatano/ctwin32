@@ -29,6 +29,7 @@ from .wtypes import (
     PULONG,
     PUNICODE_STRING,
     PVOID,
+    SIZE_T,
     UINT_PTR,
     ULARGE_INTEGER,
     ULONG,
@@ -105,8 +106,32 @@ class SYSTEM_PROCESS_ID_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
+class CLIENT_ID(ctypes.Structure):
+    _fields_ = (
+        ("UniqueProcess", LONG_PTR),
+        ("UniqueThread", LONG_PTR)
+        )
+
+################################################################################
+
+class SYSTEM_THREAD_INFORMATION(ctypes.Structure):
+    _fields_ = (
+        ("KernelTime", LARGE_INTEGER),
+        ("UserTime", LARGE_INTEGER),
+        ("CreateTime", LARGE_INTEGER),
+        ("WaitTime", ULONG),
+        ("StartAddress", PVOID),
+        ("ClientId", CLIENT_ID),
+        ("Priority", LONG),
+        ("BasePriority", LONG),
+        ("ContextSwitches", ULONG),
+        ("ThreadState", INT),
+        ("WaitReason", INT),
+        )
+
+################################################################################
+
 class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
-    "this is just a partial definition"
     _fields_ = (
         ("NextEntryOffset", ULONG),
         ("NumberOfThreads", ULONG),
@@ -124,7 +149,27 @@ class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
         ("HandleCount", ULONG),
         ("SessionId", ULONG),
         ("UniqueProcessKey", UINT_PTR),
+        ("PeakVirtualSize", SIZE_T),
+        ("VirtualSize", SIZE_T),
+        ("PageFaultCount",  ULONG),
+        ("PeakWorkingSetSize", SIZE_T),
+        ("WorkingSetSize", SIZE_T),
+        ("QuotaPeakPagedPoolUsage", SIZE_T),
+        ("QuotaPagedPoolUsage", SIZE_T),
+        ("QuotaPeakNonPagedPoolUsage", SIZE_T),
+        ("QuotaNonPagedPoolUsage", SIZE_T),
+        ("PagefileUsage", SIZE_T),
+        ("PeakPagefileUsage", SIZE_T),
+        ("PrivatePageCount", SIZE_T),
+        ("ReadOperationCount", LARGE_INTEGER),
+        ("WriteOperationCount", LARGE_INTEGER),
+        ("OtherOperationCount", LARGE_INTEGER),
+        ("ReadTransferCount", LARGE_INTEGER),
+        ("WriteTransferCount", LARGE_INTEGER),
+        ("OtherTransferCount", LARGE_INTEGER),
         )
+        # At this point there is an array of
+        # NumberOfThreads * SYSTEM_THREAD_INFORMATION.
 
 ################################################################################
 
@@ -153,14 +198,6 @@ class SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION(ctypes.Structure):
         ("DpcTime", LARGE_INTEGER),
         ("InterruptTime", LARGE_INTEGER),
         ("InterruptCount", ULONG),
-        )
-
-################################################################################
-
-class CLIENT_ID(ctypes.Structure):
-    _fields_ = (
-        ("UniqueProcess", LONG_PTR),
-        ("UniqueThread", LONG_PTR)
         )
 
 ################################################################################
@@ -324,14 +361,6 @@ def _fixed_size_proc_info(proc_handle, proc_info, dest):
 ################################################################################
 
 def enum_processes():
-    def name_pid(pi):
-        return _namespace(
-            name=(
-                str(pi.ImageName) if pi.ImageName.Buffer else
-                ("idle" if not pi.UniqueProcessId else "system")
-                ),
-            pid=pi.UniqueProcessId or 0
-            )
 
     status = STATUS_INFO_LENGTH_MISMATCH
     while status == STATUS_INFO_LENGTH_MISMATCH:
@@ -346,14 +375,27 @@ def enum_processes():
             )
     raise_failed_status(status)
 
-    offs = 0
-    pi = SYSTEM_PROCESS_INFORMATION.from_buffer(buf, offs)
-    res = [name_pid(pi)]
-
-    while pi.NextEntryOffset:
-        offs += pi.NextEntryOffset
+    res = []
+    pinfo_size = ctypes.sizeof(SYSTEM_PROCESS_INFORMATION)
+    offs, offs_inc = 0, 1
+    while offs_inc:
         pi = SYSTEM_PROCESS_INFORMATION.from_buffer(buf, offs)
-        res.append(name_pid(pi))
+        nt = pi.NumberOfThreads
+        ti_addr = ctypes.addressof(pi) + pinfo_size
+        ti = (SYSTEM_THREAD_INFORMATION * nt).from_address(ti_addr)
+        res.append(
+            _namespace(
+                name=(
+                    str(pi.ImageName) if pi.ImageName.Buffer else
+                    ("idle" if not pi.UniqueProcessId else "system")
+                    ),
+                pid=pi.UniqueProcessId or 0,
+                tids=[i.ClientId.UniqueThread for i in ti],
+                )
+            )
+        offs_inc = pi.NextEntryOffset
+        offs += offs_inc
+
     return res
 
 ################################################################################

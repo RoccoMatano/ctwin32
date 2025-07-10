@@ -238,8 +238,8 @@ def _validate():
 
 def _demo():
     _validate()
-    from pprint import pprint
-    from ctwin32 import ns_from_struct
+    from pprint import pprint # noqa: PLC0415
+    from ctwin32 import ns_from_struct # noqa: PLC0415
 
     pprint(ns_from_struct(get_ref()))
 

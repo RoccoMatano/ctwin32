@@ -52,6 +52,9 @@ http://semver.org/spec/v2.0.0.html).
 - renamed user.center_wnd -> user.center_window (**_not backwards compatible_**)
 - renamed user.build_wnd_list -> user.build_window_list (**_not backwards compatible_**)
 - discontinue support for python 3.8 and 3.9 (**_not backwards compatible_**)
+- complete the partial definition of ntdll.SYSTEM_PROCESS_INFORMATION
+- extend ntdll.enum_processes to also return the list of thread IDs for each
+  process
 
 ### Fixed
 

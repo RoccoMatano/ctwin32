@@ -1386,7 +1386,7 @@ class terminate_on_exception:
         # Before we do that, we try to inform the user.
 
         try:
-            from ctwin32 import user
+            from ctwin32 import user  # noqa: PLC0415
             info = "".join(traceback.format_exception(typ, val, tb))
             try:
                 interactive = user.is_interactive_process()

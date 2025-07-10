@@ -151,7 +151,7 @@ def ns_from_struct(ctypes_aggregation):
 
 def _warn_win_ver():
     if kuser_shared_data.get_ref().NtMajorVersion < 10:
-        import warnings
+        import warnings # noqa: PLC0415
         msg = (
             "ctwin32 does not intend to support old Windows versions "
             "(< Windows 10). Be happy if it still works ;-)"

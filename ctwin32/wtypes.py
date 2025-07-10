@@ -124,11 +124,17 @@ class GUID(ULONG * 4):         # using ULONG for correct alignment
     def __repr__(self):
         return f"{self.__class__.__name__}('{self.uuid()!s}')"
 
+    def __int__(self):
+        return int.from_bytes(bytes(self), ENDIANNESS)
+
     def __eq__(self, other):
         try:
             return bytes(self) == bytes(other)
         except Exception:   # noqa: BLE001
             return False
+
+    def __hash__(self):
+        return int(self)
 
 ################################################################################
 
