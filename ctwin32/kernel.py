@@ -799,14 +799,7 @@ def WritePrivateProfileSection(secname, secdata, filename):
             secdata = "\0".join(lines)
         else:
             secdata = "\0\0"
-    # quote from https://github.com/python/cpython/issues/76926 concerning
-    # CPython versions up to 3.9:
-    #   "PyUnicode_AsWideCharString was updated to raise ValueError for
-    #    embedded nulls if the 'size' output parameter is NULL."
-    # That's why we need to detour 'secdata' through a unicode buffer. Since
-    # py310 that would no longer be necessary (ctypes was fixed).
-    buf = string_buffer(secdata, len(secdata))
-    raise_on_zero(_WritePrivateProfileSection(secname, buf, filename))
+    raise_on_zero(_WritePrivateProfileSection(secname, secdata, filename))
 
 ################################################################################
 
@@ -869,9 +862,7 @@ _SetEnvironmentStrings = fun_fact(
     )
 
 def SetEnvironmentStrings(strings):
-    # see comment on PyUnicode_AsWideCharString above
-    buf = string_buffer(strings, len(strings))
-    raise_on_zero(_SetEnvironmentStrings(buf))
+    raise_on_zero(_SetEnvironmentStrings(strings))
 
 ################################################################################
 

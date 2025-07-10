@@ -55,6 +55,8 @@ http://semver.org/spec/v2.0.0.html).
 - complete the partial definition of ntdll.SYSTEM_PROCESS_INFORMATION
 - extend ntdll.enum_processes to also return the list of thread IDs for each
   process
+- removed workaround for strings with embedded zeros, that was required for
+  python < 3.10
 
 ### Fixed
 
