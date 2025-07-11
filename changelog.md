@@ -40,6 +40,7 @@ http://semver.org/spec/v2.0.0.html).
 - ntdll.get_abs_thread_priority
 - ntdll.obj_attr
 - sample obj_dir.py
+- ntdll.enum_processes_ex
 
 ### Changed
 

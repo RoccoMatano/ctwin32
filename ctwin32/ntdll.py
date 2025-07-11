@@ -360,8 +360,7 @@ def _fixed_size_proc_info(proc_handle, proc_info, dest):
 
 ################################################################################
 
-def enum_processes():
-
+def _enum_proc_worker(extract_func):
     status = STATUS_INFO_LENGTH_MISMATCH
     while status == STATUS_INFO_LENGTH_MISMATCH:
         size = ULONG(0)
@@ -383,20 +382,40 @@ def enum_processes():
         nt = pi.NumberOfThreads
         ti_addr = ctypes.addressof(pi) + pinfo_size
         ti = (SYSTEM_THREAD_INFORMATION * nt).from_address(ti_addr)
-        res.append(
-            _namespace(
-                name=(
-                    str(pi.ImageName) if pi.ImageName.Buffer else
-                    ("idle" if not pi.UniqueProcessId else "system")
-                    ),
-                pid=pi.UniqueProcessId or 0,
-                tids=[i.ClientId.UniqueThread for i in ti],
-                )
-            )
+        res.append(extract_func(pi, ti))
         offs_inc = pi.NextEntryOffset
         offs += offs_inc
-
     return res
+
+################################################################################
+
+def _extract_basic_proc_info(pi, ti):
+    return _namespace(
+        name=(
+            str(pi.ImageName) if pi.ImageName.Buffer else
+            ("idle" if not pi.UniqueProcessId else "system")
+            ),
+        pid=pi.UniqueProcessId or 0,
+        tids=[i.ClientId.UniqueThread for i in ti],
+        )
+
+################################################################################
+
+def _extract_full_proc_info(pi, ti):
+    pins = ns_from_struct(pi)
+    del pins.NextEntryOffset
+    pins.Threads = [ns_from_struct(t) for t in ti]
+    return pins
+
+################################################################################
+
+def enum_processes():
+    return _enum_proc_worker(_extract_basic_proc_info)
+
+################################################################################
+
+def enum_processes_ex():
+    return _enum_proc_worker(_extract_full_proc_info)
 
 ################################################################################
 
