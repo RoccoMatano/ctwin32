@@ -62,6 +62,7 @@ http://semver.org/spec/v2.0.0.html).
 ### Fixed
 
 - fix structure alignment in setupapi
+- fix determination of prefix length in iphlpapi
 
 ## [3.0.0] - 2024-10-09
 
