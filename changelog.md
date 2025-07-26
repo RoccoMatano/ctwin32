@@ -58,6 +58,7 @@ http://semver.org/spec/v2.0.0.html).
   process
 - removed workaround for strings with embedded zeros, that was required for
   python < 3.10
+- improved reporting of delayed imports in sample dep_tree.py
 
 ### Fixed
 

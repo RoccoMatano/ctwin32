@@ -73,7 +73,7 @@ def get_dll_search_dirs(mod_path, for_wow=False):
 
 class Imports():
     def __init__(self, key, path):
-        self.tree = nspace(name=key, children=[])
+        self.tree = nspace(name=key, delayed=False, children=[])
         self.mods = {key: nspace(elem=self.tree, path=path, resolved=False)}
 
     def add_dll(self, dependant, dll, path, is_delayed):
@@ -81,7 +81,7 @@ class Imports():
         dll = dll.lower()
         if dll in (c.name for c in dep.children):
             return
-        child = nspace(name=dll, children=[])
+        child = nspace(name=dll, delayed=is_delayed, children=[])
         dep.children.append(child)
         if dll not in self.mods:
             if path is None:
@@ -101,7 +101,8 @@ class Imports():
         res = []
         if node is None:
             node = self.tree
-        res.append(f"{' ' * level * indent}{node.name}")
+        d = " (delayed)" if node.delayed else ""
+        res.append(f"{' ' * level * indent}{node.name}{d}")
         for c in node.children:
             res.extend(self._fmt_nodes(c, level + 1, indent))
         return res
@@ -174,7 +175,8 @@ def add_delay_imports(imports, pe, search_info):
 
 ################################################################################
 
-def get_dep_tree(filename, delayed):
+def get_dep_tree(filename, delayed, static):
+    level = 0
     with pemap(filename) as pe:
         imports = Imports(pe.key, pe.name)
         search_info = (
@@ -185,26 +187,25 @@ def get_dep_tree(filename, delayed):
         for path in unresolved:
             with pemap(path) as pe:
                 add_static_imports(imports, pe, search_info)
-                if delayed:
+                if not static and (delayed or level < 1):
                     add_delay_imports(imports, pe, search_info)
                 imports.mark_resolved(pe.key)
-
+        level += 1
     return imports.get_results()
 
 ################################################################################
 
 def dep_tree():
     ape = ArgumentParser(description="determine dependency tree")
-    ape.add_argument(
-        "-d",
-        "--delay",
-        action="store_true",
-        help="include delayed imports"
-        )
+    group = ape.add_mutually_exclusive_group()
+    g = group.add_argument
+    dhlp = "include delayed imports beyond first level"
+    g("-d", "--delay", action="store_true", help=dhlp)
+    g("-s", "--static", action="store_true", help="only report static imports")
     ape.add_argument("filename", help="name of file to examine")
-    args = ape.parse_args()
+    a = ape.parse_args()
 
-    mod_list, tree, formatted_tree = get_dep_tree(args.filename, args.delay)
+    mod_list, tree, formatted_tree = get_dep_tree(a.filename, a.delay, a.static)
 
     max_name_len = max(len(n) for n, _ in mod_list) + 1
     print(f"\nlist of modules ({len(mod_list)}):\n")
