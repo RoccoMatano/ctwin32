@@ -59,6 +59,7 @@ http://semver.org/spec/v2.0.0.html).
 - removed workaround for strings with embedded zeros, that was required for
   python < 3.10
 - improved reporting of delayed imports in sample dep_tree.py
+- in wtypes renamed PTR_64_BIT -> PTR_HAS_64_BITS and PTR_32_BIT -> PTR_HAS_32_BITS
 
 ### Fixed
 

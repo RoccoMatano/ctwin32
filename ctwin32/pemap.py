@@ -22,7 +22,7 @@ from . import (
 from .wtypes import (
     BYTE,
     DWORD,
-    PTR_64_BIT,
+    PTR_HAS_64_BITS,
     PVOID,
     ULONG,
     ULONGLONG,
@@ -408,7 +408,7 @@ class API_SET_VALUE_ENTRY(SizedStruct):
 
 class ApiSet():
     def __init__(self):
-        offs = 0x68 if PTR_64_BIT else 0x38
+        offs = 0x68 if PTR_HAS_64_BITS else 0x38
         base = PVOID.from_address(ntdll.RtlGetCurrentPeb() + offs).value
         apiset = API_SET_NAMESPACE.from_address(base)
         if apiset.Version == 6:

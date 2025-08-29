@@ -19,7 +19,7 @@ from .wtypes import (
     PDWORD,
     PGUID,
     POINTER,
-    PTR_64_BIT,
+    PTR_HAS_64_BITS,
     PVOID,
     PWSTR,
     ScdToBeClosed,
@@ -54,7 +54,7 @@ from .advapi import registry_to_py
 _sua = ctypes.WinDLL("setupapi.dll", use_last_error=True)
 
 # SetupAPI.h packs structures differently in 64 and 32 bit mode!
-_SUA_PACK = 8 if PTR_64_BIT else 1
+_SUA_PACK = 8 if PTR_HAS_64_BITS else 1
 
 ################################################################################
 
