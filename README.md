@@ -73,7 +73,8 @@ for several instances of how ctwin32 can be used.
 While there is already another Python module that does something very similar
 to ctwin32 ([pywin32-ctypes](https://github.com/enthought/pywin32-ctypes)),
 it has a different purpose (namely to serve the internal needs of its
-[creator](https://www.enthought.com/)).
+[creator](https://www.enthought.com/)). However, ctwin32 wraps significantly
+more API functions than pywin32-ctypes (as of September 2025: 417 / 16).
 
 -----
 
