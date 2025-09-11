@@ -229,7 +229,7 @@ def EnumThreadWindows(tid, callback, context):
 ################################################################################
 
 def _get_wnd_lst_cb(hwnd, wnd_lst):
-    tid, pid = GetWindowThreadProcessId(hwnd)
+    _, pid = GetWindowThreadProcessId(hwnd)
     d = _namespace(
         hwnd=hwnd,
         text=GetWindowText(hwnd),

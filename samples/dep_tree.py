@@ -158,7 +158,7 @@ def add_static_imports(imports, pe, search_info):
 ################################################################################
 
 def add_delay_imports(imports, pe, search_info):
-    rva, size = pe.img_dir(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
+    rva, _ = pe.img_dir(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
     if not rva:
         return
     offs = pe.offs_from_rva(rva)
@@ -205,7 +205,7 @@ def dep_tree():
     ape.add_argument("filename", help="name of file to examine")
     a = ape.parse_args()
 
-    mod_list, tree, formatted_tree = get_dep_tree(a.filename, a.delay, a.static)
+    mod_list, _, formatted_tree = get_dep_tree(a.filename, a.delay, a.static)
 
     max_name_len = max(len(n) for n, _ in mod_list) + 1
     print(f"\nlist of modules ({len(mod_list)}):\n")

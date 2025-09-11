@@ -130,7 +130,7 @@ def find_imports(pe, mode, names):
 def find_delay_imports(pe, mode, names):
     result = []
     src = "delay import"
-    rva, size = pe.img_dir(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
+    rva, _ = pe.img_dir(IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT)
     if not rva:
         return result
     offs = pe.offs_from_rva(rva)

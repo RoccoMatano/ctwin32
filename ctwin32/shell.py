@@ -173,7 +173,7 @@ def elevate(*args, direc=None, wait=False, show=SW_SHOW):
 ################################################################################
 
 def relegate(*args, wait=False):
-    tid, pid, = user.GetWindowThreadProcessId(user.GetShellWindow())
+    _, pid, = user.GetWindowThreadProcessId(user.GetShellWindow())
     with kernel.OpenProcess(PROCESS_CREATE_PROCESS, False, pid) as shell_proc:
         attr = ((PROC_THREAD_ATTRIBUTE_PARENT_PROCESS, shell_proc),)
         with kernel.ProcThreadAttributeList(attr) as ptal:

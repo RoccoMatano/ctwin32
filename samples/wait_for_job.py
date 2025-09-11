@@ -38,7 +38,7 @@ def create_job(arglist):
 ################################################################################
 
 def job_is_still_alive(job, io_port, timeout=INFINITE):
-    code, key, ovrl = kernel.GetQueuedCompletionStatus(io_port, timeout)
+    code, key, _ = kernel.GetQueuedCompletionStatus(io_port, timeout)
     return key != job or code != JOB_OBJECT_MSG_ACTIVE_PROCESS_ZERO
 
 ################################################################################

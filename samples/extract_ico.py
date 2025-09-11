@@ -109,7 +109,7 @@ def get_executable_file_info(hmod):
     ids = kernel.get_resource_names(hmod, RT_GROUP_ICON)
     res = []
     for i in ids:
-        addr, size = kernel.get_resource_info(hmod, i, RT_GROUP_ICON)
+        addr, _ = kernel.get_resource_info(hmod, i, RT_GROUP_ICON)
         idh = ICONDIR_HEADER.from_address(addr)
         addr += ctypes.sizeof(ICONDIR_HEADER)
         ICON_ENTRIES = GRPICONDIRENTRY * idh.count
