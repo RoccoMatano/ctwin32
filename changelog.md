@@ -8,6 +8,8 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [4.0.0] - 2025-10-08
+
 ### Added
 
 - kernel.GetNumberOfConsoleInputEvents
@@ -779,7 +781,8 @@ such an old version.
 - Everything. All this happened before the dawn of time (i.e. before the
   existence of this change log).
 
-[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/3.0.0...master
+[Unreleased]: https://github.com/RoccoMatano/ctwin32/compare/4.0.0...master
+[4.0.0]: https://github.com/RoccoMatano/ctwin32/compare/3.0.0...4.0.0
 [3.0.0]: https://github.com/RoccoMatano/ctwin32/compare/2.7.1...3.0.0
 [2.7.1]: https://github.com/RoccoMatano/ctwin32/compare/2.7.0...2.7.1
 [2.7.0]: https://github.com/RoccoMatano/ctwin32/compare/2.6.0...2.7.0
