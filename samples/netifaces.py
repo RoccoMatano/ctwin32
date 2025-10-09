@@ -9,6 +9,7 @@
 
 from ctwin32.iphlpapi import (
     get_host_interfaces,
+    netifaces,
     ConvertInterfaceGuidToLuid,
     ConvertInterfaceLuidToAlias,
     ConvertInterfaceIndexToLuid,
@@ -29,4 +30,14 @@ for guid, ifaces in get_host_interfaces(None, True).items():
     alias = ConvertInterfaceLuidToAlias(ConvertInterfaceGuidToLuid(guid))
     print(f"\nAdapter: {alias}, {guid}")
     for nif in ifaces:
+        print(f"    {nif!r}")
+
+
+print("\n\nnetifaces:")
+for ifaces in netifaces(None, True):
+    print(f"\nIndex: {ifaces.idx}, Adapter: {ifaces.alias}, {ifaces.guid}")
+    if ifaces.phys_addr:
+        mac = ":".join(f"{b:02X}" for b in ifaces.phys_addr)
+        print(f"    MAC: {mac}")
+    for nif in ifaces.ifaces:
         print(f"    {nif!r}")

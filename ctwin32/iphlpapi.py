@@ -8,6 +8,7 @@
 import ipaddress as _iaddr
 from types import SimpleNamespace as _namespace
 from collections import defaultdict as _defdict
+from dataclasses import dataclass as _dtacls, field as _field
 
 import ctypes
 from .wtypes import (
@@ -208,6 +209,21 @@ class SOCKADDR_INET(ctypes.Union):
 
 ################################################################################
 
+@_dtacls
+class Ifaces:
+    idx: int = -1
+    guid: str = ""
+    alias: str = ""
+    phys_addr: bytes = 6 * b"\0"
+    ifaces: list = _field(default_factory=list)
+
+    @staticmethod
+    def sortkey(iface):
+        return iface.idx
+
+
+################################################################################
+
 def _sock_addr_to_ip_addr(p_sock_addr):
     fam = p_sock_addr.contents.sa_family
     if fam == AF_INET:
@@ -269,6 +285,9 @@ def _adapter_addresses_to_interfaces(p_adresses, include_loopback):
                 prefix = _sock_addr_to_ip_addr(pfx.Address.lpSockaddr)
                 prefixes.append((prefix, pfx.PrefixLength))
             adptr_name = ctypes.string_at(adptr_addr.AdapterName).decode()
+            phy_len = adptr_addr.PhysicalAddressLength
+            phy_addr = bytes(adptr_addr.PhysicalAddress[:phy_len])
+            result[adptr_name].append(phy_addr)
             pfua = adptr_addr.FirstUnicastAddress
             while pfua:
                 fua = pfua.contents
@@ -286,8 +305,7 @@ def _ver_to_fam(ver):
 
 ################################################################################
 
-def get_host_interfaces(version=4, include_loopback=False):
-    "returns the list of the ip interfaces of the local network adapters"
+def _get_phy_and_ifaces(version, include_loopback):
     fam = _ver_to_fam(version)
     flags = (
         GAA_FLAG_INCLUDE_PREFIX |
@@ -301,8 +319,40 @@ def get_host_interfaces(version=4, include_loopback=False):
         p_addr = ctypes.cast(buffer, PIP_ADAPTER_ADDRESSES)
         error = _GetAdaptersAddresses(fam, flags, None, p_addr, ref(blen))
     raise_on_err(error)
-
     return _adapter_addresses_to_interfaces(p_addr, include_loopback)
+
+################################################################################
+
+def get_host_interfaces(version=4, include_loopback=False):
+    "returns a dict that maps adapters giuds to a list of ip interfaces"
+    phys_and_if = _get_phy_and_ifaces(version, include_loopback)
+    return {g: lst[1:] for g, lst in phys_and_if.items()}
+
+################################################################################
+
+def _guid_to_idx_and_alias(guid):
+    luid = ConvertInterfaceGuidToLuid(guid)
+    alias = ConvertInterfaceLuidToAlias(luid)
+    idx = 1
+    while True:
+        try:
+            if luid == ConvertInterfaceIndexToLuid(idx):
+                return idx, alias
+            idx += 1
+        except OSError:
+            break
+    raise ValueError(f"no index found for '{guid}'")
+
+################################################################################
+
+def netifaces(version=4, include_loopback=False):
+    "returns a list of Iface objects describing the network adapters"
+    result = []
+    phys_and_if = _get_phy_and_ifaces(version, include_loopback)
+    for guid, lst in phys_and_if.items():
+        idx, alias = _guid_to_idx_and_alias(guid)
+        result.append(Ifaces(idx, guid, alias, lst[0], lst[1:]))
+    return sorted(result, key=Ifaces.sortkey)
 
 ################################################################################
 

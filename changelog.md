@@ -8,6 +8,14 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- iphlpapi.netifaces
+
+### Changed
+
+- use iphlpapi.netifaces in sample netifaces.py
+
 ## [4.0.0] - 2025-10-08
 
 ### Added
