@@ -219,18 +219,16 @@ class pemap:
 
     def __init__(self, fname, *, convert_open_err=False):
         try:
-            f = kernel.create_file(str(fname), GENERIC_READ)
+            with kernel.create_file(str(fname), GENERIC_READ) as f:
+                self.size = kernel.GetFileSize(f)
+                if self.size < (self.E_LFANEW + 4):
+                    raise NotPeError(fname)
+                with kernel.CreateFileMapping(f, None, PAGE_READONLY, 0) as m:
+                    self.view = kernel.MapViewOfFile(m, FILE_MAP_READ, 0, 0)
         except OSError as e:
             if convert_open_err:
                 raise NotPeError(fname, e.winerror) from e
             raise
-
-        with f:
-            self.size = kernel.GetFileSize(f)
-            if self.size < (self.E_LFANEW + 4):
-                raise NotPeError(fname)
-            with kernel.CreateFileMapping(f, None, PAGE_READONLY, 0) as m:
-                self.view = kernel.MapViewOfFile(m, FILE_MAP_READ, 0, 0)
 
         if fhaddr := self._file_header_addr():
             self.name = fname
