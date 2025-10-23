@@ -11,6 +11,7 @@ http://semver.org/spec/v2.0.0.html).
 ### Added
 
 - iphlpapi.netifaces
+- ntdll.NtQueryTimerResolution
 
 ### Changed
 

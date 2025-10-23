@@ -876,3 +876,17 @@ def NtQuerySymbolicLinkObject(hdl):
             return us.str
 
 ################################################################################
+
+_NtQueryTimerResolution = fun_fact(
+    _nt.NtQueryTimerResolution,
+    (NTSTATUS, PULONG, PULONG, PULONG)
+    )
+
+def NtQueryTimerResolution():
+    min = ULONG(0)
+    max = ULONG(0)
+    cur = ULONG(0)
+    raise_failed_status(_NtQueryTimerResolution(ref(min), ref(max), ref(cur)))
+    return min.value, max.value, cur.value
+
+################################################################################
