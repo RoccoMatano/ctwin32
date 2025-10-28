@@ -5,13 +5,12 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import string_buffer, DWORD, PWSTR
-from . import fun_fact, raise_on_zero
+from . import ApiDll, raise_on_zero
 
 ################################################################################
 
-_dbghlp = ctypes.WinDLL("dbghelp.dll", use_last_error=True)
+_dbghlp = ApiDll("dbghelp.dll")
 
 UNDNAME_COMPLETE = 0x0000
 UNDNAME_NO_LEADING_UNDERSCORES = 0x0001
@@ -33,8 +32,9 @@ UNDNAME_NO_SPECIAL_SYMS = 0x4000
 
 ################################################################################
 
-_UnDecorateSymbolName = fun_fact(
-    _dbghlp.UnDecorateSymbolNameW, (DWORD, PWSTR, PWSTR, DWORD, DWORD)
+_UnDecorateSymbolName = _dbghlp.fun_fact(
+    "UnDecorateSymbolNameW",
+    (DWORD, PWSTR, PWSTR, DWORD, DWORD)
     )
 
 def UnDecorateSymbolName(sym_name, flags=UNDNAME_COMPLETE):

@@ -29,11 +29,11 @@ from .wtypes import (
     WPARAM,
     )
 from . import (
+    ApiDll,
     ref,
     kernel,
     raise_on_zero,
     raise_on_hr,
-    fun_fact,
     S_OK,
     TDF_POSITION_RELATIVE_TO_WINDOW,
     )
@@ -88,7 +88,7 @@ def _load_comctl():
     kernel.ActivateActCtx(ctx)
 
     # this calls LoadLibrary
-    comctl = ctypes.WinDLL("comctl32.dll", use_last_error=True)
+    comctl = ApiDll("comctl32.dll")
 
     # Do NOT deactivate the context! Just decrement its ref-count by
     # releasing it.
@@ -127,8 +127,8 @@ del _load_comctl
 
 ################################################################################
 
-_TaskDialog = fun_fact(
-    _ctl.TaskDialog, (
+_TaskDialog = _ctl.fun_fact(
+    "TaskDialog", (
         HRESULT,
         HWND,
         HINSTANCE,
@@ -235,8 +235,8 @@ PTASKDIALOGCONFIG = POINTER(TASKDIALOGCONFIG)
 
 ################################################################################
 
-_TaskDialogIndirect = fun_fact(
-    _ctl.TaskDialogIndirect, (
+_TaskDialogIndirect = _ctl.fun_fact(
+    "TaskDialogIndirect", (
         HRESULT,
         PTASKDIALOGCONFIG,
         PINT,

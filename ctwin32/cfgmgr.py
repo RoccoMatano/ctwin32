@@ -5,7 +5,6 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     byte_buffer,
     string_buffer,
@@ -22,8 +21,8 @@ from .wtypes import (
     WinError,
     )
 from . import (
+    ApiDll,
     ref,
-    fun_fact,
     multi_str_from_str,
     MAX_DEVICE_ID_LEN,
     MAX_PATH,
@@ -35,11 +34,11 @@ from . import (
     ERROR_CURRENT_DIRECTORY,
     )
 from .advapi import registry_to_py
-_cfg = ctypes.WinDLL("cfgmgr32.dll", use_last_error=True)
+_cfg = ApiDll("cfgmgr32.dll")
 
 ################################################################################
 
-CM_MapCrToWin32Err = fun_fact(_cfg.CM_MapCrToWin32Err, (DWORD, DWORD, DWORD))
+CM_MapCrToWin32Err = _cfg.fun_fact("CM_MapCrToWin32Err", (DWORD, DWORD, DWORD))
 
 def raise_on_cr(cfgret):
     if cfgret != CR_SUCCESS:
@@ -49,8 +48,8 @@ def raise_on_cr(cfgret):
 
 ################################################################################
 
-_CM_Get_Device_ID = fun_fact(
-    _cfg.CM_Get_Device_IDW,
+_CM_Get_Device_ID = _cfg.fun_fact(
+    "CM_Get_Device_IDW",
     (DWORD, DWORD, PWSTR, ULONG, ULONG)
     )
 
@@ -61,8 +60,8 @@ def CM_Get_Device_ID(devinst):
 
 ################################################################################
 
-_CM_Get_DevNode_Status = fun_fact(
-    _cfg.CM_Get_DevNode_Status,
+_CM_Get_DevNode_Status = _cfg.fun_fact(
+    "CM_Get_DevNode_Status",
     (DWORD, PULONG, PULONG, DWORD, ULONG)
     )
 
@@ -74,8 +73,8 @@ def CM_Get_DevNode_Status(dev_inst):
 
 ################################################################################
 
-_CM_Enumerate_Enumerators = fun_fact(
-    _cfg.CM_Enumerate_EnumeratorsW,
+_CM_Enumerate_Enumerators = _cfg.fun_fact(
+    "CM_Enumerate_EnumeratorsW",
     (DWORD, ULONG, PWSTR, PULONG, ULONG)
     )
 
@@ -87,8 +86,9 @@ def CM_Enumerate_Enumerators(idx):
 
 ################################################################################
 
-_CM_Enumerate_Classes = fun_fact(
-    _cfg.CM_Enumerate_Classes, (DWORD, ULONG, PGUID, ULONG)
+_CM_Enumerate_Classes = _cfg.fun_fact(
+    "CM_Enumerate_Classes",
+    (DWORD, ULONG, PGUID, ULONG)
     )
 
 def CM_Enumerate_Classes(idx, flags=0):
@@ -98,9 +98,7 @@ def CM_Enumerate_Classes(idx, flags=0):
 
 ################################################################################
 
-_CM_Get_Parent = fun_fact(
-    _cfg.CM_Get_Parent, (DWORD, PDWORD, DWORD, ULONG)
-    )
+_CM_Get_Parent = _cfg.fun_fact("CM_Get_Parent", (DWORD, PDWORD, DWORD, ULONG))
 
 def CM_Get_Parent(devinst):
     parent = DWORD()
@@ -109,8 +107,8 @@ def CM_Get_Parent(devinst):
 
 ################################################################################
 
-_CM_Request_Device_Eject = fun_fact(
-    _cfg.CM_Request_Device_EjectW, (
+_CM_Request_Device_Eject = _cfg.fun_fact(
+    "CM_Request_Device_EjectW", (
         DWORD,
         DWORD,
         PINT,
@@ -139,8 +137,9 @@ def CM_Request_Device_Eject(devinst):
 
 ################################################################################
 
-_CM_Locate_DevNode = fun_fact(
-    _cfg.CM_Locate_DevNodeW, (DWORD, PDWORD, PWSTR, ULONG)
+_CM_Locate_DevNode = _cfg.fun_fact(
+    "CM_Locate_DevNodeW",
+    (DWORD, PDWORD, PWSTR, ULONG)
     )
 
 def CM_Locate_DevNode(device_id, flags=CM_LOCATE_DEVNODE_NORMAL):
@@ -150,8 +149,8 @@ def CM_Locate_DevNode(device_id, flags=CM_LOCATE_DEVNODE_NORMAL):
 
 ################################################################################
 
-_CM_Get_DevNode_Registry_Property = fun_fact(
-    _cfg.CM_Get_DevNode_Registry_PropertyW, (
+_CM_Get_DevNode_Registry_Property = _cfg.fun_fact(
+    "CM_Get_DevNode_Registry_PropertyW", (
         DWORD,
         DWORD,
         ULONG,
@@ -188,8 +187,8 @@ def CM_Get_DevNode_Registry_Property(devinst, prop):
 
 ################################################################################
 
-_CM_Get_Device_Interface_List_Size = fun_fact(
-    _cfg.CM_Get_Device_Interface_List_SizeW, (
+_CM_Get_Device_Interface_List_Size = _cfg.fun_fact(
+    "CM_Get_Device_Interface_List_SizeW", (
         DWORD,
         PULONG,
         PGUID,
@@ -216,8 +215,8 @@ def CM_Get_Device_Interface_List_Size(
 
 ################################################################################
 
-_CM_Get_Device_Interface_List = fun_fact(
-    _cfg.CM_Get_Device_Interface_ListW, (
+_CM_Get_Device_Interface_List = _cfg.fun_fact(
+    "CM_Get_Device_Interface_ListW", (
         DWORD,
         PGUID,
         PWSTR,

@@ -8,8 +8,8 @@
 from types import SimpleNamespace as _namespace
 import ctypes
 from . import (
+    ApiDll,
     ERROR_INVALID_PARAMETER,
-    fun_fact,
     ns_from_struct,
     ref,
     suppress_winerr,
@@ -51,7 +51,7 @@ from .advapi import (
     ConvertSidToStringSid,
     )
 
-_sec = ctypes.WinDLL("secur32.dll", use_last_error=True)
+_sec = ApiDll("secur32.dll")
 
 ################################################################################
 
@@ -93,17 +93,15 @@ PPSECURITY_LOGON_SESSION_DATA = POINTER(PSECURITY_LOGON_SESSION_DATA)
 
 ################################################################################
 
-_LsaFreeReturnBuffer = fun_fact(
-    _sec.LsaFreeReturnBuffer, (NTSTATUS, PVOID)
-    )
+_LsaFreeReturnBuffer = _sec.fun_fact("LsaFreeReturnBuffer", (NTSTATUS, PVOID))
 
 def LsaFreeReturnBuffer(ptr):
     raise_failed_status(_LsaFreeReturnBuffer(ptr))
 
 ################################################################################
 
-_LsaGetLogonSessionData = fun_fact(
-    _sec.LsaGetLogonSessionData,
+_LsaGetLogonSessionData = _sec.fun_fact(
+    "LsaGetLogonSessionData",
     (NTSTATUS, PLUID, PPSECURITY_LOGON_SESSION_DATA)
     )
 
@@ -159,8 +157,9 @@ def LsaGetLogonSessionData(luid):
 
 ################################################################################
 
-_LsaEnumerateLogonSessions = fun_fact(
-    _sec.LsaEnumerateLogonSessions, (NTSTATUS, PULONG, PPLUID)
+_LsaEnumerateLogonSessions = _sec.fun_fact(
+    "LsaEnumerateLogonSessions",
+    (NTSTATUS, PULONG, PPLUID)
     )
 
 def LsaEnumerateLogonSessions():
@@ -177,8 +176,9 @@ def LsaEnumerateLogonSessions():
 
 ################################################################################
 
-_LsaDeregisterLogonProcess = fun_fact(
-    _sec.LsaDeregisterLogonProcess, (NTSTATUS, HANDLE)
+_LsaDeregisterLogonProcess = _sec.fun_fact(
+    "LsaDeregisterLogonProcess",
+    (NTSTATUS, HANDLE)
     )
 
 def LsaDeregisterLogonProcess(hdl):
@@ -186,7 +186,7 @@ def LsaDeregisterLogonProcess(hdl):
 
 ################################################################################
 
-_LsaConnectUntrusted = fun_fact(_sec.LsaConnectUntrusted, (NTSTATUS, PHANDLE))
+_LsaConnectUntrusted = _sec.fun_fact("LsaConnectUntrusted", (NTSTATUS, PHANDLE))
 
 def LsaConnectUntrusted():
     hdl = HANDLE()
@@ -233,8 +233,9 @@ def LsaStrFromStr(init):
 
 ################################################################################
 
-_LsaLookupAuthenticationPackage = fun_fact(
-    _sec.LsaLookupAuthenticationPackage, (NTSTATUS, HANDLE, PLSA_STRING, PULONG)
+_LsaLookupAuthenticationPackage = _sec.fun_fact(
+    "LsaLookupAuthenticationPackage",
+    (NTSTATUS, HANDLE, PLSA_STRING, PULONG)
     )
 
 def LsaLookupAuthenticationPackage(hlsa, name):
@@ -277,8 +278,8 @@ PQUOTA_LIMITS = POINTER(QUOTA_LIMITS)
 
 ################################################################################
 
-_LsaLogonUser = fun_fact(
-    _sec.LsaLogonUser, (
+_LsaLogonUser = _sec.fun_fact(
+    "LsaLogonUser", (
         NTSTATUS,
         HANDLE,
         PLSA_STRING,

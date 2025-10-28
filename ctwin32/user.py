@@ -48,13 +48,13 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     ref,
     ntdll,
     kernel,
     raise_if,
     raise_on_zero,
     raise_on_err,
-    fun_fact,
     CF_UNICODETEXT,
     GMEM_MOVEABLE,
     GWL_STYLE,
@@ -80,12 +80,13 @@ from . import (
     WSF_VISIBLE,
     )
 
-_usr = ctypes.WinDLL("user32.dll", use_last_error=True)
+_usr = ApiDll("user32.dll")
 
 ################################################################################
 
-_GetWindowThreadProcessId = fun_fact(
-    _usr.GetWindowThreadProcessId, (DWORD, HANDLE, PDWORD)
+_GetWindowThreadProcessId = _usr.fun_fact(
+    "GetWindowThreadProcessId",
+    (DWORD, HANDLE, PDWORD)
     )
 
 def GetWindowThreadProcessId(hwnd):
@@ -95,23 +96,21 @@ def GetWindowThreadProcessId(hwnd):
 
 ################################################################################
 
-_IsWindowVisible = fun_fact(_usr.IsWindowVisible, (BOOL, HWND))
+_IsWindowVisible = _usr.fun_fact("IsWindowVisible", (BOOL, HWND))
 
 def IsWindowVisible(hwnd):
     return bool(_IsWindowVisible(hwnd))
 
 ################################################################################
 
-_GetWindowTextLength = fun_fact(
-    _usr.GetWindowTextLengthW, (INT, HWND)
-    )
+_GetWindowTextLength = _usr.fun_fact("GetWindowTextLengthW", (INT, HWND))
 
 def GetWindowTextLength(hwnd):
     return _GetWindowTextLength(hwnd)
 
 ################################################################################
 
-_GetWindowText = fun_fact(_usr.GetWindowTextW, (INT, HWND, PWSTR, INT))
+_GetWindowText = _usr.fun_fact("GetWindowTextW", (INT, HWND, PWSTR, INT))
 
 def GetWindowText(hwnd):
     slen = GetWindowTextLength(hwnd)
@@ -122,16 +121,14 @@ def GetWindowText(hwnd):
 
 ################################################################################
 
-_SetWindowText = fun_fact(_usr.SetWindowTextW, (BOOL, HWND, PWSTR))
+_SetWindowText = _usr.fun_fact("SetWindowTextW", (BOOL, HWND, PWSTR))
 
 def SetWindowText(hwnd, txt):
     raise_on_zero(_SetWindowText(hwnd, txt))
 
 ################################################################################
 
-_GetClassName = fun_fact(
-    _usr.GetClassNameW, (INT, HWND, PWSTR, INT)
-    )
+_GetClassName = _usr.fun_fact("GetClassNameW", (INT, HWND, PWSTR, INT))
 
 def GetClassName(hwnd):
     size = 32
@@ -145,33 +142,30 @@ def GetClassName(hwnd):
 
 ################################################################################
 
-_GetWindowLong = fun_fact(_usr.GetWindowLongW, (LONG, HWND, INT))
+_GetWindowLong = _usr.fun_fact("GetWindowLongW", (LONG, HWND, INT))
 
 def GetWindowLong(hwnd, idx):
     return _GetWindowLong(hwnd, idx)
 
 ################################################################################
 
-_GetWindowLongPtr = fun_fact(
-    _usr.GetWindowLongPtrW, (LONG_PTR, HWND, INT)
-    )
+_GetWindowLongPtr = _usr.fun_fact("GetWindowLongPtrW", (LONG_PTR, HWND, INT))
 
 def GetWindowLongPtr(hwnd, idx):
     return _GetWindowLongPtr(hwnd, idx)
 
 ################################################################################
 
-_SetWindowLong = fun_fact(
-    _usr.SetWindowLongW, (LONG, HWND, INT, LONG)
-    )
+_SetWindowLong = _usr.fun_fact("SetWindowLongW", (LONG, HWND, INT, LONG))
 
 def SetWindowLong(hwnd, idx, value):
     return _SetWindowLong(hwnd, idx, value)
 
 ################################################################################
 
-_SetWindowLongPtr = fun_fact(
-    _usr.SetWindowLongPtrW, (LONG_PTR, HWND, INT, LONG_PTR)
+_SetWindowLongPtr = _usr.fun_fact(
+    "SetWindowLongPtrW",
+    (LONG_PTR, HWND, INT, LONG_PTR)
     )
 
 def SetWindowLongPtr(hwnd, idx, value):
@@ -196,8 +190,9 @@ def _EnumWndCb(hwnd, ctxt):
 
 ################################################################################
 
-_EnumWindows = fun_fact(
-    _usr.EnumWindows, (BOOL, _EnumWindowsCallback, CallbackContextPtr)
+_EnumWindows = _usr.fun_fact(
+    "EnumWindows",
+    (BOOL, _EnumWindowsCallback, CallbackContextPtr)
     )
 
 def EnumWindows(callback, context):
@@ -206,8 +201,8 @@ def EnumWindows(callback, context):
 
 ################################################################################
 
-_EnumChildWindows = fun_fact(
-    _usr.EnumChildWindows,
+_EnumChildWindows = _usr.fun_fact(
+    "EnumChildWindows",
     (BOOL, HWND, _EnumWindowsCallback, CallbackContextPtr)
     )
 
@@ -217,8 +212,8 @@ def EnumChildWindows(hwnd, callback, context):
 
 ################################################################################
 
-_EnumThreadWindows = fun_fact(
-    _usr.EnumThreadWindows,
+_EnumThreadWindows = _usr.fun_fact(
+    "EnumThreadWindows",
     (BOOL, DWORD, _EnumWindowsCallback, CallbackContextPtr)
     )
 
@@ -259,9 +254,7 @@ def get_thread_window_list(tid):
 
 ################################################################################
 
-_WaitForInputIdle = fun_fact(
-    _usr.WaitForInputIdle, (DWORD, HANDLE, DWORD)
-    )
+_WaitForInputIdle = _usr.fun_fact("WaitForInputIdle", (DWORD, HANDLE, DWORD))
 
 def WaitForInputIdle(proc, timeout):
     res = _WaitForInputIdle(proc, timeout)
@@ -270,8 +263,8 @@ def WaitForInputIdle(proc, timeout):
 
 ################################################################################
 
-_PostMessage = fun_fact(
-    _usr.PostMessageW,
+_PostMessage = _usr.fun_fact(
+    "PostMessageW",
     (BOOL, HWND, UINT, UINT_PTR, LONG_PTR)
     )
 
@@ -280,12 +273,12 @@ def PostMessage(hwnd, msg, wp, lp):
 
 ################################################################################
 
-PostQuitMessage = fun_fact(_usr.PostQuitMessage, (None, INT))
+PostQuitMessage = _usr.fun_fact("PostQuitMessage", (None, INT))
 
 ################################################################################
 
-_SendMessage = fun_fact(
-    _usr.SendMessageW,
+_SendMessage = _usr.fun_fact(
+    "SendMessageW",
     (LONG_PTR, HWND, UINT, UINT_PTR, LONG_PTR)
     )
 
@@ -294,8 +287,8 @@ def SendMessage(hwnd, msg, wp, lp):
 
 ################################################################################
 
-_SendMessageTimeout = fun_fact(
-    _usr.SendMessageTimeoutW, (
+_SendMessageTimeout = _usr.fun_fact(
+    "SendMessageTimeoutW", (
         LONG_PTR,
         HWND,
         UINT,
@@ -324,21 +317,21 @@ def SendMessageTimeout(hwnd, msg, wp, lp, flags, timeout):
 
 ################################################################################
 
-_GetWindow = fun_fact(_usr.GetWindow, (HWND, HWND, UINT))
+_GetWindow = _usr.fun_fact("GetWindow", (HWND, HWND, UINT))
 
 def GetWindow(hwnd, cmd):
     return _GetWindow(hwnd, cmd)
 
 ################################################################################
 
-_GetAsyncKeyState = fun_fact(_usr.GetAsyncKeyState, (SHORT, INT))
+_GetAsyncKeyState = _usr.fun_fact("GetAsyncKeyState", (SHORT, INT))
 
 def GetAsyncKeyState(vkey):
     return _GetAsyncKeyState(vkey)
 
 ################################################################################
 
-_GetWindowRect = fun_fact(_usr.GetWindowRect, (BOOL, HWND, PRECT))
+_GetWindowRect = _usr.fun_fact("GetWindowRect", (BOOL, HWND, PRECT))
 
 def GetWindowRect(hwnd):
     rc = RECT()
@@ -347,7 +340,7 @@ def GetWindowRect(hwnd):
 
 ################################################################################
 
-_GetClientRect = fun_fact(_usr.GetClientRect, (BOOL, HWND, PRECT))
+_GetClientRect = _usr.fun_fact("GetClientRect", (BOOL, HWND, PRECT))
 
 def GetClientRect(hwnd):
     rc = RECT()
@@ -356,8 +349,9 @@ def GetClientRect(hwnd):
 
 ################################################################################
 
-_AdjustWindowRectEx = fun_fact(
-    _usr.AdjustWindowRectEx, (BOOL, PRECT, DWORD, BOOL, DWORD)
+_AdjustWindowRectEx = _usr.fun_fact(
+    "AdjustWindowRectEx",
+    (BOOL, PRECT, DWORD, BOOL, DWORD)
     )
 
 def AdjustWindowRectEx(rc, style, has_menu, exstyle):
@@ -402,8 +396,9 @@ PWINDOWPLACEMENT = POINTER(WINDOWPLACEMENT)
 
 ################################################################################
 
-_GetWindowPlacement = fun_fact(
-    _usr.GetWindowPlacement, (BOOL, HWND, PWINDOWPLACEMENT)
+_GetWindowPlacement = _usr.fun_fact(
+    "GetWindowPlacement",
+    (BOOL, HWND, PWINDOWPLACEMENT)
     )
 
 def GetWindowPlacement(hwnd):
@@ -413,8 +408,9 @@ def GetWindowPlacement(hwnd):
 
 ################################################################################
 
-_SetWindowPlacement = fun_fact(
-    _usr.SetWindowPlacement, (BOOL, HWND, PWINDOWPLACEMENT)
+_SetWindowPlacement = _usr.fun_fact(
+    "SetWindowPlacement",
+    (BOOL, HWND, PWINDOWPLACEMENT)
     )
 
 def SetWindowPlacement(hwnd, wpt):
@@ -422,8 +418,9 @@ def SetWindowPlacement(hwnd, wpt):
 
 ################################################################################
 
-_SetWindowPos = fun_fact(
-    _usr.SetWindowPos, (BOOL, HWND, HWND, INT, INT, INT, INT, UINT)
+_SetWindowPos = _usr.fun_fact(
+    "SetWindowPos",
+    (BOOL, HWND, HWND, INT, INT, INT, INT, UINT)
     )
 
 def SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags):
@@ -431,8 +428,9 @@ def SetWindowPos(hwnd, ins_after, x, y, cx, cy, flags):
 
 ################################################################################
 
-_AttachThreadInput = fun_fact(
-    _usr.AttachThreadInput, (BOOL, DWORD, DWORD, BOOL)
+_AttachThreadInput = _usr.fun_fact(
+    "AttachThreadInput",
+    (BOOL, DWORD, DWORD, BOOL)
     )
 
 def AttachThreadInput(id_attach, id_attach_to, do_attach):
@@ -440,7 +438,7 @@ def AttachThreadInput(id_attach, id_attach_to, do_attach):
 
 ################################################################################
 
-_BringWindowToTop = fun_fact(_usr.BringWindowToTop, (BOOL, HWND))
+_BringWindowToTop = _usr.fun_fact("BringWindowToTop", (BOOL, HWND))
 
 def BringWindowToTop(hwnd):
     raise_on_zero(_BringWindowToTop(hwnd))
@@ -456,16 +454,14 @@ def to_top_maybe_attach(hwnd):
 
 ################################################################################
 
-_SetActiveWindow = fun_fact(_usr.SetActiveWindow, (HWND, HWND))
+_SetActiveWindow = _usr.fun_fact("SetActiveWindow", (HWND, HWND))
 
 def SetActiveWindow(hwnd):
     return _SetActiveWindow(hwnd)
 
 ################################################################################
 
-_MessageBox = fun_fact(
-    _usr.MessageBoxW, (INT, HWND, PWSTR, PWSTR, UINT)
-    )
+_MessageBox = _usr.fun_fact("MessageBoxW", (INT, HWND, PWSTR, PWSTR, UINT))
 
 def MessageBox(hwnd, text, caption, flags):
     res = _MessageBox(hwnd, text, caption, flags)
@@ -540,7 +536,7 @@ def kb_input(vk, scan, flags=0):
 
 ################################################################################
 
-_SendInput = fun_fact(_usr.SendInput, (UINT, UINT, PINPUT, INT))
+_SendInput = _usr.fun_fact("SendInput", (UINT, UINT, PINPUT, INT))
 
 def SendInput(inputs):
     if isinstance(inputs, INPUT):
@@ -558,29 +554,29 @@ def SendInput(inputs):
 
 ################################################################################
 
-_ExitWindowsEx = fun_fact(_usr.ExitWindowsEx, (BOOL, UINT, DWORD))
+_ExitWindowsEx = _usr.fun_fact("ExitWindowsEx", (BOOL, UINT, DWORD))
 
 def ExitWindowsEx(flags, reason):
     raise_on_zero(_ExitWindowsEx(flags, reason))
 
 ################################################################################
 
-_LockWorkStation = fun_fact(_usr.LockWorkStation, (BOOL,))
+_LockWorkStation = _usr.fun_fact("LockWorkStation", (BOOL,))
 
 def LockWorkStation():
     raise_on_zero(_LockWorkStation())
 
 ################################################################################
 
-GetDesktopWindow = fun_fact(_usr.GetDesktopWindow, (HWND,))
+GetDesktopWindow = _usr.fun_fact("GetDesktopWindow", (HWND,))
 
 ################################################################################
 
-GetShellWindow = fun_fact(_usr.GetShellWindow, (HWND,))
+GetShellWindow = _usr.fun_fact("GetShellWindow", (HWND,))
 
 ################################################################################
 
-_MonitorFromWindow = fun_fact(_usr.MonitorFromWindow, (HANDLE, HWND, DWORD))
+_MonitorFromWindow = _usr.fun_fact("MonitorFromWindow", (HANDLE, HWND, DWORD))
 
 def MonitorFromWindow(hwnd, flags=MONITOR_DEFAULTTOPRIMARY):
     return _MonitorFromWindow(hwnd, flags)
@@ -603,7 +599,10 @@ PMONITORINFOEX = POINTER(MONITORINFOEX)
 
 ################################################################################
 
-_GetMonitorInfo = fun_fact(_usr.GetMonitorInfoW, (BOOL, HANDLE, PMONITORINFOEX))
+_GetMonitorInfo = _usr.fun_fact(
+    "GetMonitorInfoW",
+    (BOOL, HANDLE, PMONITORINFOEX)
+    )
 
 def GetMonitorInfo(hmon):
     mi = MONITORINFOEX()
@@ -645,7 +644,7 @@ def start_centered(arglist):
 
 ################################################################################
 
-_LoadString = fun_fact(_usr.LoadStringW, (INT, HANDLE, UINT, PPWSTR, INT))
+_LoadString = _usr.fun_fact("LoadStringW", (INT, HANDLE, UINT, PPWSTR, INT))
 
 def LoadString(hinst, strid):
     ptr = PWSTR()
@@ -654,7 +653,7 @@ def LoadString(hinst, strid):
 
 ################################################################################
 
-_LoadCursor = fun_fact(_usr.LoadCursorW, (HANDLE, HANDLE, PWSTR))
+_LoadCursor = _usr.fun_fact("LoadCursorW", (HANDLE, HANDLE, PWSTR))
 
 def LoadCursor(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
@@ -664,7 +663,7 @@ def LoadCursor(hinst, cname):
 
 ################################################################################
 
-_LoadIcon = fun_fact(_usr.LoadIconW, (HANDLE, HANDLE, PWSTR))
+_LoadIcon = _usr.fun_fact("LoadIconW", (HANDLE, HANDLE, PWSTR))
 
 def LoadIcon(hinst, cname):
     if isinstance(cname, int) and cname < 2**16:
@@ -674,8 +673,9 @@ def LoadIcon(hinst, cname):
 
 ################################################################################
 
-_DefWindowProc = fun_fact(
-    _usr.DefWindowProcW, (LRESULT, HWND, UINT, WPARAM, LPARAM)
+_DefWindowProc = _usr.fun_fact(
+    "DefWindowProcW",
+    (LRESULT, HWND, UINT, WPARAM, LPARAM)
     )
 
 def DefWindowProc(hwnd, msg, wp, lp):
@@ -758,7 +758,7 @@ PPAINTSTRUCT = POINTER(PAINTSTRUCT)
 
 ################################################################################
 
-_GetClassInfo = fun_fact(_usr.GetClassInfoW, (BOOL, HANDLE, PWSTR, PWNDCLASS))
+_GetClassInfo = _usr.fun_fact("GetClassInfoW", (BOOL, HANDLE, PWSTR, PWNDCLASS))
 
 def GetClassInfo(hinst, cname):
     wclass = WNDCLASS()
@@ -767,7 +767,7 @@ def GetClassInfo(hinst, cname):
 
 ################################################################################
 
-_RegisterClass = fun_fact(_usr.RegisterClassW, (WORD, PWNDCLASS))
+_RegisterClass = _usr.fun_fact("RegisterClassW", (WORD, PWNDCLASS))
 
 def RegisterClass(wclass):
     res = _RegisterClass(ref(wclass))
@@ -776,8 +776,8 @@ def RegisterClass(wclass):
 
 ################################################################################
 
-_CreateWindowEx = fun_fact(
-    _usr.CreateWindowExW, (
+_CreateWindowEx = _usr.fun_fact(
+    "CreateWindowExW", (
         HWND,
         DWORD,
         PWSTR,
@@ -827,7 +827,7 @@ def CreateWindowEx(
 
 ################################################################################
 
-_GetMessage = fun_fact(_usr.GetMessageW, (BOOL, PMSG, HWND, UINT, UINT))
+_GetMessage = _usr.fun_fact("GetMessageW", (BOOL, PMSG, HWND, UINT, UINT))
 
 def GetMessage(hwnd=None, msg_min=0, msg_max=0):
     msg = MSG()
@@ -837,46 +837,46 @@ def GetMessage(hwnd=None, msg_min=0, msg_max=0):
 
 ################################################################################
 
-_TranslateMessage = fun_fact(_usr.TranslateMessage, (BOOL, PMSG))
+_TranslateMessage = _usr.fun_fact("TranslateMessage", (BOOL, PMSG))
 
 def TranslateMessage(msg):
     return _TranslateMessage(ref(msg))
 
 ################################################################################
 
-_DispatchMessage = fun_fact(_usr.DispatchMessageW, (LRESULT, PMSG))
+_DispatchMessage = _usr.fun_fact("DispatchMessageW", (LRESULT, PMSG))
 
 def DispatchMessage(msg):
     return _DispatchMessage(ref(msg))
 
 ################################################################################
 
-_ShowWindow = fun_fact(_usr.ShowWindow, (BOOL, HWND, INT))
+_ShowWindow = _usr.fun_fact("ShowWindow", (BOOL, HWND, INT))
 
 def ShowWindow(hwnd, cmd):
     return bool(_ShowWindow(hwnd, cmd))
 
 ################################################################################
 
-_UpdateWindow = fun_fact(_usr.UpdateWindow, (BOOL, HWND))
+_UpdateWindow = _usr.fun_fact("UpdateWindow", (BOOL, HWND))
 
 def UpdateWindow(hwnd):
     raise_on_zero(_UpdateWindow(hwnd))
 
 ################################################################################
 
-_DestroyWindow = fun_fact(_usr.DestroyWindow, (BOOL, HWND))
+_DestroyWindow = _usr.fun_fact("DestroyWindow", (BOOL, HWND))
 
 def DestroyWindow(hwnd):
     raise_on_zero(_DestroyWindow(hwnd))
 
 ################################################################################
 
-IsWindow = fun_fact(_usr.IsWindow, (BOOL, HWND))
+IsWindow = _usr.fun_fact("IsWindow", (BOOL, HWND))
 
 ################################################################################
 
-_GetDlgItem = fun_fact(_usr.GetDlgItem, (HWND, HWND, INT))
+_GetDlgItem = _usr.fun_fact("GetDlgItem", (HWND, HWND, INT))
 
 def GetDlgItem(hwnd, id):
     res = _GetDlgItem(hwnd, id)
@@ -885,23 +885,23 @@ def GetDlgItem(hwnd, id):
 
 ################################################################################
 
-SendDlgItemMessage = fun_fact(
-    _usr.SendDlgItemMessageW, (LRESULT, HWND, INT, UINT, WPARAM, LPARAM)
+SendDlgItemMessage = _usr.fun_fact(
+    "SendDlgItemMessageW",
+    (LRESULT, HWND, INT, UINT, WPARAM, LPARAM)
     )
 
 ################################################################################
 
-_SetDlgItemText = fun_fact(
-    _usr.SetDlgItemTextW, (BOOL, HWND, INT, PWSTR)
-    )
+_SetDlgItemText = _usr.fun_fact("SetDlgItemTextW", (BOOL, HWND, INT, PWSTR))
 
 def SetDlgItemText(dlg, id, txt):
     raise_on_zero(_SetDlgItemText(dlg, id, txt))
 
 ################################################################################
 
-_GetDlgItemText = fun_fact(
-    _usr.GetDlgItemTextW, (UINT, HWND, INT, PWSTR, INT)
+_GetDlgItemText = _usr.fun_fact(
+    "GetDlgItemTextW",
+    (UINT, HWND, INT, PWSTR, INT)
     )
 
 def GetDlgItemText(dlg, id):
@@ -917,8 +917,9 @@ def GetDlgItemText(dlg, id):
 
 ################################################################################
 
-_CheckRadioButton = fun_fact(
-    _usr.CheckRadioButton, (BOOL, HWND, INT, INT, INT)
+_CheckRadioButton = _usr.fun_fact(
+    "CheckRadioButton",
+    (BOOL, HWND, INT, INT, INT)
     )
 
 def CheckRadioButton(dlg, first, last, check):
@@ -926,7 +927,7 @@ def CheckRadioButton(dlg, first, last, check):
 
 ################################################################################
 
-_GetDlgCtrlID = fun_fact(_usr.GetDlgCtrlID, (INT, HWND))
+_GetDlgCtrlID = _usr.fun_fact("GetDlgCtrlID", (INT, HWND))
 
 def GetDlgCtrlID(hwnd):
     res = _GetDlgCtrlID(hwnd)
@@ -935,27 +936,27 @@ def GetDlgCtrlID(hwnd):
 
 ################################################################################
 
-EnableWindow = fun_fact(_usr.EnableWindow, (BOOL, HWND, BOOL))
+EnableWindow = _usr.fun_fact("EnableWindow", (BOOL, HWND, BOOL))
 
 ################################################################################
 
-SetForegroundWindow = fun_fact(_usr.SetForegroundWindow, (BOOL, HWND))
+SetForegroundWindow = _usr.fun_fact("SetForegroundWindow", (BOOL, HWND))
 
 ################################################################################
 
-SetFocus = fun_fact(_usr.SetFocus, (HWND, HWND))
+SetFocus = _usr.fun_fact("SetFocus", (HWND, HWND))
 
 ################################################################################
 
-GetParent = fun_fact(_usr.GetParent, (HWND, HWND))
+GetParent = _usr.fun_fact("GetParent", (HWND, HWND))
 
 ################################################################################
 
-GetMenu = fun_fact(_usr.GetMenu, (HANDLE, HWND))
+GetMenu = _usr.fun_fact("GetMenu", (HANDLE, HWND))
 
 ################################################################################
 
-_InvalidateRect = fun_fact(_usr.InvalidateRect, (BOOL, HWND, PRECT, BOOL))
+_InvalidateRect = _usr.fun_fact("InvalidateRect", (BOOL, HWND, PRECT, BOOL))
 
 def InvalidateRect(hwnd, rc, erase):
     prc = ref(rc) if rc is not None else None
@@ -963,12 +964,12 @@ def InvalidateRect(hwnd, rc, erase):
 
 ################################################################################
 
-WindowFromPoint = fun_fact(_usr.WindowFromPoint, (HWND, POINT))
+WindowFromPoint = _usr.fun_fact("WindowFromPoint", (HWND, POINT))
 
 ################################################################################
 
-_MoveWindow = fun_fact(
-    _usr.MoveWindow, (
+_MoveWindow = _usr.fun_fact(
+    "MoveWindow", (
         BOOL,
         HWND,
         INT,
@@ -984,8 +985,8 @@ def MoveWindow(hwnd, x, y, width, height, repaint):
 
 ################################################################################
 
-MapWindowPoints = fun_fact(
-    _usr.MapWindowPoints, (
+MapWindowPoints = _usr.fun_fact(
+    "MapWindowPoints", (
         INT,
         HWND,
         HWND,
@@ -996,7 +997,7 @@ MapWindowPoints = fun_fact(
 
 ################################################################################
 
-_GetCursorPos = fun_fact(_usr.GetCursorPos, (BOOL, PPOINT))
+_GetCursorPos = _usr.fun_fact("GetCursorPos", (BOOL, PPOINT))
 
 def GetCursorPos():
     pt = POINT()
@@ -1005,7 +1006,7 @@ def GetCursorPos():
 
 ################################################################################
 
-_GetDC = fun_fact(_usr.GetDC, (HANDLE, HWND))
+_GetDC = _usr.fun_fact("GetDC", (HANDLE, HWND))
 
 def GetDC(hwnd):
     res = _GetDC(hwnd)
@@ -1014,7 +1015,7 @@ def GetDC(hwnd):
 
 ################################################################################
 
-_GetWindowDC = fun_fact(_usr.GetWindowDC, (HANDLE, HWND))
+_GetWindowDC = _usr.fun_fact("GetWindowDC", (HANDLE, HWND))
 
 def GetWindowDC(hwnd):
     res = _GetWindowDC(hwnd)
@@ -1023,39 +1024,39 @@ def GetWindowDC(hwnd):
 
 ################################################################################
 
-_ReleaseDC = fun_fact(_usr.ReleaseDC, (INT, HWND, HANDLE))
+_ReleaseDC = _usr.fun_fact("ReleaseDC", (INT, HWND, HANDLE))
 
 def ReleaseDC(hwnd, hdc):
     raise_on_zero(_ReleaseDC(hwnd, hdc))
 
 ################################################################################
 
-_SetTimer = fun_fact(_usr.SetTimer, (UINT_PTR, HWND, UINT_PTR, UINT, PVOID))
+_SetTimer = _usr.fun_fact("SetTimer", (UINT_PTR, HWND, UINT_PTR, UINT, PVOID))
 
 def SetTimer(hwnd, timer_id, period_ms):
     raise_on_zero(_SetTimer(hwnd, timer_id, period_ms, None))
 
 ################################################################################
 
-_KillTimer = fun_fact(_usr.KillTimer, (BOOL, HWND, UINT_PTR))
+_KillTimer = _usr.fun_fact("KillTimer", (BOOL, HWND, UINT_PTR))
 
 def KillTimer(hwnd, timer_id):
     raise_on_zero(_KillTimer(hwnd, timer_id))
 
 ################################################################################
 
-_CheckDlgButton = fun_fact(_usr.CheckDlgButton, (BOOL, HWND, INT, UINT))
+_CheckDlgButton = _usr.fun_fact("CheckDlgButton", (BOOL, HWND, INT, UINT))
 
 def CheckDlgButton(dlg, id, check):
     raise_on_zero(_CheckDlgButton(dlg, id, check))
 
 ################################################################################
 
-IsDlgButtonChecked = fun_fact(_usr.IsDlgButtonChecked, (UINT, HWND, INT))
+IsDlgButtonChecked = _usr.fun_fact("IsDlgButtonChecked", (UINT, HWND, INT))
 
 ################################################################################
 
-_BeginPaint = fun_fact(_usr.BeginPaint, (HANDLE, HWND, PPAINTSTRUCT))
+_BeginPaint = _usr.fun_fact("BeginPaint", (HANDLE, HWND, PPAINTSTRUCT))
 
 def BeginPaint(hwnd):
     ps = PAINTSTRUCT()
@@ -1065,28 +1066,28 @@ def BeginPaint(hwnd):
 
 ################################################################################
 
-_EndPaint = fun_fact(_usr.EndPaint, (BOOL, HWND, PPAINTSTRUCT))
+_EndPaint = _usr.fun_fact("EndPaint", (BOOL, HWND, PPAINTSTRUCT))
 
 def EndPaint(hwnd, ps):
     raise_on_zero(_EndPaint(hwnd, ref(ps)))
 
 ################################################################################
 
-_DrawText = fun_fact(_usr.DrawTextW, (INT, HANDLE, PWSTR, INT, PRECT, UINT))
+_DrawText = _usr.fun_fact("DrawTextW", (INT, HANDLE, PWSTR, INT, PRECT, UINT))
 
 def DrawText(hdc, txt, rc, fmt):
     raise_on_zero(_DrawText(hdc, txt, len(txt), ref(rc), fmt))
 
 ################################################################################
 
-_SetProp = fun_fact(_usr.SetPropW, (BOOL, HWND, PWSTR, HANDLE))
+_SetProp = _usr.fun_fact("SetPropW", (BOOL, HWND, PWSTR, HANDLE))
 
 def SetProp(hwnd, name, data):
     raise_on_zero(_SetProp(hwnd, name, data))
 
 ################################################################################
 
-_GetProp = fun_fact(_usr.GetPropW, (HANDLE, HWND, PWSTR))
+_GetProp = _usr.fun_fact("GetPropW", (HANDLE, HWND, PWSTR))
 
 def GetProp(hwnd, name):
     data = _GetProp(hwnd, name)
@@ -1099,7 +1100,7 @@ def get_prop_def(hwnd, name, default=None):
 
 ################################################################################
 
-_RemoveProp = fun_fact(_usr.RemovePropW, (HANDLE, HWND, PWSTR))
+_RemoveProp = _usr.fun_fact("RemovePropW", (HANDLE, HWND, PWSTR))
 
 def RemoveProp(hwnd, name):
     data = _RemoveProp(hwnd, name)
@@ -1127,8 +1128,9 @@ def _EnumPropsCb(hwnd, name, data, ctxt):
 
 ################################################################################
 
-_EnumPropsEx = fun_fact(
-    _usr.EnumPropsExW, (INT, HWND, _EnumPropsCallback, CallbackContextPtr)
+_EnumPropsEx = _usr.fun_fact(
+    "EnumPropsExW",
+    (INT, HWND, _EnumPropsCallback, CallbackContextPtr)
     )
 
 def EnumPropsEx(hwnd, callback, context):
@@ -1152,21 +1154,21 @@ def get_prop_dict(hwnd):
 
 ################################################################################
 
-_OpenClipboard = fun_fact(_usr.OpenClipboard, (BOOL, HWND))
+_OpenClipboard = _usr.fun_fact("OpenClipboard", (BOOL, HWND))
 
 def OpenClipboard(hwnd):
     raise_on_zero(_OpenClipboard(hwnd))
 
 ################################################################################
 
-_EmptyClipboard = fun_fact(_usr.EmptyClipboard, (BOOL,))
+_EmptyClipboard = _usr.fun_fact("EmptyClipboard", (BOOL,))
 
 def EmptyClipboard():
     raise_on_zero(_EmptyClipboard())
 
 ################################################################################
 
-_SetClipboardData = fun_fact(_usr.SetClipboardData, (HANDLE, UINT, HANDLE))
+_SetClipboardData = _usr.fun_fact("SetClipboardData", (HANDLE, UINT, HANDLE))
 
 def SetClipboardData(fmt, hmem):
     res = _SetClipboardData(fmt, hmem)
@@ -1175,7 +1177,7 @@ def SetClipboardData(fmt, hmem):
 
 ################################################################################
 
-_GetClipboardData = fun_fact(_usr.GetClipboardData, (HANDLE, UINT))
+_GetClipboardData = _usr.fun_fact("GetClipboardData", (HANDLE, UINT))
 
 def GetClipboardData(fmt):
     res = _GetClipboardData(fmt)
@@ -1184,21 +1186,23 @@ def GetClipboardData(fmt):
 
 ################################################################################
 
-IsClipboardFormatAvailable = fun_fact(
-    _usr.IsClipboardFormatAvailable, (BOOL, UINT)
+IsClipboardFormatAvailable = _usr.fun_fact(
+    "IsClipboardFormatAvailable",
+    (BOOL, UINT)
     )
 
 ################################################################################
 
-_CloseClipboard = fun_fact(_usr.CloseClipboard, (BOOL,))
+_CloseClipboard = _usr.fun_fact("CloseClipboard", (BOOL,))
 
 def CloseClipboard():
     raise_on_zero(_CloseClipboard())
 
 ################################################################################
 
-_GetClipboardFormatName = fun_fact(
-    _usr.GetClipboardFormatNameW, (DWORD, DWORD, PWSTR, DWORD)
+_GetClipboardFormatName = _usr.fun_fact(
+    "GetClipboardFormatNameW",
+    (DWORD, DWORD, PWSTR, DWORD)
     )
 
 def GetClipboardFormatName(fmt_atom):
@@ -1210,7 +1214,7 @@ def GetClipboardFormatName(fmt_atom):
 
 ################################################################################
 
-EnumClipboardFormats = fun_fact(_usr.EnumClipboardFormats, (DWORD, DWORD))
+EnumClipboardFormats = _usr.fun_fact("EnumClipboardFormats", (DWORD, DWORD))
 
 ################################################################################
 
@@ -1249,12 +1253,13 @@ def txt_from_clip(hwnd=None):
 
 ################################################################################
 
-GetSystemMetrics = fun_fact(_usr.GetSystemMetrics, (INT, INT))
+GetSystemMetrics = _usr.fun_fact("GetSystemMetrics", (INT, INT))
 
 ################################################################################
 
-_ScrollWindow = fun_fact(
-    _usr.ScrollWindow, (BOOL, HWND, INT, INT, PRECT, PRECT)
+_ScrollWindow = _usr.fun_fact(
+    "ScrollWindow",
+    (BOOL, HWND, INT, INT, PRECT, PRECT)
     )
 
 def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
@@ -1264,7 +1269,7 @@ def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
 
 ################################################################################
 
-_GetKeyNameText = fun_fact(_usr.GetKeyNameTextW, (INT, LONG, PWSTR, INT))
+_GetKeyNameText = _usr.fun_fact("GetKeyNameTextW", (INT, LONG, PWSTR, INT))
 
 def GetKeyNameText(lparam, expect_empty=False):
     size = ret = 32
@@ -1277,10 +1282,9 @@ def GetKeyNameText(lparam, expect_empty=False):
 
 ################################################################################
 
-_CreateIconFromResourceEx = fun_fact(
-    _usr.CreateIconFromResourceEx, (
-        HANDLE, PVOID, DWORD, BOOL, DWORD, INT, INT, UINT
-        )
+_CreateIconFromResourceEx = _usr.fun_fact(
+    "CreateIconFromResourceEx",
+    (HANDLE, PVOID, DWORD, BOOL, DWORD, INT, INT, UINT)
     )
 
 def CreateIconFromResourceEx(
@@ -1322,8 +1326,9 @@ class GUITHREADINFO(ctypes.Structure):
 
 PGUITHREADINFO = POINTER(GUITHREADINFO)
 
-_GetGUIThreadInfo = fun_fact(
-    _usr.GetGUIThreadInfo, (BOOL, DWORD, PGUITHREADINFO)
+_GetGUIThreadInfo = _usr.fun_fact(
+    "GetGUIThreadInfo",
+    (BOOL, DWORD, PGUITHREADINFO)
     )
 
 def GetGUIThreadInfo(tid=0):
@@ -1333,8 +1338,9 @@ def GetGUIThreadInfo(tid=0):
 
 ################################################################################
 
-_SystemParametersInfo = fun_fact(
-    _usr.SystemParametersInfoW, (BOOL, UINT, UINT, PVOID, UINT)
+_SystemParametersInfo = _usr.fun_fact(
+    "SystemParametersInfoW",
+    (BOOL, UINT, UINT, PVOID, UINT)
     )
 
 ################################################################################
@@ -1497,8 +1503,9 @@ DLGPROC = ctypes.WINFUNCTYPE(
 
 ################################################################################
 
-_DialogBoxIndirectParam = fun_fact(
-    _usr.DialogBoxIndirectParamW, (INT_PTR, HANDLE, PVOID, HWND, DLGPROC, PVOID)
+_DialogBoxIndirectParam = _usr.fun_fact(
+    "DialogBoxIndirectParamW",
+    (INT_PTR, HANDLE, PVOID, HWND, DLGPROC, PVOID)
     )
 
 def DialogBoxIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
@@ -1509,10 +1516,9 @@ def DialogBoxIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
 
 ################################################################################
 
-_CreateDialogIndirectParam = fun_fact(
-    _usr.CreateDialogIndirectParamW, (
-        HWND, HANDLE, PVOID, HWND, DLGPROC, PVOID
-        )
+_CreateDialogIndirectParam = _usr.fun_fact(
+    "CreateDialogIndirectParamW",
+    (HWND, HANDLE, PVOID, HWND, DLGPROC, PVOID)
     )
 
 def CreateDialogIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
@@ -1522,7 +1528,7 @@ def CreateDialogIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
 
 ################################################################################
 
-_EndDialog = fun_fact(_usr.EndDialog, (BOOL, HWND, INT_PTR))
+_EndDialog = _usr.fun_fact("EndDialog", (BOOL, HWND, INT_PTR))
 
 def EndDialog(hdlg, result):
     raise_on_zero(_EndDialog(hdlg, result))
@@ -1530,9 +1536,9 @@ def EndDialog(hdlg, result):
 ################################################################################
 
 try:
-    _w32 = ctypes.WinDLL("win32u.dll", use_last_error=True)
-    _NtUserBuildHwndList = fun_fact(
-        _w32.NtUserBuildHwndList, (
+    _w32 = ApiDll("win32u.dll")
+    _NtUserBuildHwndList = _w32.fun_fact(
+        "NtUserBuildHwndList", (
             NTSTATUS,
             HANDLE,
             HWND,
@@ -1605,7 +1611,7 @@ def is_window_cloaked(hwnd):
 
 ################################################################################
 
-_GetProcessWindowStation = fun_fact(_usr.GetProcessWindowStation, (HANDLE,))
+_GetProcessWindowStation = _usr.fun_fact("GetProcessWindowStation", (HANDLE,))
 
 def GetProcessWindowStation():
     res = _GetProcessWindowStation()
@@ -1614,7 +1620,7 @@ def GetProcessWindowStation():
 
 ################################################################################
 
-_GetThreadDesktop = fun_fact(_usr.GetThreadDesktop, (HANDLE, DWORD))
+_GetThreadDesktop = _usr.fun_fact("GetThreadDesktop", (HANDLE, DWORD))
 
 def GetThreadDesktop(tid):
     res = _GetThreadDesktop(tid)
@@ -1623,8 +1629,8 @@ def GetThreadDesktop(tid):
 
 ################################################################################
 
-_GetUserObjectInformation = fun_fact(
-    _usr.GetUserObjectInformationW,
+_GetUserObjectInformation = _usr.fun_fact(
+    "GetUserObjectInformationW",
     (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
     )
 
@@ -1723,8 +1729,9 @@ class RAWINPUTDEVICE(ctypes.Structure):
 
 ################################################################################
 
-_RegisterRawInputDevices = fun_fact(
-    _usr.RegisterRawInputDevices, (BOOL, PVOID, UINT, UINT)
+_RegisterRawInputDevices = _usr.fun_fact(
+    "RegisterRawInputDevices",
+    (BOOL, PVOID, UINT, UINT)
     )
 
 def RegisterRawInputDevices(raw_imp_devs):
@@ -1760,8 +1767,9 @@ def _make_raw_hid_input(buf, size, count):
 
 ################################################################################
 
-_GetRawInputData = fun_fact(
-    _usr.GetRawInputData, (UINT, HANDLE, UINT, PVOID, PUINT, UINT)
+_GetRawInputData = _usr.fun_fact(
+    "GetRawInputData",
+    (UINT, HANDLE, UINT, PVOID, PUINT, UINT)
     )
 
 def GetRawInputData(hRaw):

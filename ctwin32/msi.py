@@ -5,7 +5,6 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     byte_buffer,
     string_buffer,
@@ -22,12 +21,12 @@ from . import (
     ref,
     raise_on_err,
     suppress_winerr,
-    fun_fact,
+    ApiDll,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_ITEMS
     )
 
-_msi = ctypes.WinDLL("msi.dll", use_last_error=True)
+_msi = ApiDll("msi.dll")
 
 MSIDBOPEN_READONLY     = PWSTR(0)
 MSIDBOPEN_TRANSACT     = PWSTR(1)
@@ -41,7 +40,7 @@ BIN_DATA_IDX = 2  # field index of binary data
 
 ################################################################################
 
-_MsiCloseHandle = fun_fact(_msi.MsiCloseHandle, (UINT, ULONG))
+_MsiCloseHandle = _msi.fun_fact("MsiCloseHandle", (UINT, ULONG))
 
 def MsiCloseHandle(hdl):
     raise_on_err(_MsiCloseHandle(hdl))
@@ -55,8 +54,9 @@ PMSIHANDLE = POINTER(MSIHANDLE)
 
 ################################################################################
 
-_MsiOpenDatabase = fun_fact(
-    _msi.MsiOpenDatabaseW, (UINT, PWSTR, PWSTR, PMSIHANDLE)
+_MsiOpenDatabase = _msi.fun_fact(
+    "MsiOpenDatabaseW",
+    (UINT, PWSTR, PWSTR, PMSIHANDLE)
     )
 
 def MsiOpenDatabase(filename, persist):
@@ -66,8 +66,9 @@ def MsiOpenDatabase(filename, persist):
 
 ################################################################################
 
-_MsiDatabaseOpenView = fun_fact(
-    _msi.MsiDatabaseOpenViewW, (UINT, MSIHANDLE, PWSTR, PMSIHANDLE)
+_MsiDatabaseOpenView = _msi.fun_fact(
+    "MsiDatabaseOpenViewW",
+    (UINT, MSIHANDLE, PWSTR, PMSIHANDLE)
     )
 
 def MsiDatabaseOpenView(dbase, query):
@@ -77,8 +78,9 @@ def MsiDatabaseOpenView(dbase, query):
 
 ################################################################################
 
-_MsiViewExecute = fun_fact(
-    _msi.MsiViewExecute, (UINT, MSIHANDLE, MSIHANDLE)
+_MsiViewExecute = _msi.fun_fact(
+    "MsiViewExecute",
+    (UINT, MSIHANDLE, MSIHANDLE)
     )
 
 def MsiViewExecute(view, record):
@@ -86,9 +88,7 @@ def MsiViewExecute(view, record):
 
 ################################################################################
 
-_MsiViewFetch = fun_fact(
-    _msi.MsiViewFetch, (UINT, MSIHANDLE, PMSIHANDLE)
-    )
+_MsiViewFetch = _msi.fun_fact("MsiViewFetch", (UINT, MSIHANDLE, PMSIHANDLE))
 
 def MsiViewFetch(view):
     hdl = MSIHANDLE()
@@ -105,8 +105,9 @@ def view_enum_records(view):
 
 ################################################################################
 
-_MsiRecordGetFieldCount = fun_fact(
-    _msi.MsiRecordGetFieldCount, (UINT, MSIHANDLE)
+_MsiRecordGetFieldCount = _msi.fun_fact(
+    "MsiRecordGetFieldCount",
+    (UINT, MSIHANDLE)
     )
 
 def MsiRecordGetFieldCount(record):
@@ -114,8 +115,8 @@ def MsiRecordGetFieldCount(record):
 
 ################################################################################
 
-_MsiRecordGetString = fun_fact(
-    _msi.MsiRecordGetStringW, (
+_MsiRecordGetString = _msi.fun_fact(
+    "MsiRecordGetStringW", (
         UINT,
         MSIHANDLE,
         UINT,
@@ -135,8 +136,8 @@ def MsiRecordGetString(record, field_idx):
 
 ################################################################################
 
-_MsiRecordReadStream = fun_fact(
-    _msi.MsiRecordReadStream, (
+_MsiRecordReadStream = _msi.fun_fact(
+    "MsiRecordReadStream", (
         UINT,
         MSIHANDLE,
         UINT,

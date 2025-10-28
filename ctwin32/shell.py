@@ -22,6 +22,7 @@ from .wtypes import (
     PWSTR,
     )
 from . import (
+    ApiDll,
     INFINITE,
     SW_SHOW,
     MAX_PATH,
@@ -33,13 +34,12 @@ from . import (
     cmdline_from_args,
     raise_on_zero,
     raise_on_hr,
-    fun_fact,
     kernel,
     user,
     ref,
     )
 
-_sh = ctypes.WinDLL("shell32.dll", use_last_error=True)
+_sh = ApiDll("shell32.dll")
 
 ################################################################################
 
@@ -141,7 +141,7 @@ PSHELLEXECUTEINFOW = POINTER(SHELLEXECUTEINFOW)
 
 ################################################################################
 
-_ShellExecuteExW = fun_fact(_sh.ShellExecuteExW, (BOOL, PSHELLEXECUTEINFOW))
+_ShellExecuteExW = _sh.fun_fact("ShellExecuteExW", (BOOL, PSHELLEXECUTEINFOW))
 
 ################################################################################
 
@@ -185,7 +185,7 @@ def relegate(*args, wait=False):
 
 ################################################################################
 
-_CommandLineToArgv = fun_fact(_sh.CommandLineToArgvW, (PPWSTR, PWSTR, PINT))
+_CommandLineToArgv = _sh.fun_fact("CommandLineToArgvW", (PPWSTR, PWSTR, PINT))
 
 def CommandLineToArgv(cmdline):
     # CommandLineToArgv gets leading white space wrong
@@ -203,8 +203,9 @@ def CommandLineToArgv(cmdline):
 
 ################################################################################
 
-_SHGetFolderPath = fun_fact(
-    _sh.SHGetFolderPathW, (HRESULT, HWND, INT, HANDLE, DWORD, PWSTR)
+_SHGetFolderPath = _sh.fun_fact(
+    "SHGetFolderPathW",
+    (HRESULT, HWND, INT, HANDLE, DWORD, PWSTR)
     )
 
 def SHGetFolderPath(csidl, flags=0, token=None):

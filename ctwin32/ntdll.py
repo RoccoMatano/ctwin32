@@ -42,9 +42,9 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     ref,
     kernel,
-    fun_fact,
     ns_from_struct,
     suppress_winerr,
     wtypes,
@@ -62,14 +62,14 @@ from . import (
     ProcessWow64Information,
     )
 
-_nt = ctypes.WinDLL("ntdll.dll", use_last_error=True)
+_nt = ApiDll("ntdll.dll")
 
 def _ntstatus(status):
     return LONG(status).value
 
 ################################################################################
 
-RtlGetCurrentPeb = fun_fact(_nt.RtlGetCurrentPeb, (PVOID,))
+RtlGetCurrentPeb = _nt.fun_fact("RtlGetCurrentPeb", (PVOID,))
 
 ################################################################################
 
@@ -82,8 +82,9 @@ STATUS_NO_MORE_ENTRIES= _ntstatus(0x8000001A)
 
 ################################################################################
 
-_RtlNtStatusToDosError = fun_fact(
-    _nt.RtlNtStatusToDosError, (ULONG, NTSTATUS)
+_RtlNtStatusToDosError = _nt.fun_fact(
+    "RtlNtStatusToDosError",
+    (ULONG, NTSTATUS)
     )
 
 def RtlNtStatusToDosError(status):
@@ -282,15 +283,15 @@ def _make_handle_info(num_entries):
 
 ################################################################################
 
-_NtClose = fun_fact(_nt.NtClose, (NTSTATUS, PVOID))
+_NtClose = _nt.fun_fact("NtClose", (NTSTATUS, PVOID))
 
 def NtClose(handle):
     raise_failed_status(_NtClose(handle))
 
 ################################################################################
 
-_NtOpenProcess = fun_fact(
-    _nt.NtOpenProcess,
+_NtOpenProcess = _nt.fun_fact(
+    "NtOpenProcess",
     (NTSTATUS, PVOID, ULONG, PVOID, PVOID)
     )
 
@@ -305,8 +306,8 @@ def NtOpenProcess(pid, desired_access):
 
 ################################################################################
 
-_RtlAdjustPrivilege = fun_fact(
-    _nt.RtlAdjustPrivilege,
+_RtlAdjustPrivilege = _nt.fun_fact(
+    "RtlAdjustPrivilege",
     (NTSTATUS, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
     )
 
@@ -318,8 +319,8 @@ def RtlAdjustPrivilege(priv, enable, thread_priv=False):
 
 ################################################################################
 
-_NtQuerySystemInformation = fun_fact(
-    _nt.NtQuerySystemInformation,
+_NtQuerySystemInformation = _nt.fun_fact(
+    "NtQuerySystemInformation",
     (NTSTATUS, LONG, PVOID, ULONG, PULONG)
     )
 
@@ -328,8 +329,8 @@ def NtQuerySystemInformation(sys_info, buf, buf_size, p_ret_len):
 
 ################################################################################
 
-_NtQueryInformationProcess = fun_fact(
-    _nt.NtQueryInformationProcess,
+_NtQueryInformationProcess = _nt.fun_fact(
+    "NtQueryInformationProcess",
     (NTSTATUS, PVOID, LONG, PVOID, ULONG, PVOID)
     )
 
@@ -504,8 +505,8 @@ def get_grouped_handles(pid=-1):
 
 ################################################################################
 
-_NtGetNextProcess = fun_fact(
-    _nt.NtGetNextProcess,
+_NtGetNextProcess = _nt.fun_fact(
+    "NtGetNextProcess",
     (NTSTATUS, PVOID, ULONG, ULONG, ULONG, PVOID)
     )
 
@@ -565,8 +566,8 @@ PFILE_DIRECTORY_INFORMATION = POINTER(FILE_DIRECTORY_INFORMATION)
 
 ################################################################################
 
-_NtQueryDirectoryFile = fun_fact(
-    _nt.NtQueryDirectoryFile, (
+_NtQueryDirectoryFile = _nt.fun_fact(
+    "NtQueryDirectoryFile", (
         NTSTATUS,
         HANDLE,
         HANDLE,
@@ -648,7 +649,7 @@ def enum_directory_info(hdir):
 
 ################################################################################
 
-_RtlGetVersion = fun_fact(_nt.RtlGetVersion, (NTSTATUS, POSVERSIONINFOEX))
+_RtlGetVersion = _nt.fun_fact("RtlGetVersion", (NTSTATUS, POSVERSIONINFOEX))
 
 def RtlGetVersion():
     osve = OSVERSIONINFOEX()
@@ -657,8 +658,8 @@ def RtlGetVersion():
 
 ################################################################################
 
-_NtPowerInformation = fun_fact(
-    _nt.NtPowerInformation, (
+_NtPowerInformation = _nt.fun_fact(
+    "NtPowerInformation", (
         NTSTATUS,
         LONG,
         PVOID,
@@ -715,8 +716,8 @@ class THREAD_BASIC_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-_NtQueryInformationThread = fun_fact(
-    _nt.NtQueryInformationThread,
+_NtQueryInformationThread = _nt.fun_fact(
+    "NtQueryInformationThread",
     (NTSTATUS, PVOID, LONG, PVOID, ULONG, PVOID)
     )
 
@@ -741,8 +742,8 @@ def get_thread_basic_info(thdl):
 
 ################################################################################
 
-_NtSetInformationThread = fun_fact(
-    _nt.NtSetInformationThread,
+_NtSetInformationThread = _nt.fun_fact(
+    "NtSetInformationThread",
     (NTSTATUS, PVOID, LONG, PVOID, ULONG)
     )
 
@@ -772,8 +773,8 @@ def get_abs_thread_priority(thdl):
 
 ################################################################################
 
-_NtGetNextThread = fun_fact(
-    _nt.NtGetNextThread,
+_NtGetNextThread = _nt.fun_fact(
+    "NtGetNextThread",
     (NTSTATUS, PVOID, PVOID, ULONG, ULONG, ULONG, PVOID)
     )
 
@@ -784,8 +785,8 @@ def NtGetNextThread(proc, cur_thrd, access, attribs=0, flags=0):
 
 ################################################################################
 
-_NtOpenDirectoryObject = fun_fact(
-    _nt.NtOpenDirectoryObject,
+_NtOpenDirectoryObject = _nt.fun_fact(
+    "NtOpenDirectoryObject",
     (NTSTATUS, PVOID, ULONG, PVOID)
     )
 
@@ -804,8 +805,8 @@ class OBJECT_DIRECTORY_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-_NtQueryDirectoryObject = fun_fact(
-    _nt.NtQueryDirectoryObject,
+_NtQueryDirectoryObject = _nt.fun_fact(
+    "NtQueryDirectoryObject",
     (NTSTATUS, HANDLE, PVOID, ULONG, BOOLEAN, BOOLEAN, PULONG, PULONG)
     )
 
@@ -845,8 +846,8 @@ def NtQueryDirectoryObject(hdir):
 
 ################################################################################
 
-_NtOpenSymbolicLinkObject = fun_fact(
-    _nt.NtOpenSymbolicLinkObject,
+_NtOpenSymbolicLinkObject = _nt.fun_fact(
+    "NtOpenSymbolicLinkObject",
     (NTSTATUS, PVOID, ULONG, PVOID)
     )
 
@@ -857,8 +858,8 @@ def NtOpenSymbolicLinkObject(acc, obj_attr):
 
 ################################################################################
 
-_NtQuerySymbolicLinkObject = fun_fact(
-    _nt.NtQuerySymbolicLinkObject,
+_NtQuerySymbolicLinkObject = _nt.fun_fact(
+    "NtQuerySymbolicLinkObject",
     (NTSTATUS, HANDLE, PUNICODE_STRING, PULONG)
     )
 
@@ -877,8 +878,8 @@ def NtQuerySymbolicLinkObject(hdl):
 
 ################################################################################
 
-_NtQueryTimerResolution = fun_fact(
-    _nt.NtQueryTimerResolution,
+_NtQueryTimerResolution = _nt.fun_fact(
+    "NtQueryTimerResolution",
     (NTSTATUS, PULONG, PULONG, PULONG)
     )
 

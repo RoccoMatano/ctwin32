@@ -19,22 +19,23 @@ from .wtypes import (
     WinError,
     )
 from . import (
+    ApiDll,
     ref,
     ntdll,
     kernel,
     raise_on_zero,
-    fun_fact,
     ns_from_struct,
     LIST_MODULES_DEFAULT,
     ERROR_PARTIAL_COPY,
     )
 
-_psa = ctypes.WinDLL("psapi.dll", use_last_error=True)
+_psa = ApiDll("psapi.dll")
 
 ################################################################################
 
-_EnumProcessModulesEx = fun_fact(
-    _psa.EnumProcessModulesEx, (BOOL, HANDLE, PVOID, DWORD, PDWORD, DWORD)
+_EnumProcessModulesEx = _psa.fun_fact(
+    "EnumProcessModulesEx",
+    (BOOL, HANDLE, PVOID, DWORD, PDWORD, DWORD)
     )
 
 def EnumProcessModulesEx(hdl, filter):
@@ -61,8 +62,9 @@ def EnumProcesses():
 
 ################################################################################
 
-_GetMappedFileName = fun_fact(
-    _psa.GetMappedFileNameW, (DWORD, HANDLE, PVOID, PWSTR, DWORD)
+_GetMappedFileName = _psa.fun_fact(
+    "GetMappedFileNameW",
+    (DWORD, HANDLE, PVOID, PWSTR, DWORD)
     )
 
 def GetMappedFileName(hdl, addr):
@@ -76,8 +78,9 @@ def GetMappedFileName(hdl, addr):
 
 ################################################################################
 
-_GetModuleFileNameEx = fun_fact(
-    _psa.GetModuleFileNameExW, (DWORD, HANDLE, PVOID, PWSTR, DWORD)
+_GetModuleFileNameEx = _psa.fun_fact(
+    "GetModuleFileNameExW",
+    (DWORD, HANDLE, PVOID, PWSTR, DWORD)
     )
 
 def GetModuleFileNameEx(hdl, mod):
@@ -101,8 +104,9 @@ class MODULEINFO(ctypes.Structure):
 
 PMODULEINFO = POINTER(MODULEINFO)
 
-_GetModuleInformation = fun_fact(
-    _psa.GetModuleInformation, (BOOL, HANDLE, PVOID, PMODULEINFO, DWORD)
+_GetModuleInformation = _psa.fun_fact(
+    "GetModuleInformation",
+    (BOOL, HANDLE, PVOID, PMODULEINFO, DWORD)
     )
 
 def GetModuleInformation(hdl, mod):

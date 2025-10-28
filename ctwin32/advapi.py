@@ -41,6 +41,7 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     cmdline_from_args,
     CRED_TYPE_GENERIC,
     DACL_SECURITY_INFORMATION,
@@ -52,7 +53,6 @@ from . import (
     ERROR_NO_MORE_ITEMS,
     EVENTLOG_BACKWARDS_READ,
     EVENTLOG_SEQUENTIAL_READ,
-    fun_fact,
     GROUP_SECURITY_INFORMATION,
     KEY_ALL_ACCESS,
     KEY_READ,
@@ -101,7 +101,7 @@ from .kernel import (
     )
 from .ntdll import enum_processes
 
-_adv = ctypes.WinDLL("advapi32.dll", use_last_error=True)
+_adv = ApiDll("advapi32.dll")
 
 ################################################################################
 
@@ -122,7 +122,7 @@ _PREDEFINED_KEYS = {
 
 ################################################################################
 
-_RegCloseKey = fun_fact(_adv.RegCloseKey, (LONG, HANDLE))
+_RegCloseKey = _adv.fun_fact("RegCloseKey", (LONG, HANDLE))
 
 def RegCloseKey(key):
     raise_on_err(_RegCloseKey(key))
@@ -174,8 +174,8 @@ def registry_to_py(reg_type, data):
 
 ################################################################################
 
-_RegOpenKeyEx = fun_fact(
-    _adv.RegOpenKeyExW,
+_RegOpenKeyEx = _adv.fun_fact(
+    "RegOpenKeyExW",
     (LONG, HKEY, PWSTR, DWORD, DWORD, PHKEY)
     )
 
@@ -186,8 +186,8 @@ def RegOpenKeyEx(parent, name, access=KEY_READ):
 
 ################################################################################
 
-_RegQueryInfoKey = fun_fact(
-    _adv.RegQueryInfoKeyW, (
+_RegQueryInfoKey = _adv.fun_fact(
+    "RegQueryInfoKeyW", (
         LONG,
         HKEY,
         PWSTR,
@@ -238,8 +238,8 @@ def RegQueryInfoKey(key):
 
 ################################################################################
 
-_RegCreateKeyEx = fun_fact(
-    _adv.RegCreateKeyExW, (
+_RegCreateKeyEx = _adv.fun_fact(
+    "RegCreateKeyExW", (
         LONG,
         HKEY,
         PWSTR,
@@ -271,8 +271,9 @@ def RegCreateKeyEx(parent, name, access=KEY_ALL_ACCESS):
 
 ################################################################################
 
-_RegDeleteKeyEx = fun_fact(
-    _adv.RegDeleteKeyExW, (LONG, HKEY, PWSTR, DWORD, DWORD)
+_RegDeleteKeyEx = _adv.fun_fact(
+    "RegDeleteKeyExW",
+    (LONG, HKEY, PWSTR, DWORD, DWORD)
     )
 
 def RegDeleteKeyEx(parent, name, access=KEY_WOW64_64KEY):
@@ -287,17 +288,16 @@ def RegDeleteKeyEx(parent, name, access=KEY_WOW64_64KEY):
 
 ################################################################################
 
-_RegDeleteValue = fun_fact(
-    _adv.RegDeleteValueW, (LONG, HKEY, PWSTR)
-    )
+_RegDeleteValue = _adv.fun_fact("RegDeleteValueW", (LONG, HKEY, PWSTR))
 
 def RegDeleteValue(key, name):
     raise_on_err(_RegDeleteValue(key, name))
 
 ################################################################################
 
-_RegDeleteKeyValue = fun_fact(
-    _adv.RegDeleteKeyValueW, (LONG, HKEY, PWSTR, PWSTR)
+_RegDeleteKeyValue = _adv.fun_fact(
+    "RegDeleteKeyValueW",
+    (LONG, HKEY, PWSTR, PWSTR)
     )
 
 def RegDeleteKeyValue(parent, key_name, value_name):
@@ -320,8 +320,8 @@ _MAX_KEY_LEN = 257
 
 ################################################################################
 
-_RegEnumKeyEx = fun_fact(
-    _adv.RegEnumKeyExW, (
+_RegEnumKeyEx = _adv.fun_fact(
+    "RegEnumKeyExW", (
         LONG,
         HKEY,
         DWORD,
@@ -363,8 +363,8 @@ def reg_enum_keys(key):
 
 ################################################################################
 
-_RegEnumValue = fun_fact(
-    _adv.RegEnumValueW, (
+_RegEnumValue = _adv.fun_fact(
+    "RegEnumValueW", (
         LONG,
         HKEY,
         DWORD,
@@ -417,8 +417,8 @@ def reg_enum_values(key):
 
 ################################################################################
 
-_RegQueryValueEx = fun_fact(
-    _adv.RegQueryValueExW, (
+_RegQueryValueEx = _adv.fun_fact(
+    "RegQueryValueExW", (
         LONG,
         HKEY,
         PWSTR,
@@ -454,8 +454,8 @@ def RegQueryValueEx(key, name):
 
 ################################################################################
 
-_RegSetValueEx = fun_fact(
-    _adv.RegSetValueExW, (
+_RegSetValueEx = _adv.fun_fact(
+    "RegSetValueExW", (
         LONG,
         HKEY,
         PWSTR,
@@ -481,8 +481,8 @@ def RegSetValueEx(key, name, typ, data):
 
 ################################################################################
 
-_RegSetKeyValue = fun_fact(
-    _adv.RegSetKeyValueW, (
+_RegSetKeyValue = _adv.fun_fact(
+    "RegSetKeyValueW", (
         LONG,
         HKEY,
         PWSTR,
@@ -542,15 +542,15 @@ def reg_set_dword(key, name, dword):
 
 ################################################################################
 
-_RegFlushKey = fun_fact(_adv.RegFlushKey, (LONG, HKEY))
+_RegFlushKey = _adv.fun_fact("RegFlushKey", (LONG, HKEY))
 
 def RegFlushKey(key):
     raise_on_err(_RegFlushKey(key))
 
 ################################################################################
 
-_RegLoadAppKey = fun_fact(
-    _adv.RegLoadAppKeyW,
+_RegLoadAppKey = _adv.fun_fact(
+    "RegLoadAppKeyW",
     (LONG, PWSTR, PHKEY, DWORD, DWORD, DWORD)
     )
 
@@ -564,14 +564,14 @@ def RegLoadAppKey(hive_name, acc=KEY_ALL_ACCESS, opt=REG_PROCESS_APPKEY):
 
 ################################################################################
 
-_IsValidSid = fun_fact(_adv.IsValidSid, (BOOL, PVOID))
+_IsValidSid = _adv.fun_fact("IsValidSid", (BOOL, PVOID))
 
 def IsValidSid(psid):
     return _IsValidSid(psid) != 0
 
 ################################################################################
 
-_GetLengthSid = fun_fact(_adv.GetLengthSid, (DWORD, PVOID))
+_GetLengthSid = _adv.fun_fact("GetLengthSid", (DWORD, PVOID))
 
 def GetLengthSid(psid):
     if not IsValidSid(psid):
@@ -580,8 +580,9 @@ def GetLengthSid(psid):
 
 ################################################################################
 
-_ConvertStringSidToSid = fun_fact(
-    _adv.ConvertStringSidToSidW, (BOOL, PWSTR, PVOID)
+_ConvertStringSidToSid = _adv.fun_fact(
+    "ConvertStringSidToSidW",
+    (BOOL, PWSTR, PVOID)
     )
 
 def ConvertStringSidToSid(string_sid):
@@ -594,8 +595,9 @@ def ConvertStringSidToSid(string_sid):
 
 ################################################################################
 
-_ConvertSidToStringSid = fun_fact(
-    _adv.ConvertSidToStringSidW, (BOOL, PVOID, PPWSTR)
+_ConvertSidToStringSid = _adv.fun_fact(
+    "ConvertSidToStringSidW",
+    (BOOL, PVOID, PPWSTR)
     )
 
 def ConvertSidToStringSid(sid):
@@ -609,8 +611,9 @@ def ConvertSidToStringSid(sid):
 
 ################################################################################
 
-_CreateWellKnownSid = fun_fact(
-    _adv.CreateWellKnownSid, (BOOL, INT, PVOID, PVOID, PDWORD)
+_CreateWellKnownSid = _adv.fun_fact(
+    "CreateWellKnownSid",
+    (BOOL, INT, PVOID, PVOID, PDWORD)
     )
 
 def CreateWellKnownSid(sid_type, domain=None):
@@ -624,9 +627,7 @@ def CreateWellKnownSid(sid_type, domain=None):
 
 ################################################################################
 
-_IsWellKnownSid = fun_fact(
-    _adv.IsWellKnownSid, (BOOL, PVOID, INT)
-    )
+_IsWellKnownSid = _adv.fun_fact("IsWellKnownSid", (BOOL, PVOID, INT))
 
 def IsWellKnownSid(sid, sid_type):
     bin_sid = byte_buffer(sid)
@@ -634,13 +635,9 @@ def IsWellKnownSid(sid, sid_type):
 
 ################################################################################
 
-_CheckTokenMembership = fun_fact(
-    _adv.CheckTokenMembership, (
-        BOOL,
-        HANDLE,
-        PVOID,
-        PBOOL
-        )
+_CheckTokenMembership = _adv.fun_fact(
+    "CheckTokenMembership",
+    (BOOL, HANDLE, PVOID, PBOOL)
     )
 
 def CheckTokenMembership(token_handle, sid_to_check):
@@ -659,8 +656,9 @@ def running_as_admin():
 
 ################################################################################
 
-_OpenProcessToken = fun_fact(
-    _adv.OpenProcessToken, (BOOL, HANDLE, DWORD, PHANDLE)
+_OpenProcessToken = _adv.fun_fact(
+    "OpenProcessToken",
+    (BOOL, HANDLE, DWORD, PHANDLE)
     )
 
 def OpenProcessToken(proc_handle, desired_acc):
@@ -670,8 +668,9 @@ def OpenProcessToken(proc_handle, desired_acc):
 
 ################################################################################
 
-_OpenThreadToken = fun_fact(
-    _adv.OpenThreadToken, (BOOL, HANDLE, DWORD, BOOL, PHANDLE)
+_OpenThreadToken = _adv.fun_fact(
+    "OpenThreadToken",
+    (BOOL, HANDLE, DWORD, BOOL, PHANDLE)
     )
 
 def OpenThreadToken(thrd_handle, desired_acc, as_self):
@@ -694,8 +693,8 @@ def GetCurrentThreadEffectiveToken():
 
 ################################################################################
 
-_DuplicateTokenEx = fun_fact(
-    _adv.DuplicateTokenEx,
+_DuplicateTokenEx = _adv.fun_fact(
+    "DuplicateTokenEx",
     (BOOL, HANDLE, DWORD, PSECURITY_ATTRIBUTES, INT, INT, PHANDLE)
     )
 
@@ -706,8 +705,9 @@ def DuplicateTokenEx(tok, acc, sattr, imp, typ):
 
 ################################################################################
 
-_AllocateLocallyUniqueId = fun_fact(
-    _adv.AllocateLocallyUniqueId, (BOOL, PLUID)
+_AllocateLocallyUniqueId = _adv.fun_fact(
+    "AllocateLocallyUniqueId",
+    (BOOL, PLUID)
     )
 
 def AllocateLocallyUniqueId():
@@ -739,8 +739,9 @@ class TOKEN_STATISTICS(ctypes.Structure):
 
 ################################################################################
 
-_GetTokenInformation = fun_fact(
-    _adv.GetTokenInformation, (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
+_GetTokenInformation = _adv.fun_fact(
+    "GetTokenInformation",
+    (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
     )
 
 def GetTokenInformation(hdl, cls):
@@ -755,8 +756,9 @@ def GetTokenInformation(hdl, cls):
 
 ################################################################################
 
-_SetTokenInformation = fun_fact(
-    _adv.SetTokenInformation, (BOOL, HANDLE, INT, PVOID, DWORD)
+_SetTokenInformation = _adv.fun_fact(
+    "SetTokenInformation",
+    (BOOL, HANDLE, INT, PVOID, DWORD)
     )
 
 def SetTokenInformation(hdl, cls, info):
@@ -866,8 +868,8 @@ def is_elevated_via_uac():
 
 ################################################################################
 
-_CreateProcessAsUser = fun_fact(
-    _adv.CreateProcessAsUserW, (
+_CreateProcessAsUser = _adv.fun_fact(
+    "CreateProcessAsUserW", (
         BOOL,
         HANDLE,
         PWSTR,
@@ -943,8 +945,9 @@ def create_process_as_user(
 
 ################################################################################
 
-_LookupPrivilegeValue = fun_fact(
-    _adv.LookupPrivilegeValueW, (BOOL, PWSTR, PWSTR, PLUID)
+_LookupPrivilegeValue = _adv.fun_fact(
+    "LookupPrivilegeValueW",
+    (BOOL, PWSTR, PWSTR, PLUID)
     )
 
 def LookupPrivilegeValue(sys_name, name):
@@ -971,8 +974,8 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
             ("Privileges", LUID_AND_ATTRIBUTES * num_la)
             )
     PTOKEN_PRIVILEGES = POINTER(TOKEN_PRIVILEGES)
-    _AdjustTokenPrivileges = fun_fact(
-        _adv.AdjustTokenPrivileges, (
+    _AdjustTokenPrivileges = _adv.fun_fact(
+        "AdjustTokenPrivileges", (
             BOOL,
             HANDLE,
             BOOL,
@@ -1017,8 +1020,8 @@ def enable_privileges(privileges):
 
 ################################################################################
 
-_LookupAccountSid = fun_fact(
-    _adv.LookupAccountSidW,
+_LookupAccountSid = _adv.fun_fact(
+    "LookupAccountSidW",
     (BOOL, PWSTR, PVOID, PWSTR, PDWORD, PWSTR, PDWORD, PDWORD)
     )
 
@@ -1058,7 +1061,7 @@ def LookupAccountSid(sid, system_name=None):
 
 ################################################################################
 
-_SetThreadToken = fun_fact(_adv.SetThreadToken, (BOOL, PHANDLE, HANDLE))
+_SetThreadToken = _adv.fun_fact("SetThreadToken", (BOOL, PHANDLE, HANDLE))
 
 def SetThreadToken(tok, thrd=None):
     pht = None if thrd is None else ref(thrd)
@@ -1105,10 +1108,7 @@ class ACL_SIZE_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-_GetAce = fun_fact(
-    _adv.GetAce,
-    (BOOL, PACL, DWORD, PPACE)
-    )
+_GetAce = _adv.fun_fact("GetAce", (BOOL, PACL, DWORD, PPACE))
 
 def GetAce(pacl, idx):
     pace = PACE()
@@ -1117,8 +1117,8 @@ def GetAce(pacl, idx):
 
 ################################################################################
 
-_GetSecurityDescriptorDacl = fun_fact(
-    _adv.GetSecurityDescriptorDacl,
+_GetSecurityDescriptorDacl = _adv.fun_fact(
+    "GetSecurityDescriptorDacl",
     (BOOL, PVOID, PBOOL, PPACL, PBOOL)
     )
 
@@ -1138,8 +1138,8 @@ def GetSecurityDescriptorDacl(sd):
 
 ################################################################################
 
-_GetSecurityDescriptorOwner = fun_fact(
-    _adv.GetSecurityDescriptorOwner,
+_GetSecurityDescriptorOwner = _adv.fun_fact(
+    "GetSecurityDescriptorOwner",
     (BOOL, PVOID, PVOID, PBOOL)
     )
 
@@ -1157,8 +1157,8 @@ def GetSecurityDescriptorOwner(sd):
 
 ################################################################################
 
-_GetSecurityDescriptorGroup = fun_fact(
-    _adv.GetSecurityDescriptorGroup,
+_GetSecurityDescriptorGroup = _adv.fun_fact(
+    "GetSecurityDescriptorGroup",
     (BOOL, PVOID, PVOID, PBOOL)
     )
 
@@ -1176,14 +1176,15 @@ def GetSecurityDescriptorGroup(sd):
 
 ################################################################################
 
-GetSecurityDescriptorLength = fun_fact(
-    _adv.GetSecurityDescriptorLength, (DWORD, PVOID)
+GetSecurityDescriptorLength = _adv.fun_fact(
+    "GetSecurityDescriptorLength",
+    (DWORD, PVOID)
     )
 
 ################################################################################
 
-_GetNamedSecurityInfo = fun_fact(
-    _adv.GetNamedSecurityInfoW,
+_GetNamedSecurityInfo = _adv.fun_fact(
+    "GetNamedSecurityInfoW",
     (DWORD, PWSTR, DWORD, DWORD, PPVOID, PPVOID, PPVOID, PPVOID, PPVOID)
     )
 
@@ -1218,8 +1219,8 @@ def GetNamedSecurityInfo(name, otype, req_info=NEARLY_ALL_SECURITY_INFORMATION):
 
 ################################################################################
 
-_SetNamedSecurityInfo = fun_fact(
-    _adv.SetNamedSecurityInfoW,
+_SetNamedSecurityInfo = _adv.fun_fact(
+    "SetNamedSecurityInfoW",
     (DWORD, PWSTR, DWORD, DWORD, PVOID, PVOID, PVOID, PVOID)
     )
 
@@ -1255,7 +1256,7 @@ def SetNamedSecurityInfo(
 
 ################################################################################
 
-_CloseServiceHandle = fun_fact(_adv.CloseServiceHandle, (BOOL, HANDLE))
+_CloseServiceHandle = _adv.fun_fact("CloseServiceHandle", (BOOL, HANDLE))
 
 def CloseServiceHandle(handle):
     raise_on_zero(_CloseServiceHandle(handle))
@@ -1272,9 +1273,7 @@ class SC_HANDLE(
 
 ################################################################################
 
-_OpenSCManager = fun_fact(
-    _adv.OpenSCManagerW, (HANDLE, PWSTR, PWSTR, DWORD)
-    )
+_OpenSCManager = _adv.fun_fact("OpenSCManagerW", (HANDLE, PWSTR, PWSTR, DWORD))
 
 def OpenSCManager(machine_name, database_name, desired_acc):
     res = SC_HANDLE(_OpenSCManager(machine_name, database_name, desired_acc))
@@ -1283,9 +1282,7 @@ def OpenSCManager(machine_name, database_name, desired_acc):
 
 ################################################################################
 
-_OpenService = fun_fact(
-    _adv.OpenServiceW, (HANDLE, HANDLE, PWSTR, DWORD)
-    )
+_OpenService = _adv.fun_fact("OpenServiceW", (HANDLE, HANDLE, PWSTR, DWORD))
 
 def OpenService(scm, name, desired_acc):
     res = SC_HANDLE(_OpenService(scm, name, desired_acc))
@@ -1294,8 +1291,8 @@ def OpenService(scm, name, desired_acc):
 
 ################################################################################
 
-_CreateService = fun_fact(
-    _adv.CreateServiceW, (
+_CreateService = _adv.fun_fact(
+    "CreateServiceW", (
         HANDLE,
         HANDLE,
         PWSTR,
@@ -1351,14 +1348,7 @@ def CreateService(
 
 ################################################################################
 
-_StartService = fun_fact(
-    _adv.StartServiceW, (
-        BOOL,
-        HANDLE,
-        DWORD,
-        PVOID
-        )
-    )
+_StartService = _adv.fun_fact("StartServiceW", (BOOL, HANDLE, DWORD, PVOID))
 
 def StartService(handle, arglist):
     aa = ArgcArgvFromArgs(arglist)
@@ -1378,8 +1368,8 @@ class SERVICE_STATUS(ctypes.Structure):
         )
 PSERVICE_STATUS = POINTER(SERVICE_STATUS)
 
-_ControlService = fun_fact(
-    _adv.ControlService, (
+_ControlService = _adv.fun_fact(
+    "ControlService", (
         BOOL,
         HANDLE,
         DWORD,
@@ -1394,7 +1384,7 @@ def ControlService(service, control):
 
 ################################################################################
 
-_DeleteService = fun_fact(_adv.DeleteService, (BOOL, HANDLE))
+_DeleteService = _adv.fun_fact("DeleteService", (BOOL, HANDLE))
 
 def DeleteService(service):
     raise_on_zero(_DeleteService(service))
@@ -1414,8 +1404,8 @@ class SERVICE_STATUS_PROCESS(ctypes.Structure):
         ("dwServiceFlags", DWORD),
         )
 
-_QueryServiceStatusEx = fun_fact(
-    _adv.QueryServiceStatusEx, (
+_QueryServiceStatusEx = _adv.fun_fact(
+    "QueryServiceStatusEx", (
         BOOL,
         HANDLE,
         INT,
@@ -1448,8 +1438,8 @@ class ENUM_SERVICE_STATUS_PROCESS(ctypes.Structure):
         ("ServiceStatusProcess", SERVICE_STATUS_PROCESS),
         )
 
-_EnumServicesStatusEx = fun_fact(
-    _adv.EnumServicesStatusExW, (
+_EnumServicesStatusEx = _adv.fun_fact(
+    "EnumServicesStatusExW", (
         BOOL,
         HANDLE,
         INT,
@@ -1514,8 +1504,8 @@ class QUERY_SERVICE_CONFIG(ctypes.Structure):
         )
 PQUERY_SERVICE_CONFIG = POINTER(QUERY_SERVICE_CONFIG)
 
-_QueryServiceConfig = fun_fact(
-    _adv.QueryServiceConfigW, (
+_QueryServiceConfig = _adv.fun_fact(
+    "QueryServiceConfigW", (
         BOOL,
         HANDLE,
         PQUERY_SERVICE_CONFIG,
@@ -1548,8 +1538,9 @@ class SERVICE_TABLE_ENTRY(ctypes.Structure):
         )
 PSERVICE_TABLE_ENTRY = POINTER(SERVICE_TABLE_ENTRY)
 
-_StartServiceCtrlDispatcher = fun_fact(
-    _adv.StartServiceCtrlDispatcherW, (BOOL, PSERVICE_TABLE_ENTRY)
+_StartServiceCtrlDispatcher = _adv.fun_fact(
+    "StartServiceCtrlDispatcherW",
+    (BOOL, PSERVICE_TABLE_ENTRY)
     )
 
 def StartServiceCtrlDispatcher(table):
@@ -1559,8 +1550,9 @@ def StartServiceCtrlDispatcher(table):
 
 HANDLER_FUNCTION = ctypes.WINFUNCTYPE(None, DWORD)
 
-_RegisterServiceCtrlHandler = fun_fact(
-    _adv.RegisterServiceCtrlHandlerW, (HANDLE, PWSTR, HANDLER_FUNCTION)
+_RegisterServiceCtrlHandler = _adv.fun_fact(
+    "RegisterServiceCtrlHandlerW",
+    (HANDLE, PWSTR, HANDLER_FUNCTION)
     )
 
 def RegisterServiceCtrlHandler(name, handler):
@@ -1570,8 +1562,9 @@ def RegisterServiceCtrlHandler(name, handler):
 
 ################################################################################
 
-_SetServiceStatus = fun_fact(
-    _adv.SetServiceStatus, (BOOL, HANDLE, PSERVICE_STATUS)
+_SetServiceStatus = _adv.fun_fact(
+    "SetServiceStatus",
+    (BOOL, HANDLE, PSERVICE_STATUS)
     )
 
 def SetServiceStatus(hdl, status):
@@ -1607,8 +1600,8 @@ PCREDENTIAL = POINTER(CREDENTIAL)
 PPCREDENTIAL = POINTER(PCREDENTIAL)
 PPPCREDENTIAL = POINTER(PPCREDENTIAL)
 
-_CredRead = fun_fact(
-    _adv.CredReadW, (
+_CredRead = _adv.fun_fact(
+    "CredReadW", (
         BOOL,
         PWSTR,
         DWORD,
@@ -1616,8 +1609,8 @@ _CredRead = fun_fact(
         PPCREDENTIAL
         )
     )
-_CredEnumerate = fun_fact(
-    _adv.CredEnumerateW, (
+_CredEnumerate = _adv.fun_fact(
+    "CredEnumerateW", (
         BOOL,
         PWSTR,
         DWORD,
@@ -1625,8 +1618,8 @@ _CredEnumerate = fun_fact(
         PPPCREDENTIAL
         )
     )
-_CredWrite = fun_fact(_adv.CredWriteW, (BOOL, PCREDENTIAL, DWORD))
-_CredFree = fun_fact(_adv.CredFree, (None, PVOID))
+_CredWrite = _adv.fun_fact("CredWriteW", (BOOL, PCREDENTIAL, DWORD))
+_CredFree = _adv.fun_fact("CredFree", (None, PVOID))
 
 ################################################################################
 
@@ -1718,7 +1711,7 @@ def CredWrite(credential, flags=0):
 
 ################################################################################
 
-_CloseEventLog = fun_fact(_adv.CloseEventLog, (BOOL, HANDLE))
+_CloseEventLog = _adv.fun_fact("CloseEventLog", (BOOL, HANDLE))
 
 def CloseEventLog(hdl):
     raise_on_zero(_CloseEventLog(hdl))
@@ -1730,9 +1723,7 @@ class EHANDLE(ScdToBeClosed, HANDLE, close_func=CloseEventLog, invalid=0):
 
 ################################################################################
 
-_OpenEventLog = fun_fact(
-    _adv.OpenEventLogW, (HANDLE, PWSTR, PWSTR)
-    )
+_OpenEventLog = _adv.fun_fact("OpenEventLogW", (HANDLE, PWSTR, PWSTR))
 
 def OpenEventLog(source, server=None):
     hdl = EHANDLE(_OpenEventLog(server, source))
@@ -1819,8 +1810,8 @@ def _evt_from_buf(buf, offs):
 
 ################################################################################
 
-_ReadEventLog = fun_fact(
-    _adv.ReadEventLogW, (
+_ReadEventLog = _adv.fun_fact(
+    "ReadEventLogW", (
         BOOL,
         HANDLE,
         DWORD,
@@ -1870,14 +1861,14 @@ def enum_event_log(name, flags=None, server=None):
 
 ################################################################################
 
-_EncryptFile = fun_fact(_adv.EncryptFileW, (BOOL, PWSTR))
+_EncryptFile = _adv.fun_fact("EncryptFileW", (BOOL, PWSTR))
 
 def EncryptFile(file_or_dir_name):
     raise_on_zero(_EncryptFile(file_or_dir_name))
 
 ################################################################################
 
-_DecryptFile = fun_fact(_adv.DecryptFileW, (BOOL, PWSTR, DWORD))
+_DecryptFile = _adv.fun_fact("DecryptFileW", (BOOL, PWSTR, DWORD))
 
 def DecryptFile(file_or_dir_name):
     raise_on_zero(_DecryptFile(file_or_dir_name, 0))

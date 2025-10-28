@@ -32,8 +32,8 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     ref,
-    fun_fact,
     raise_on_err,
     ERROR_BUFFER_OVERFLOW,
     IF_TYPE_SOFTWARE_LOOPBACK,
@@ -42,7 +42,7 @@ from . import (
     AF_INET6,
     )
 
-_iph = ctypes.WinDLL("iphlpapi.dll", use_last_error=True)
+_iph = ApiDll("iphlpapi.dll")
 
 ################################################################################
 
@@ -240,8 +240,8 @@ def _sock_addr_to_ip_addr(p_sock_addr):
 
 ################################################################################
 
-_GetAdaptersAddresses = fun_fact(
-    _iph.GetAdaptersAddresses, (
+_GetAdaptersAddresses = _iph.fun_fact(
+    "GetAdaptersAddresses", (
         ULONG,
         ULONG,
         ULONG,
@@ -372,11 +372,11 @@ class MIB_IPNET_ROW2(ctypes.Structure):
 
 ################################################################################
 
-FreeMibTable = fun_fact(_iph.FreeMibTable, (None, PVOID))
+FreeMibTable = _iph.fun_fact("FreeMibTable", (None, PVOID))
 
 ################################################################################
 
-_GetIpNetTable2 = fun_fact(_iph.GetIpNetTable2, (DWORD, WORD, PPVOID))
+_GetIpNetTable2 = _iph.fun_fact("GetIpNetTable2", (DWORD, WORD, PPVOID))
 
 def GetIpNetTable2(version=0):
     ptr = PVOID()
@@ -409,8 +409,8 @@ def GetIpNetTable2(version=0):
 
 ################################################################################
 
-_ConvertInterfaceGuidToLuid = fun_fact(
-    _iph.ConvertInterfaceGuidToLuid,
+_ConvertInterfaceGuidToLuid = _iph.fun_fact(
+    "ConvertInterfaceGuidToLuid",
     (DWORD, PGUID, PULONGLONG)
     )
 
@@ -422,8 +422,8 @@ def ConvertInterfaceGuidToLuid(guid):
 
 ################################################################################
 
-_ConvertInterfaceIndexToLuid = fun_fact(
-    _iph.ConvertInterfaceIndexToLuid,
+_ConvertInterfaceIndexToLuid = _iph.fun_fact(
+    "ConvertInterfaceIndexToLuid",
     (DWORD, ULONG, PULONGLONG)
     )
 
@@ -434,8 +434,8 @@ def ConvertInterfaceIndexToLuid(idx):
 
 ################################################################################
 
-_ConvertInterfaceLuidToAlias = fun_fact(
-    _iph.ConvertInterfaceLuidToAlias,
+_ConvertInterfaceLuidToAlias = _iph.fun_fact(
+    "ConvertInterfaceLuidToAlias",
     (DWORD, PULONGLONG, PWSTR, SIZE_T)
     )
 
@@ -450,8 +450,8 @@ def ConvertInterfaceLuidToAlias(luid):
 
 ################################################################################
 
-_ConvertInterfaceLuidToName = fun_fact(
-    _iph.ConvertInterfaceLuidToNameW,
+_ConvertInterfaceLuidToName = _iph.fun_fact(
+    "ConvertInterfaceLuidToNameW",
     (DWORD, PULONGLONG, PWSTR, SIZE_T)
     )
 

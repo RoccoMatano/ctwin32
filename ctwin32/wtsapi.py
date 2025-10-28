@@ -17,15 +17,15 @@ from .wtypes import (
     PWSTR,
     )
 from . import (
+    ApiDll,
     ref,
-    fun_fact,
     raise_on_zero,
     ns_from_struct,
     )
 
 ################################################################################
 
-_wts = ctypes.WinDLL("wtsapi32.dll", use_last_error=True)
+_wts = ApiDll("wtsapi32.dll")
 
 class WTS_SESSION_INFO(ctypes.Structure):
     _fields_ = (
@@ -38,12 +38,12 @@ PP_SESSION_INFO = POINTER(P_SESSION_INFO)
 
 ################################################################################
 
-_WTSFreeMemory = fun_fact(_wts.WTSFreeMemory, (None, PVOID))
+_WTSFreeMemory = _wts.fun_fact("WTSFreeMemory", (None, PVOID))
 
 ################################################################################
 
-_WTSEnumerateSessions = fun_fact(
-    _wts.WTSEnumerateSessionsW,
+_WTSEnumerateSessions = _wts.fun_fact(
+    "WTSEnumerateSessionsW",
     (BOOL, HANDLE, DWORD, DWORD, PP_SESSION_INFO, PDWORD)
     )
 
@@ -58,8 +58,9 @@ def WTSEnumerateSessions(server=None):
 
 ################################################################################
 
-_WTSDisconnectSession = fun_fact(
-    _wts.WTSDisconnectSession, (BOOL, HANDLE, DWORD, BOOL)
+_WTSDisconnectSession = _wts.fun_fact(
+    "WTSDisconnectSession",
+    (BOOL, HANDLE, DWORD, BOOL)
     )
 
 def WTSDisconnectSession(session_id, server=None, wait=True):

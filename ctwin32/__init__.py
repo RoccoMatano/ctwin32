@@ -5,7 +5,9 @@
 #
 ################################################################################
 
+import sys as _sys
 from types import SimpleNamespace as _namespace
+import _ctypes
 import ctypes
 from .wtypes import (
     DWORD,
@@ -15,12 +17,45 @@ from .wtypes import (
     WCHAR_SIZE,
     WinError,
     )
-from . import kuser_shared_data
+from . import kuser_shared_data as _kusd
 ref = ctypes.byref
 
 ################################################################################
 
 __version__ = "4.0.0"
+
+################################################################################
+
+class _ApiFuncPtr(_ctypes.CFuncPtr):
+    _flags_ = _ctypes.FUNCFLAG_STDCALL | _ctypes.FUNCFLAG_USE_LASTERROR
+    _restype_ = DWORD
+
+
+class ApiDll:
+    def __init__(self, name):
+        # ATTENTION: The use of the attribute named '_handle' is hard-coded
+        # in ctypes' C code -> don't change its name!
+        self._handle = _ctypes.LoadLibrary(
+            name,
+            LOAD_LIBRARY_SEARCH_DEFAULT_DIRS
+            )  & (_sys.maxsize * 2 + 1)
+        self._name = name
+
+    def __repr__(self):
+        cls = self.__class__.__name__
+        adr = id(self) & (_sys.maxsize * 2 + 1)
+        return f"<{cls} '{self._name}', handle {self._handle:#x} at {adr:#x}>"
+
+    def __getattr__(self, name):
+        func = _ApiFuncPtr((name, self))
+        setattr(self, name, func)
+        return func
+
+    def fun_fact(self, name, signature):
+        func = getattr(self, name)
+        func.restype = signature[0]
+        func.argtypes = signature[1:]
+        return func
 
 ################################################################################
 
@@ -63,13 +98,6 @@ class suppress_winerr():
             issubclass(exctype, OSError) and
             excinst.winerror in self._err_codes
             )
-
-################################################################################
-
-def fun_fact(function, signature):
-    function.restype = signature[0]
-    function.argtypes = signature[1:]
-    return function
 
 ################################################################################
 
@@ -150,7 +178,7 @@ def ns_from_struct(ctypes_aggregation):
 ################################################################################
 
 def _warn_win_ver():
-    if kuser_shared_data.get_ref().NtMajorVersion < 10:
+    if _kusd.get_ref().NtMajorVersion < 10:
         import warnings # noqa: PLC0415
         msg = (
             "ctwin32 does not intend to support old Windows versions "

@@ -54,8 +54,8 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     cmdline_from_args,
-    fun_fact,
     multi_str_from_addr,
     multi_str_from_ubuf,
     ns_from_struct,
@@ -102,11 +102,11 @@ from . import (
     WAIT_FAILED,
     )
 
-_k32 = ctypes.WinDLL("kernel32.dll", use_last_error=True)
+_k32 = ApiDll("kernel32.dll")
 
 ################################################################################
 
-ExitProcess = fun_fact(_k32.ExitProcess, (None, UINT))
+ExitProcess = _k32.fun_fact("ExitProcess", (None, UINT))
 
 ################################################################################
 
@@ -120,21 +120,21 @@ SetLastError = ctypes.set_last_error
 
 ################################################################################
 
-_LocalFree = fun_fact(_k32.LocalFree, (HANDLE, HANDLE))
+_LocalFree = _k32.fun_fact("LocalFree", (HANDLE, HANDLE))
 
 def LocalFree(hmem):
     raise_if(_LocalFree(hmem))
 
 ################################################################################
 
-_GlobalFree = fun_fact(_k32.GlobalFree, (HANDLE, HANDLE))
+_GlobalFree = _k32.fun_fact("GlobalFree", (HANDLE, HANDLE))
 
 def GlobalFree(hmem):
     raise_if(_GlobalFree(hmem))
 
 ################################################################################
 
-_GlobalAlloc = fun_fact(_k32.GlobalAlloc, (HANDLE, UINT, SIZE_T))
+_GlobalAlloc = _k32.fun_fact("GlobalAlloc", (HANDLE, UINT, SIZE_T))
 
 def GlobalAlloc(flags, size):
     res = _GlobalAlloc(flags, size)
@@ -143,7 +143,7 @@ def GlobalAlloc(flags, size):
 
 ################################################################################
 
-_GlobalLock = fun_fact(_k32.GlobalLock, (PVOID, HANDLE))
+_GlobalLock = _k32.fun_fact("GlobalLock", (PVOID, HANDLE))
 
 def GlobalLock(hmem):
     res = _GlobalLock(hmem)
@@ -152,7 +152,7 @@ def GlobalLock(hmem):
 
 ################################################################################
 
-_GlobalUnlock = fun_fact(_k32.GlobalUnlock, (BOOL, HANDLE))
+_GlobalUnlock = _k32.fun_fact("GlobalUnlock", (BOOL, HANDLE))
 
 def GlobalUnlock(hmem):
     res = _GlobalUnlock(hmem)
@@ -161,7 +161,7 @@ def GlobalUnlock(hmem):
 
 ################################################################################
 
-_CloseHandle = fun_fact(_k32.CloseHandle, (BOOL, HANDLE))
+_CloseHandle = _k32.fun_fact("CloseHandle", (BOOL, HANDLE))
 
 def CloseHandle(handle):
     raise_on_zero(_CloseHandle(handle))
@@ -201,8 +201,8 @@ PSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 
 ################################################################################
 
-_CreateFile = fun_fact(
-    _k32.CreateFileW, (
+_CreateFile = _k32.fun_fact(
+    "CreateFileW", (
         HANDLE,
         PWSTR,
         DWORD,
@@ -250,8 +250,9 @@ def create_file(
 
 ################################################################################
 
-_ReadFile = fun_fact(
-    _k32.ReadFile, (BOOL, HANDLE, PVOID, DWORD, PDWORD, PVOID)
+_ReadFile = _k32.fun_fact(
+    "ReadFile",
+    (BOOL, HANDLE, PVOID, DWORD, PDWORD, PVOID)
     )
 
 def ReadFile(hdl, size_or_buf):
@@ -278,8 +279,8 @@ def read_file_text(hdl, size):
 
 ################################################################################
 
-_WriteFile = fun_fact(
-    _k32.WriteFile,
+_WriteFile = _k32.fun_fact(
+    "WriteFile",
     (BOOL, HANDLE, PVOID, DWORD, PDWORD, PVOID)
     )
 
@@ -302,7 +303,7 @@ def write_file_text(hdl, txt):
 
 ################################################################################
 
-_FlushFileBuffers = fun_fact(_k32.FlushFileBuffers, (BOOL, HANDLE))
+_FlushFileBuffers = _k32.fun_fact("FlushFileBuffers", (BOOL, HANDLE))
 
 def FlushFileBuffers(hdl):
     raise_on_zero(_FlushFileBuffers(hdl))
@@ -336,8 +337,8 @@ PPOVERLAPPED = POINTER(POVERLAPPED)
 
 ################################################################################
 
-_DeviceIoControl = fun_fact(
-    _k32.DeviceIoControl, (
+_DeviceIoControl = _k32.fun_fact(
+    "DeviceIoControl", (
         BOOL,
         HANDLE,
         DWORD,
@@ -382,8 +383,8 @@ def DeviceIoControl(hdl, ioctl, in_ctobj, out_len):
 
 ################################################################################
 
-_CreateIoCompletionPort = fun_fact(
-    _k32.CreateIoCompletionPort,
+_CreateIoCompletionPort = _k32.fun_fact(
+    "CreateIoCompletionPort",
     (KHANDLE, HANDLE, HANDLE, ULONG_PTR, DWORD)
     )
 
@@ -397,8 +398,8 @@ def create_io_completion_port(file, key, num_threads=0, existing=None):
 
 ################################################################################
 
-_GetQueuedCompletionStatus = fun_fact(
-    _k32.GetQueuedCompletionStatus,
+_GetQueuedCompletionStatus = _k32.fun_fact(
+    "GetQueuedCompletionStatus",
     (BOOL, HANDLE, PDWORD, PULONG_PTR, PPOVERLAPPED, DWORD)
     )
 
@@ -418,8 +419,8 @@ def GetQueuedCompletionStatus(port, timeout):
 
 ################################################################################
 
-_CreateNamedPipe = fun_fact(
-    _k32.CreateNamedPipeW, (
+_CreateNamedPipe = _k32.fun_fact(
+    "CreateNamedPipeW", (
         HANDLE,
         PWSTR,
         DWORD,
@@ -486,7 +487,7 @@ def create_named_pipe(
 
 ################################################################################
 
-_ConnectNamedPipe = fun_fact(_k32.ConnectNamedPipe, (BOOL, HANDLE, PVOID))
+_ConnectNamedPipe = _k32.fun_fact("ConnectNamedPipe", (BOOL, HANDLE, PVOID))
 
 def ConnectNamedPipe(hdl):
     if not _ConnectNamedPipe(hdl, None):
@@ -496,27 +497,28 @@ def ConnectNamedPipe(hdl):
 
 ################################################################################
 
-_DisconnectNamedPipe = fun_fact(_k32.DisconnectNamedPipe, (BOOL, HANDLE))
+_DisconnectNamedPipe = _k32.fun_fact("DisconnectNamedPipe", (BOOL, HANDLE))
 
 def DisconnectNamedPipe(hdl):
     raise_on_zero(_DisconnectNamedPipe(hdl))
 
 ################################################################################
 
-GetCurrentProcess = fun_fact(_k32.GetCurrentProcess, (HANDLE,))
+GetCurrentProcess = _k32.fun_fact("GetCurrentProcess", (HANDLE,))
 
 ################################################################################
 
-GetCurrentProcessId = fun_fact(_k32.GetCurrentProcessId, (DWORD,))
+GetCurrentProcessId = _k32.fun_fact("GetCurrentProcessId", (DWORD,))
 
 ################################################################################
 
-GetCurrentThread = fun_fact(_k32.GetCurrentThread, (HANDLE,))
+GetCurrentThread = _k32.fun_fact("GetCurrentThread", (HANDLE,))
 
 ################################################################################
 
-_ProcessIdToSessionId = fun_fact(
-    _k32.ProcessIdToSessionId, (BOOL, DWORD, PDWORD)
+_ProcessIdToSessionId = _k32.fun_fact(
+    "ProcessIdToSessionId",
+    (BOOL, DWORD, PDWORD)
     )
 
 def ProcessIdToSessionId(pid):
@@ -526,7 +528,7 @@ def ProcessIdToSessionId(pid):
 
 ################################################################################
 
-_GetModuleHandle = fun_fact(_k32.GetModuleHandleW, (HANDLE, PWSTR))
+_GetModuleHandle = _k32.fun_fact("GetModuleHandleW", (HANDLE, PWSTR))
 
 def GetModuleHandle(mod_name):
     res = _GetModuleHandle(mod_name)
@@ -535,8 +537,9 @@ def GetModuleHandle(mod_name):
 
 ################################################################################
 
-_GetModuleFileName = fun_fact(
-    _k32.GetModuleFileNameW, (DWORD, HANDLE, PWSTR, DWORD)
+_GetModuleFileName = _k32.fun_fact(
+    "GetModuleFileNameW",
+    (DWORD, HANDLE, PWSTR, DWORD)
     )
 
 def GetModuleFileName(hmod):
@@ -551,8 +554,9 @@ def GetModuleFileName(hmod):
 
 ################################################################################
 
-_WaitForSingleObject = fun_fact(
-    _k32.WaitForSingleObject, (DWORD, HANDLE, DWORD)
+_WaitForSingleObject = _k32.fun_fact(
+    "WaitForSingleObject",
+    (DWORD, HANDLE, DWORD)
     )
 
 def WaitForSingleObject(handle, timeout):
@@ -562,9 +566,7 @@ def WaitForSingleObject(handle, timeout):
 
 ################################################################################
 
-_OpenProcess = fun_fact(
-    _k32.OpenProcess, (HANDLE, DWORD, BOOL, DWORD)
-    )
+_OpenProcess = _k32.fun_fact("OpenProcess", (HANDLE, DWORD, BOOL, DWORD))
 
 def OpenProcess(desired_acc, inherit, pid):
     res = KHANDLE(_OpenProcess(desired_acc, inherit, pid))
@@ -573,17 +575,16 @@ def OpenProcess(desired_acc, inherit, pid):
 
 ################################################################################
 
-_TerminateProcess = fun_fact(
-    _k32.TerminateProcess, (BOOL, HANDLE, UINT)
-    )
+_TerminateProcess = _k32.fun_fact("TerminateProcess", (BOOL, HANDLE, UINT))
 
 def TerminateProcess(handle, exit_code):
     raise_on_zero(_TerminateProcess(handle, exit_code))
 
 ################################################################################
 
-_GetExitCodeProcess = fun_fact(
-    _k32.GetExitCodeProcess, (BOOL, HANDLE, PDWORD)
+_GetExitCodeProcess = _k32.fun_fact(
+    "GetExitCodeProcess",
+    (BOOL, HANDLE, PDWORD)
     )
 
 def GetExitCodeProcess(handle):
@@ -593,15 +594,13 @@ def GetExitCodeProcess(handle):
 
 ################################################################################
 
-_GetCommandLine = fun_fact(_k32.GetCommandLineW, (PWSTR,))
+_GetCommandLine = _k32.fun_fact("GetCommandLineW", (PWSTR,))
 def GetCommandLine():
     return ctypes.wstring_at(_GetCommandLine())
 
 ################################################################################
 
-_QueryDosDevice = fun_fact(
-    _k32.QueryDosDeviceW, (DWORD, PWSTR, PWSTR, DWORD)
-    )
+_QueryDosDevice = _k32.fun_fact("QueryDosDeviceW", (DWORD, PWSTR, PWSTR, DWORD))
 
 def QueryDosDevice(device_name):
     size = 512
@@ -676,7 +675,7 @@ def FileTimeToLocalSystemTime(ft):
 
 ################################################################################
 
-def AdjustTime(seconds_to_adjust):
+def adjust_time(seconds_to_adjust):
     ft = GetSystemTimeAsFileTime()
     ft += int(seconds_to_adjust * 1e7)
     st = FileTimeToSystemTime(ft)
@@ -703,9 +702,7 @@ def GetFileAttributes(fname):
 
 ################################################################################
 
-_SetFileAttributes = fun_fact(
-    _k32.SetFileAttributesW, (BOOL, PWSTR, DWORD)
-    )
+_SetFileAttributes = _k32.fun_fact("SetFileAttributesW", (BOOL, PWSTR, DWORD))
 
 ################################################################################
 
@@ -714,7 +711,7 @@ def SetFileAttributes(fname, attribs):
 
 ################################################################################
 
-_GetACP = fun_fact(_k32.GetACP, (DWORD,))
+_GetACP = _k32.fun_fact("GetACP", (DWORD,))
 
 def GetACP():
     return _GetACP()
@@ -724,7 +721,7 @@ def get_ansi_encoding():
 
 ################################################################################
 
-_OutputDebugStringW = fun_fact(_k32.OutputDebugStringW, (None, PWSTR))
+_OutputDebugStringW = _k32.fun_fact("OutputDebugStringW", (None, PWSTR))
 
 def OutputDebugString(dstr):
     _OutputDebugStringW(dstr)
@@ -736,8 +733,9 @@ def dbg_print(*args, end="\n"):
 
 ################################################################################
 
-_SetThreadExecutionState = fun_fact(
-    _k32.SetThreadExecutionState, (DWORD, DWORD)
+_SetThreadExecutionState = _k32.fun_fact(
+    "SetThreadExecutionState",
+    (DWORD, DWORD)
     )
 
 def SetThreadExecutionState(es_flags):
@@ -745,8 +743,8 @@ def SetThreadExecutionState(es_flags):
 
 ################################################################################
 
-_GetPrivateProfileSectionNames = fun_fact(
-    _k32.GetPrivateProfileSectionNamesW,
+_GetPrivateProfileSectionNames = _k32.fun_fact(
+    "GetPrivateProfileSectionNamesW",
     (DWORD, PWSTR, DWORD, PWSTR)
     )
 
@@ -762,8 +760,8 @@ def GetPrivateProfileSectionNames(filename):
 
 ################################################################################
 
-_GetPrivateProfileSection = fun_fact(
-    _k32.GetPrivateProfileSectionW,
+_GetPrivateProfileSection = _k32.fun_fact(
+    "GetPrivateProfileSectionW",
     (DWORD, PWSTR, PWSTR, DWORD, PWSTR)
     )
 
@@ -784,8 +782,8 @@ def GetPrivateProfileSection(secname, filename):
 
 ################################################################################
 
-_WritePrivateProfileSection = fun_fact(
-    _k32.WritePrivateProfileSectionW,
+_WritePrivateProfileSection = _k32.fun_fact(
+    "WritePrivateProfileSectionW",
     (DWORD, PWSTR, PWSTR, PWSTR)
     )
 
@@ -803,8 +801,8 @@ def WritePrivateProfileSection(secname, secdata, filename):
 
 ################################################################################
 
-_GetEnvironmentVariable = fun_fact(
-    _k32.GetEnvironmentVariableW,
+_GetEnvironmentVariable = _k32.fun_fact(
+    "GetEnvironmentVariableW",
     (DWORD, PWSTR, PWSTR, DWORD)
     )
 
@@ -821,8 +819,8 @@ def GetEnvironmentVariable(name):
 
 ################################################################################
 
-_SetEnvironmentVariable = fun_fact(
-    _k32.SetEnvironmentVariableW,
+_SetEnvironmentVariable = _k32.fun_fact(
+    "SetEnvironmentVariableW",
     (BOOL, PWSTR, PWSTR)
     )
 
@@ -833,12 +831,12 @@ def SetEnvironmentVariable(name, value):
 
 # using void pointers instead of PWSTR so we can do pointer arithmatic.
 
-_FreeEnvironmentStrings = fun_fact(
-    _k32.FreeEnvironmentStringsW,
+_FreeEnvironmentStrings = _k32.fun_fact(
+    "FreeEnvironmentStringsW",
     (BOOL, PVOID)
     )
 
-_GetEnvironmentStrings = fun_fact(_k32.GetEnvironmentStringsW, (PVOID,))
+_GetEnvironmentStrings = _k32.fun_fact("GetEnvironmentStringsW", (PVOID,))
 
 def GetEnvironmentStrings():
     ptr = _GetEnvironmentStrings()
@@ -856,8 +854,8 @@ def get_env_as_dict():
 
 ################################################################################
 
-_SetEnvironmentStrings = fun_fact(
-    _k32.SetEnvironmentStringsW,
+_SetEnvironmentStrings = _k32.fun_fact(
+    "SetEnvironmentStringsW",
     (BOOL, PWSTR)
     )
 
@@ -866,8 +864,8 @@ def SetEnvironmentStrings(strings):
 
 ################################################################################
 
-_ExpandEnvironmentStrings = fun_fact(
-    _k32.ExpandEnvironmentStringsW,
+_ExpandEnvironmentStrings = _k32.fun_fact(
+    "ExpandEnvironmentStringsW",
     (DWORD, PWSTR, PWSTR, DWORD)
     )
 
@@ -942,8 +940,8 @@ class STARTUPINFOEX(ctypes.Structure):
 
 ################################################################################
 
-_InitializeProcThreadAttributeList = fun_fact(
-    _k32.InitializeProcThreadAttributeList,
+_InitializeProcThreadAttributeList = _k32.fun_fact(
+    "InitializeProcThreadAttributeList",
     (BOOL, PVOID, DWORD, DWORD, PSIZE_T)
     )
 
@@ -955,8 +953,8 @@ def InitializeProcThreadAttributeList(alst, acnt, flags, size=0):
 
 ################################################################################
 
-_UpdateProcThreadAttribute = fun_fact(
-    _k32.UpdateProcThreadAttribute,
+_UpdateProcThreadAttribute = _k32.fun_fact(
+    "UpdateProcThreadAttribute",
     (BOOL, PVOID, DWORD, UINT_PTR, PVOID, SIZE_T, PVOID, PSIZE_T)
     )
 
@@ -975,8 +973,9 @@ def UpdateProcThreadAttribute(alst, flags, id, attr):
 
 ################################################################################
 
-_DeleteProcThreadAttributeList = fun_fact(
-    _k32.DeleteProcThreadAttributeList, (None, PVOID)
+_DeleteProcThreadAttributeList = _k32.fun_fact(
+    "DeleteProcThreadAttributeList",
+    (None, PVOID)
     )
 
 def DeleteProcThreadAttributeList(alst):
@@ -1011,8 +1010,8 @@ class ProcThreadAttributeList:
 
 ################################################################################
 
-_CreateProcess = fun_fact(
-    _k32.CreateProcessW, (
+_CreateProcess = _k32.fun_fact(
+    "CreateProcessW", (
         BOOL,
         PWSTR,
         PWSTR,
@@ -1087,8 +1086,8 @@ def create_process(
 
 ################################################################################
 
-_CreateJobObject = fun_fact(
-    _k32.CreateJobObjectW,
+_CreateJobObject = _k32.fun_fact(
+    "CreateJobObjectW",
     (KHANDLE, PSECURITY_ATTRIBUTES, PWSTR)
     )
 
@@ -1100,8 +1099,8 @@ def CreateJobObject(attrib=None, name=None):
 
 ################################################################################
 
-_AssignProcessToJobObject = fun_fact(
-    _k32.AssignProcessToJobObject,
+_AssignProcessToJobObject = _k32.fun_fact(
+    "AssignProcessToJobObject",
     (BOOL, HANDLE, HANDLE)
     )
 
@@ -1130,8 +1129,8 @@ class JOBOBJECT_BASIC_ACCOUNTING_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-_SetInformationJobObject = fun_fact(
-    _k32.SetInformationJobObject,
+_SetInformationJobObject = _k32.fun_fact(
+    "SetInformationJobObject",
     (BOOL, HANDLE, INT, PVOID, DWORD)
     )
 
@@ -1141,8 +1140,8 @@ def SetInformationJobObject(job, cls, ct_info):
 
 ################################################################################
 
-_QueryInformationJobObject = fun_fact(
-    _k32.QueryInformationJobObject,
+_QueryInformationJobObject = _k32.fun_fact(
+    "QueryInformationJobObject",
     (BOOL, HANDLE, INT, PVOID, DWORD, PDWORD)
     )
 
@@ -1160,7 +1159,7 @@ def QueryInformationJobObject(job, cls, res_obj):
 
 ################################################################################
 
-_ResumeThread = fun_fact(_k32.ResumeThread, (DWORD, HANDLE))
+_ResumeThread = _k32.fun_fact("ResumeThread", (DWORD, HANDLE))
 
 def ResumeThread(thdl):
     scnt = _ResumeThread(thdl)
@@ -1169,7 +1168,7 @@ def ResumeThread(thdl):
 
 ################################################################################
 
-_GetPriorityClass = fun_fact(_k32.GetPriorityClass, (DWORD, HANDLE))
+_GetPriorityClass = _k32.fun_fact("GetPriorityClass", (DWORD, HANDLE))
 
 def GetPriorityClass(phdl):
     raise_on_zero(result := _GetPriorityClass(phdl))
@@ -1177,14 +1176,14 @@ def GetPriorityClass(phdl):
 
 ################################################################################
 
-_SetPriorityClass = fun_fact(_k32.SetPriorityClass, (BOOL, HANDLE, DWORD))
+_SetPriorityClass = _k32.fun_fact("SetPriorityClass", (BOOL, HANDLE, DWORD))
 
 def SetPriorityClass(phdl, prio):
     raise_on_zero(_SetPriorityClass(phdl, prio))
 
 ################################################################################
 
-_GetThreadPriority = fun_fact(_k32.GetThreadPriority, (INT, HANDLE))
+_GetThreadPriority = _k32.fun_fact("GetThreadPriority", (INT, HANDLE))
 
 def GetThreadPriority(thdl):
     result = _GetThreadPriority(thdl)
@@ -1193,7 +1192,7 @@ def GetThreadPriority(thdl):
 
 ################################################################################
 
-_SetThreadPriority = fun_fact(_k32.SetThreadPriority, (BOOL, HANDLE, INT))
+_SetThreadPriority = _k32.fun_fact("SetThreadPriority", (BOOL, HANDLE, INT))
 
 def SetThreadPriority(thdl, prio):
     raise_on_zero(_SetThreadPriority(thdl, prio))
@@ -1211,14 +1210,17 @@ def _get_dir(func, order):
 
 ################################################################################
 
-_GetSystemDirectory = fun_fact(_k32.GetSystemDirectoryW, (UINT, PWSTR, UINT))
+_GetSystemDirectory = _k32.fun_fact("GetSystemDirectoryW", (UINT, PWSTR, UINT))
 
 def GetSystemDirectory():
     return _get_dir(_GetSystemDirectory, 1)
 
 ################################################################################
 
-_GetWindowsDirectory = fun_fact(_k32.GetWindowsDirectoryW, (UINT, PWSTR, UINT))
+_GetWindowsDirectory = _k32.fun_fact(
+    "GetWindowsDirectoryW",
+    (UINT, PWSTR, UINT)
+    )
 
 def GetWindowsDirectory():
     return _get_dir(_GetWindowsDirectory, 1)
@@ -1226,8 +1228,8 @@ def GetWindowsDirectory():
 
 ################################################################################
 
-_GetCurrentDirectory = fun_fact(
-    _k32.GetCurrentDirectoryW,
+_GetCurrentDirectory = _k32.fun_fact(
+    "GetCurrentDirectoryW",
     (DWORD, DWORD, PWSTR)
     )
 
@@ -1236,8 +1238,8 @@ def GetCurrentDirectory():
 
 ################################################################################
 
-_GetSystemWow64Directory = fun_fact(
-    _k32.GetSystemWow64DirectoryW,
+_GetSystemWow64Directory = _k32.fun_fact(
+    "GetSystemWow64DirectoryW",
     (UINT, PWSTR, UINT)
     )
 
@@ -1246,7 +1248,7 @@ def GetSystemWow64Directory():
 
 ################################################################################
 
-_SetCurrentDirectory = fun_fact(_k32.SetCurrentDirectoryW, (BOOL, PWSTR))
+_SetCurrentDirectory = _k32.fun_fact("SetCurrentDirectoryW", (BOOL, PWSTR))
 
 def SetCurrentDirectory(path):
     raise_on_zero(_SetCurrentDirectory(path))
@@ -1273,7 +1275,7 @@ PACTCTX = POINTER(ACTCTX)
 
 ################################################################################
 
-_CreateActCtx = fun_fact(_k32.CreateActCtxW, (HANDLE, PACTCTX))
+_CreateActCtx = _k32.fun_fact("CreateActCtxW", (HANDLE, PACTCTX))
 
 def CreateActCtx(actctx):
     res = _CreateActCtx(ref(actctx))
@@ -1282,7 +1284,7 @@ def CreateActCtx(actctx):
 
 ################################################################################
 
-_ActivateActCtx = fun_fact(_k32.ActivateActCtx, (BOOL, HANDLE, PULONG_PTR))
+_ActivateActCtx = _k32.fun_fact("ActivateActCtx", (BOOL, HANDLE, PULONG_PTR))
 
 def ActivateActCtx(ctx):
     cookie = ULONG_PTR()
@@ -1291,18 +1293,18 @@ def ActivateActCtx(ctx):
 
 ################################################################################
 
-_DeactivateActCtx = fun_fact(_k32.DeactivateActCtx, (BOOL, DWORD, ULONG_PTR))
+_DeactivateActCtx = _k32.fun_fact("DeactivateActCtx", (BOOL, DWORD, ULONG_PTR))
 
 def DeactivateActCtx(flags, cookie):
     raise_on_zero(_DeactivateActCtx(flags, cookie))
 
 ################################################################################
 
-ReleaseActCtx = fun_fact(_k32.ReleaseActCtx, (None, HANDLE))
+ReleaseActCtx = _k32.fun_fact("ReleaseActCtx", (None, HANDLE))
 
 ################################################################################
 
-_GlobalAddAtom = fun_fact(_k32.GlobalAddAtomW, (WORD, PWSTR))
+_GlobalAddAtom = _k32.fun_fact("GlobalAddAtomW", (WORD, PWSTR))
 
 def GlobalAddAtom(name):
     atom = _GlobalAddAtom(name)
@@ -1316,11 +1318,13 @@ def global_add_atom(name):
 
 ################################################################################
 
-GlobalDeleteAtom = fun_fact(_k32.GlobalDeleteAtom, (None, WORD))
+GlobalDeleteAtom = _k32.fun_fact("GlobalDeleteAtom", (None, WORD))
 
 ################################################################################
 
-_GlobalGetAtomName = fun_fact(_k32.GlobalGetAtomNameW, (UINT, WORD, PWSTR, INT))
+_GlobalGetAtomName = _k32.fun_fact(
+    "GlobalGetAtomNameW",
+    (UINT, WORD, PWSTR, INT))
 
 def GlobalGetAtomName(atom):
     size = 512
@@ -1335,7 +1339,7 @@ def GlobalGetAtomName(atom):
 
 ################################################################################
 
-_FreeLibrary = fun_fact(_k32.FreeLibrary, (BOOL, HANDLE))
+_FreeLibrary = _k32.fun_fact("FreeLibrary", (BOOL, HANDLE))
 
 def FreeLibrary(hmod):
     raise_on_zero(_FreeLibrary(hmod))
@@ -1347,7 +1351,7 @@ class HMODULE(ScdToBeClosed, HANDLE, close_func=FreeLibrary, invalid=0):
 
 ################################################################################
 
-_LoadLibraryEx = fun_fact(_k32.LoadLibraryExW, (HANDLE, PWSTR, HANDLE, DWORD))
+_LoadLibraryEx = _k32.fun_fact("LoadLibraryExW", (HANDLE, PWSTR, HANDLE, DWORD))
 
 def LoadLibraryEx(filename, flags=0):
     hmod = HMODULE(_LoadLibraryEx(filename, None, flags))
@@ -1428,8 +1432,8 @@ def _EnumResNameCb(hmod, typ, name, ctxt):
         # keep on enumerating if the callback fails to return a value
         return res if res is not None else True
 
-_EnumResourceNames = fun_fact(
-    _k32.EnumResourceNamesW,
+_EnumResourceNames = _k32.fun_fact(
+    "EnumResourceNamesW",
     (BOOL, HANDLE, PWSTR, _EnumResNameCallback, CallbackContextPtr)
     )
 
@@ -1458,9 +1462,7 @@ def get_resource_names(hmod, typ):
 
 ################################################################################
 
-_FindResource = fun_fact(
-    _k32.FindResourceW, (HANDLE, HANDLE, PWSTR, PWSTR)
-    )
+_FindResource = _k32.fun_fact("FindResourceW", (HANDLE, HANDLE, PWSTR, PWSTR))
 
 def FindResource(hmod, name, typ):
     name = name if isinstance(name, PWSTR) else PWSTR(name)
@@ -1471,7 +1473,7 @@ def FindResource(hmod, name, typ):
 
 ################################################################################
 
-_SizeofResource = fun_fact(_k32.SizeofResource, (DWORD, HANDLE, HANDLE))
+_SizeofResource = _k32.fun_fact("SizeofResource", (DWORD, HANDLE, HANDLE))
 
 def SizeofResource(hmod, hrsc):
     res = _SizeofResource(hmod, hrsc)
@@ -1480,7 +1482,7 @@ def SizeofResource(hmod, hrsc):
 
 ################################################################################
 
-_LoadResource = fun_fact(_k32.LoadResource, (PVOID, HANDLE, HANDLE))
+_LoadResource = _k32.fun_fact("LoadResource", (PVOID, HANDLE, HANDLE))
 
 def LoadResource(hmod, hrsc):
     res = _LoadResource(hmod, hrsc)
@@ -1568,7 +1570,7 @@ class SYSTEM_INFO(ctypes.Structure):
         )
 PSYSTEM_INFO = POINTER(SYSTEM_INFO)
 
-_GetSystemInfo = fun_fact(_k32.GetSystemInfo, (None, PSYSTEM_INFO))
+_GetSystemInfo = _k32.fun_fact("GetSystemInfo", (None, PSYSTEM_INFO))
 
 def GetSystemInfo():
     si = SYSTEM_INFO()
@@ -1577,7 +1579,10 @@ def GetSystemInfo():
 
 ################################################################################
 
-_GetNativeSystemInfo = fun_fact(_k32.GetNativeSystemInfo, (None, PSYSTEM_INFO))
+_GetNativeSystemInfo = _k32.fun_fact(
+    "GetNativeSystemInfo",
+    (None, PSYSTEM_INFO)
+    )
 
 def GetNativeSystemInfo():
     si = SYSTEM_INFO()
@@ -1586,7 +1591,7 @@ def GetNativeSystemInfo():
 
 ################################################################################
 
-_IsWow64Process = fun_fact(_k32.IsWow64Process, (BOOL, HANDLE, PBOOL))
+_IsWow64Process = _k32.fun_fact("IsWow64Process", (BOOL, HANDLE, PBOOL))
 
 def IsWow64Process(hprocess):
     res = BOOL()
@@ -1599,8 +1604,8 @@ def get_wow64_info(hprocess):
     mach = USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
     proc = USHORT(IMAGE_FILE_MACHINE_UNKNOWN)
     try:
-        _IsWow64Process2 = fun_fact(
-            _k32.IsWow64Process2,
+        _IsWow64Process2 = _k32.fun_fact(
+            "IsWow64Process2",
             (BOOL, HANDLE, PUSHORT, PUSHORT)
             )
     except AttributeError:
@@ -1615,7 +1620,7 @@ def get_wow64_info(hprocess):
 
 ################################################################################
 
-_GetStdHandle = fun_fact(_k32.GetStdHandle, (HANDLE, DWORD))
+_GetStdHandle = _k32.fun_fact("GetStdHandle", (HANDLE, DWORD))
 
 def GetStdHandle(nhdl):
     res = _GetStdHandle(nhdl)
@@ -1624,7 +1629,7 @@ def GetStdHandle(nhdl):
 
 ################################################################################
 
-_GetFileType = fun_fact(_k32.GetFileType, (DWORD, HANDLE))
+_GetFileType = _k32.fun_fact("GetFileType", (DWORD, HANDLE))
 
 def GetFileType(hdl):
     res = _GetFileType(hdl)
@@ -1635,8 +1640,8 @@ def GetFileType(hdl):
 
 ################################################################################
 
-_SetConsoleTextAttribute = fun_fact(
-    _k32.SetConsoleTextAttribute,
+_SetConsoleTextAttribute = _k32.fun_fact(
+    "SetConsoleTextAttribute",
     (BOOL, HANDLE, WORD)
     )
 
@@ -1671,8 +1676,8 @@ PCONSOLE_SCREEN_BUFFER_INFO = POINTER(CONSOLE_SCREEN_BUFFER_INFO)
 
 ################################################################################
 
-_GetConsoleScreenBufferInfo = fun_fact(
-    _k32.GetConsoleScreenBufferInfo,
+_GetConsoleScreenBufferInfo = _k32.fun_fact(
+    "GetConsoleScreenBufferInfo",
     (BOOL, HANDLE, PCONSOLE_SCREEN_BUFFER_INFO)
     )
 
@@ -1683,8 +1688,8 @@ def GetConsoleScreenBufferInfo(hcon):
 
 ################################################################################
 
-_FillConsoleOutputCharacter = fun_fact(
-    _k32.FillConsoleOutputCharacterW,
+_FillConsoleOutputCharacter = _k32.fun_fact(
+    "FillConsoleOutputCharacterW",
     (BOOL, HANDLE, WCHAR, DWORD, COORD, PDWORD)
     )
 
@@ -1697,8 +1702,8 @@ def FillConsoleOutputCharacter(hdl, char, length, coord):
 
 ################################################################################
 
-_FillConsoleOutputAttribute = fun_fact(
-    _k32.FillConsoleOutputCharacterW,
+_FillConsoleOutputAttribute = _k32.fun_fact(
+    "FillConsoleOutputCharacterW",
     (BOOL, HANDLE, WORD, DWORD, COORD, PDWORD)
     )
 
@@ -1711,8 +1716,9 @@ def FillConsoleOutputAttribute(hdl, attr, length, coord):
 
 ################################################################################
 
-_SetConsoleCursorPosition = fun_fact(
-    _k32.SetConsoleCursorPosition, (BOOL, HANDLE, COORD)
+_SetConsoleCursorPosition = _k32.fun_fact(
+    "SetConsoleCursorPosition",
+    (BOOL, HANDLE, COORD)
     )
 
 def SetConsoleCursorPosition(hdl, coord):
@@ -1741,9 +1747,7 @@ def cls(hdl=None):
 
 ################################################################################
 
-_GetConsoleMode = fun_fact(
-    _k32.GetConsoleMode, (BOOL, HANDLE, PDWORD)
-    )
+_GetConsoleMode = _k32.fun_fact("GetConsoleMode", (BOOL, HANDLE, PDWORD))
 
 def GetConsoleMode(hdl):
     mode = DWORD()
@@ -1752,9 +1756,7 @@ def GetConsoleMode(hdl):
 
 ################################################################################
 
-_SetConsoleMode = fun_fact(
-    _k32.SetConsoleMode, (BOOL, HANDLE, DWORD)
-    )
+_SetConsoleMode = _k32.fun_fact("SetConsoleMode", (BOOL, HANDLE, DWORD))
 
 def SetConsoleMode(hdl, mode):
     raise_on_zero(_SetConsoleMode(hdl, mode))
@@ -1771,8 +1773,9 @@ def enable_virt_term(hdl=None):
 
 ################################################################################
 
-_GetNumberOfConsoleInputEvents  = fun_fact(
-    _k32.GetNumberOfConsoleInputEvents, (BOOL, HANDLE, PDWORD)
+_GetNumberOfConsoleInputEvents  = _k32.fun_fact(
+    "GetNumberOfConsoleInputEvents",
+    (BOOL, HANDLE, PDWORD)
     )
 
 def GetNumberOfConsoleInputEvents(hdl):
@@ -1834,8 +1837,9 @@ PINPUT_RECORD = POINTER(INPUT_RECORD)
 
 ################################################################################
 
-_ReadConsoleInput  = fun_fact(
-    _k32.ReadConsoleInputW , (BOOL, HANDLE, PINPUT_RECORD, DWORD, PDWORD)
+_ReadConsoleInput  = _k32.fun_fact(
+    "ReadConsoleInputW",
+    (BOOL, HANDLE, PINPUT_RECORD, DWORD, PDWORD)
     )
 
 def ReadConsoleInput(hdl, num_records=1):
@@ -1847,11 +1851,11 @@ def ReadConsoleInput(hdl, num_records=1):
 
 ################################################################################
 
-SetErrorMode = fun_fact(_k32.SetErrorMode, (UINT, UINT))
+SetErrorMode = _k32.fun_fact("SetErrorMode", (UINT, UINT))
 
 ################################################################################
 
-_SetThreadErrorMode = fun_fact(_k32.SetThreadErrorMode, (BOOL, DWORD, PDWORD))
+_SetThreadErrorMode = _k32.fun_fact("SetThreadErrorMode", (BOOL, DWORD, PDWORD))
 
 def SetThreadErrorMode(mode):
     old = DWORD()
@@ -1860,7 +1864,7 @@ def SetThreadErrorMode(mode):
 
 ################################################################################
 
-_FindClose = fun_fact(_k32.FindClose, (BOOL, HANDLE))
+_FindClose = _k32.fun_fact("FindClose", (BOOL, HANDLE))
 
 def FindClose(hdl):
     raise_on_zero(_FindClose(hdl))
@@ -1877,8 +1881,9 @@ class FFHANDLE(
 
 ################################################################################
 
-_FindFirstFile = fun_fact(
-    _k32.FindFirstFileW, (HANDLE, PWSTR, PWIN32_FIND_DATA)
+_FindFirstFile = _k32.fun_fact(
+    "FindFirstFileW",
+    (HANDLE, PWSTR, PWIN32_FIND_DATA)
     )
 
 def FindFirstFile(name, ignore_not_found=False):
@@ -1893,9 +1898,7 @@ def FindFirstFile(name, ignore_not_found=False):
 
 ################################################################################
 
-_FindNextFile = fun_fact(
-    _k32.FindNextFileW, (BOOL, HANDLE, PWIN32_FIND_DATA)
-    )
+_FindNextFile = _k32.fun_fact("FindNextFileW", (BOOL, HANDLE, PWIN32_FIND_DATA))
 
 def FindNextFile(hdl):
     find_data = WIN32_FIND_DATA()
@@ -1943,8 +1946,9 @@ def find_file(name):
 
 ################################################################################
 
-_FindFirstFileName = fun_fact(
-    _k32.FindFirstFileNameW, (HANDLE, PWSTR, DWORD, PDWORD, PWSTR)
+_FindFirstFileName = _k32.fun_fact(
+    "FindFirstFileNameW",
+    (HANDLE, PWSTR, DWORD, PDWORD, PWSTR)
     )
 
 def FindFirstFileName(name):
@@ -1964,8 +1968,9 @@ def FindFirstFileName(name):
 
 ################################################################################
 
-_FindNextFileName = fun_fact(
-    _k32.FindNextFileNameW, (BOOL, HANDLE, PDWORD, PWSTR)
+_FindNextFileName = _k32.fun_fact(
+    "FindNextFileNameW",
+    (BOOL, HANDLE, PDWORD, PWSTR)
     )
 
 def FindNextFileName(hdl):
@@ -2042,8 +2047,9 @@ PREASON_CONTEXT = POINTER(REASON_CONTEXT)
 
 ################################################################################
 
-_PowerCreateRequest = fun_fact(
-    _k32.PowerCreateRequest, (HANDLE, PREASON_CONTEXT)
+_PowerCreateRequest = _k32.fun_fact(
+    "PowerCreateRequest",
+    (HANDLE, PREASON_CONTEXT)
     )
 
 def PowerCreateRequest(reason):
@@ -2053,15 +2059,19 @@ def PowerCreateRequest(reason):
 
 ################################################################################
 
-_PowerSetRequest = fun_fact(_k32.PowerSetRequest, (BOOL, HANDLE, PowerRequest))
+_PowerSetRequest = _k32.fun_fact(
+    "PowerSetRequest",
+    (BOOL, HANDLE, PowerRequest)
+    )
 
 def PowerSetRequest(hdl, pwr_request):
     raise_on_zero(_PowerSetRequest(hdl, pwr_request))
 
 ################################################################################
 
-_PowerClearRequest = fun_fact(
-    _k32.PowerClearRequest, (BOOL, HANDLE, PowerRequest)
+_PowerClearRequest = _k32.fun_fact(
+    "PowerClearRequest",
+    (BOOL, HANDLE, PowerRequest)
     )
 
 def PowerClearRequest(hdl, pwr_request):
@@ -2077,12 +2087,13 @@ def create_power_request(reason_str, pwr_request=PowerRequest.Inactive):
 
 ################################################################################
 
-GetDriveType = fun_fact(_k32.GetDriveTypeW, (UINT, PWSTR))
+GetDriveType = _k32.fun_fact("GetDriveTypeW", (UINT, PWSTR))
 
 ################################################################################
 
-_GetLogicalDriveStrings = fun_fact(
-    _k32.GetLogicalDriveStringsW, (DWORD, DWORD, PWSTR)
+_GetLogicalDriveStrings = _k32.fun_fact(
+    "GetLogicalDriveStringsW",
+    (DWORD, DWORD, PWSTR)
     )
 
 def GetLogicalDriveStrings():
@@ -2093,7 +2104,7 @@ def GetLogicalDriveStrings():
 
 ################################################################################
 
-_FindFirstVolume = fun_fact(_k32.FindFirstVolumeW, (HANDLE, PWSTR, DWORD))
+_FindFirstVolume = _k32.fun_fact("FindFirstVolumeW", (HANDLE, PWSTR, DWORD))
 
 def FindFirstVolume():
     size = 256
@@ -2104,7 +2115,7 @@ def FindFirstVolume():
 
 ################################################################################
 
-_FindNextVolume = fun_fact(_k32.FindNextVolumeW, (BOOL, HANDLE, PWSTR, DWORD))
+_FindNextVolume = _k32.fun_fact("FindNextVolumeW", (BOOL, HANDLE, PWSTR, DWORD))
 
 def FindNextVolume(hdl):
     size = 256
@@ -2114,7 +2125,7 @@ def FindNextVolume(hdl):
 
 ################################################################################
 
-_FindVolumeClose = fun_fact(_k32.FindVolumeClose, (BOOL, HANDLE))
+_FindVolumeClose = _k32.fun_fact("FindVolumeClose", (BOOL, HANDLE))
 
 def FindVolumeClose(hdl):
     raise_on_zero(_FindVolumeClose(hdl))
@@ -2135,8 +2146,9 @@ def enum_volumes():
 
 ################################################################################
 
-_GetVolumePathNamesForVolumeName = fun_fact(
-    _k32.GetVolumePathNamesForVolumeNameW, (BOOL, PWSTR, PWSTR, DWORD, PDWORD)
+_GetVolumePathNamesForVolumeName = _k32.fun_fact(
+    "GetVolumePathNamesForVolumeNameW",
+    (BOOL, PWSTR, PWSTR, DWORD, PDWORD)
     )
 
 def GetVolumePathNamesForVolumeName(vol):
@@ -2151,8 +2163,9 @@ def GetVolumePathNamesForVolumeName(vol):
 
 ################################################################################
 
-_ReadProcessMemory = fun_fact(
-    _k32.ReadProcessMemory, (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
+_ReadProcessMemory = _k32.fun_fact(
+    "ReadProcessMemory",
+    (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
     )
 
 def ReadProcessMemory(hdl, addr, length):
@@ -2162,8 +2175,9 @@ def ReadProcessMemory(hdl, addr, length):
 
 ################################################################################
 
-_WriteProcessMemory = fun_fact(
-    _k32.WriteProcessMemory, (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
+_WriteProcessMemory = _k32.fun_fact(
+    "WriteProcessMemory",
+    (BOOL, HANDLE, PVOID, PVOID, SIZE_T, PSIZE_T)
     )
 
 def WriteProcessMemory(hdl, addr, data):
@@ -2213,8 +2227,9 @@ class BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
         )
 PBY_HANDLE_FILE_INFORMATION = POINTER(BY_HANDLE_FILE_INFORMATION)
 
-_GetFileInformationByHandle = fun_fact(
-    _k32.GetFileInformationByHandle, (BOOL, HANDLE, PBY_HANDLE_FILE_INFORMATION)
+_GetFileInformationByHandle = _k32.fun_fact(
+    "GetFileInformationByHandle",
+    (BOOL, HANDLE, PBY_HANDLE_FILE_INFORMATION)
     )
 
 def GetFileInformationByHandle(hdl):
@@ -2224,8 +2239,8 @@ def GetFileInformationByHandle(hdl):
 
 ################################################################################
 
-_CreateFileMapping = fun_fact(
-    _k32.CreateFileMappingW, (
+_CreateFileMapping = _k32.fun_fact(
+    "CreateFileMappingW", (
         HANDLE,
         HANDLE,
         PSECURITY_ATTRIBUTES,
@@ -2252,8 +2267,9 @@ def CreateFileMapping(fhdl, sec_attr, prot, maxsize, name=None):
 
 ################################################################################
 
-_MapViewOfFile = fun_fact(
-    _k32.MapViewOfFile, (PVOID, HANDLE, DWORD, DWORD, DWORD, SIZE_T)
+_MapViewOfFile = _k32.fun_fact(
+    "MapViewOfFile",
+    (PVOID, HANDLE, DWORD, DWORD, DWORD, SIZE_T)
     )
 
 def MapViewOfFile(mapping, acc, offset, size):
@@ -2263,14 +2279,14 @@ def MapViewOfFile(mapping, acc, offset, size):
 
 ################################################################################
 
-_UnmapViewOfFile = fun_fact(_k32.UnmapViewOfFile, (BOOL, PVOID))
+_UnmapViewOfFile = _k32.fun_fact("UnmapViewOfFile", (BOOL, PVOID))
 
 def UnmapViewOfFile(addr):
     raise_on_zero(_UnmapViewOfFile(addr))
 
 ################################################################################
 
-_GetFileSizeEx = fun_fact(_k32.GetFileSizeEx, (BOOL, HANDLE, PLARGE_INTEGER))
+_GetFileSizeEx = _k32.fun_fact("GetFileSizeEx", (BOOL, HANDLE, PLARGE_INTEGER))
 
 def GetFileSizeEx(hdl):
     size = LARGE_INTEGER()
@@ -2281,7 +2297,7 @@ GetFileSize = GetFileSizeEx
 
 ################################################################################
 
-_AddDllDirectory = fun_fact(_k32.AddDllDirectory, (PVOID, PWSTR))
+_AddDllDirectory = _k32.fun_fact("AddDllDirectory", (PVOID, PWSTR))
 
 def AddDllDirectory(dir_name):
     cookie = _AddDllDirectory(dir_name)
@@ -2290,7 +2306,7 @@ def AddDllDirectory(dir_name):
 
 ################################################################################
 
-_RemoveDllDirectory = fun_fact(_k32.RemoveDllDirectory, (BOOL, PVOID))
+_RemoveDllDirectory = _k32.fun_fact("RemoveDllDirectory", (BOOL, PVOID))
 
 def RemoveDllDirectory(cookie):
     raise_on_zero(_RemoveDllDirectory(cookie))

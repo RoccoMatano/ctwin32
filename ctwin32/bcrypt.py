@@ -20,10 +20,10 @@ from .wtypes import (
     ScdToBeClosed,
     ULONG,
     )
-from . import ref, fun_fact
+from . import ApiDll, ref
 from .ntdll import raise_failed_status, STATUS_INVALID_SIGNATURE
 
-_bcr = ctypes.WinDLL("bcrypt.dll", use_last_error=True)
+_bcr = ApiDll("bcrypt.dll")
 
 ################################################################################
 
@@ -116,9 +116,7 @@ BCRYPT_HKDF_ALGORITHM              = "HKDF"
 
 ################################################################################
 
-_BCryptDestroyKey = fun_fact(
-    _bcr.BCryptDestroyKey, (NTSTATUS, HANDLE)
-    )
+_BCryptDestroyKey = _bcr.fun_fact("BCryptDestroyKey", (NTSTATUS, HANDLE))
 
 def BCryptDestroyKey(key):
     raise_failed_status(_BCryptDestroyKey(key))
@@ -135,9 +133,7 @@ class BCRYPT_KEY(ScdToBeClosed, HANDLE, close_func=BCryptDestroyKey, invalid=0):
 
 ################################################################################
 
-_BCryptDestroyHash = fun_fact(
-    _bcr.BCryptDestroyHash, (NTSTATUS, HANDLE)
-    )
+_BCryptDestroyHash = _bcr.fun_fact("BCryptDestroyHash", (NTSTATUS, HANDLE))
 
 def BCryptDestroyHash(hash):
     raise_failed_status(_BCryptDestroyHash(hash))
@@ -152,8 +148,9 @@ class BCRYPT_HASH(
 
 ################################################################################
 
-_BCryptCloseAlgorithmProvider = fun_fact(
-    _bcr.BCryptCloseAlgorithmProvider, (NTSTATUS, HANDLE, ULONG)
+_BCryptCloseAlgorithmProvider = _bcr.fun_fact(
+    "BCryptCloseAlgorithmProvider",
+    (NTSTATUS, HANDLE, ULONG)
     )
 
 def BCryptCloseAlgorithmProvider(balg):
@@ -169,8 +166,9 @@ class BCRYPT_ALG(
 
 ################################################################################
 
-_BCryptOpenAlgorithmProvider = fun_fact(
-    _bcr.BCryptOpenAlgorithmProvider, (NTSTATUS, PHANDLE, PWSTR, PWSTR, ULONG)
+_BCryptOpenAlgorithmProvider = _bcr.fun_fact(
+    "BCryptOpenAlgorithmProvider",
+    (NTSTATUS, PHANDLE, PWSTR, PWSTR, ULONG)
     )
 
 def BCryptOpenAlgorithmProvider(alg, flags=0, impl=None):
@@ -182,8 +180,8 @@ def BCryptOpenAlgorithmProvider(alg, flags=0, impl=None):
 
 ################################################################################
 
-_BCryptGetProperty = fun_fact(
-    _bcr.BCryptGetProperty, (
+_BCryptGetProperty = _bcr.fun_fact(
+    "BCryptGetProperty", (
         NTSTATUS,
         HANDLE,
         PWSTR,
@@ -209,8 +207,8 @@ def get_property_ulong(obj, name):
 
 ################################################################################
 
-_BCryptSetProperty = fun_fact(
-    _bcr.BCryptSetProperty, (
+_BCryptSetProperty = _bcr.fun_fact(
+    "BCryptSetProperty", (
         NTSTATUS,
         HANDLE,
         PWSTR,
@@ -231,8 +229,8 @@ def BCryptSetProperty(obj, name, value):
 
 ################################################################################
 
-_BCryptCreateHash = fun_fact(
-    _bcr.BCryptCreateHash, (
+_BCryptCreateHash = _bcr.fun_fact(
+    "BCryptCreateHash", (
         NTSTATUS,
         HANDLE,
         PHANDLE,
@@ -262,8 +260,9 @@ def BCryptCreateHash(balg, obj_buf, secret=None):
 
 ################################################################################
 
-_BCryptHashData = fun_fact(
-    _bcr.BCryptHashData, (NTSTATUS, HANDLE, PCHAR, ULONG, ULONG)
+_BCryptHashData = _bcr.fun_fact(
+    "BCryptHashData",
+    (NTSTATUS, HANDLE, PCHAR, ULONG, ULONG)
     )
 
 def BCryptHashData(bhash, data):
@@ -271,8 +270,9 @@ def BCryptHashData(bhash, data):
 
 ################################################################################
 
-_BCryptFinishHash = fun_fact(
-    _bcr.BCryptFinishHash, (NTSTATUS, HANDLE, PCHAR, ULONG, ULONG)
+_BCryptFinishHash = _bcr.fun_fact(
+    "BCryptFinishHash",
+    (NTSTATUS, HANDLE, PCHAR, ULONG, ULONG)
     )
 
 def BCryptFinishHash(bhash, dig_size):
@@ -349,8 +349,8 @@ class BCryptHash:
 
 ################################################################################
 
-_BCryptExportKey = fun_fact(
-    _bcr.BCryptExportKey, (
+_BCryptExportKey = _bcr.fun_fact(
+    "BCryptExportKey", (
         NTSTATUS,
         HANDLE,
         HANDLE,
@@ -375,8 +375,9 @@ def BCryptExportKey(key, btype, exp_key=None):
 
 ################################################################################
 
-_BCryptGenerateKeyPair = fun_fact(
-    _bcr.BCryptGenerateKeyPair, (NTSTATUS, HANDLE, PHANDLE, ULONG, ULONG)
+_BCryptGenerateKeyPair = _bcr.fun_fact(
+    "BCryptGenerateKeyPair",
+    (NTSTATUS, HANDLE, PHANDLE, ULONG, ULONG)
     )
 
 def BCryptGenerateKeyPair(balg, key_len):
@@ -386,8 +387,9 @@ def BCryptGenerateKeyPair(balg, key_len):
 
 ################################################################################
 
-_BCryptFinalizeKeyPair = fun_fact(
-    _bcr.BCryptFinalizeKeyPair, (NTSTATUS, HANDLE, ULONG)
+_BCryptFinalizeKeyPair = _bcr.fun_fact(
+    "BCryptFinalizeKeyPair",
+    (NTSTATUS, HANDLE, ULONG)
     )
 
 def BCryptFinalizeKeyPair(key):
@@ -395,8 +397,8 @@ def BCryptFinalizeKeyPair(key):
 
 ################################################################################
 
-_BCryptGenerateSymmetricKey = fun_fact(
-    _bcr.BCryptGenerateSymmetricKey, (
+_BCryptGenerateSymmetricKey = _bcr.fun_fact(
+    "BCryptGenerateSymmetricKey", (
         NTSTATUS,
         HANDLE,
         PHANDLE,
@@ -427,8 +429,8 @@ def BCryptGenerateSymmetricKey(balg, secret):
 
 ################################################################################
 
-_BCryptImportKeyPair = fun_fact(
-    _bcr.BCryptImportKeyPair, (
+_BCryptImportKeyPair = _bcr.fun_fact(
+    "BCryptImportKeyPair", (
         NTSTATUS,
         HANDLE,
         HANDLE,
@@ -449,8 +451,8 @@ def BCryptImportKeyPair(balg, btype, kbuf):
 
 ################################################################################
 
-_BCryptSignHash = fun_fact(
-    _bcr.BCryptSignHash, (
+_BCryptSignHash = _bcr.fun_fact(
+    "BCryptSignHash", (
         NTSTATUS,
         HANDLE,
         PVOID,
@@ -494,8 +496,8 @@ def BCryptSignHash(key, digest, flags=0):
 
 ################################################################################
 
-_BCryptVerifySignature = fun_fact(
-    _bcr.BCryptVerifySignature, (
+_BCryptVerifySignature = _bcr.fun_fact(
+    "BCryptVerifySignature", (
         NTSTATUS,
         HANDLE,
         PVOID,
@@ -523,8 +525,8 @@ def BCryptVerifySignature(key, digest, signature):
 
 ################################################################################
 
-_BCryptEncrypt = fun_fact(
-    _bcr.BCryptEncrypt, (
+_BCryptEncrypt = _bcr.fun_fact(
+    "BCryptEncrypt", (
         NTSTATUS,
         HANDLE,
         PCHAR,
@@ -574,8 +576,8 @@ def BCryptEncrypt(key, input, iv=None, flags=0):
 
 ################################################################################
 
-_BCryptDecrypt = fun_fact(
-    _bcr.BCryptDecrypt, (
+_BCryptDecrypt = _bcr.fun_fact(
+    "BCryptDecrypt", (
         NTSTATUS,
         HANDLE,
         PCHAR,

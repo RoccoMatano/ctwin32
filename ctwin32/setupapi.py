@@ -27,9 +27,9 @@ from .wtypes import (
     WCHAR,
     )
 from . import (
+    ApiDll,
     ref,
     raise_on_zero,
-    fun_fact,
     suppress_winerr,
     INVALID_HANDLE_VALUE,
     DIGCF_PRESENT,
@@ -51,7 +51,7 @@ from .cfgmgr import (
     )
 from .advapi import registry_to_py
 
-_sua = ctypes.WinDLL("setupapi.dll", use_last_error=True)
+_sua = ApiDll("setupapi.dll")
 
 # SetupAPI.h packs structures differently in 64 and 32 bit mode!
 _SUA_PACK = 8 if PTR_HAS_64_BITS else 1
@@ -135,8 +135,9 @@ def make_dev_iface_detail(size):
 
 ################################################################################
 
-_SetupDiDestroyDeviceInfoList = fun_fact(
-    _sua.SetupDiDestroyDeviceInfoList, (BOOL, HANDLE)
+_SetupDiDestroyDeviceInfoList = _sua.fun_fact(
+    "SetupDiDestroyDeviceInfoList",
+    (BOOL, HANDLE)
     )
 
 def SetupDiDestroyDeviceInfoList(info_set):
@@ -154,8 +155,8 @@ class HDEVINFO(
 
 ################################################################################
 
-_SetupDiGetClassDevs = fun_fact(
-    _sua.SetupDiGetClassDevsW,
+_SetupDiGetClassDevs = _sua.fun_fact(
+    "SetupDiGetClassDevsW",
     (HANDLE, PGUID, PWSTR, HWND, DWORD)
     )
 
@@ -174,8 +175,8 @@ def SetupDiGetClassDevs(
 
 ################################################################################
 
-_SetupDiEnumDeviceInfo = fun_fact(
-    _sua.SetupDiEnumDeviceInfo,
+_SetupDiEnumDeviceInfo = _sua.fun_fact(
+    "SetupDiEnumDeviceInfo",
     (BOOL, HANDLE, DWORD, PSP_DEVINFO_DATA)
     )
 
@@ -206,8 +207,8 @@ def get_device_classes(flags=0):
 
 ################################################################################
 
-_SetupDiClassNameFromGuid = fun_fact(
-    _sua.SetupDiClassNameFromGuidW,
+_SetupDiClassNameFromGuid = _sua.fun_fact(
+    "SetupDiClassNameFromGuidW",
     (BOOL, PGUID, PWSTR, DWORD, PDWORD)
     )
 
@@ -228,8 +229,9 @@ def SetupDiClassNameFromGuid(guid):
 
 ################################################################################
 
-_SetupDiRemoveDevice = fun_fact(
-    _sua.SetupDiRemoveDevice, (BOOL, HANDLE, PSP_DEVINFO_DATA)
+_SetupDiRemoveDevice = _sua.fun_fact(
+    "SetupDiRemoveDevice",
+    (BOOL, HANDLE, PSP_DEVINFO_DATA)
     )
 
 def SetupDiRemoveDevice(info_set, deinda):
@@ -237,8 +239,9 @@ def SetupDiRemoveDevice(info_set, deinda):
 
 ################################################################################
 
-_SetupDiCreateDeviceInfoList = fun_fact(
-    _sua.SetupDiCreateDeviceInfoList, (HANDLE, PGUID, HWND)
+_SetupDiCreateDeviceInfoList = _sua.fun_fact(
+    "SetupDiCreateDeviceInfoList",
+    (HANDLE, PGUID, HWND)
     )
 
 def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
@@ -250,8 +253,8 @@ def SetupDiCreateDeviceInfoList(guid=None, hwnd=None):
 
 ################################################################################
 
-_SetupDiGetDeviceInstanceId = fun_fact(
-    _sua.SetupDiGetDeviceInstanceIdW,
+_SetupDiGetDeviceInstanceId = _sua.fun_fact(
+    "SetupDiGetDeviceInstanceIdW",
     (BOOL, HANDLE, PSP_DEVINFO_DATA, PWSTR, DWORD, PDWORD)
     )
 
@@ -272,8 +275,8 @@ def SetupDiGetDeviceInstanceId(info_set, deinda):
 
 ################################################################################
 
-_SetupDiOpenDeviceInfo = fun_fact(
-    _sua.SetupDiOpenDeviceInfoW,
+_SetupDiOpenDeviceInfo = _sua.fun_fact(
+    "SetupDiOpenDeviceInfoW",
     (BOOL, HANDLE, PWSTR, HWND, DWORD, PSP_DEVINFO_DATA)
     )
 
@@ -284,8 +287,8 @@ def SetupDiOpenDeviceInfo(info_set, inst_id, hwnd=None, flags=0, p_info=None):
 
 ################################################################################
 
-_SetupDiClassGuidsFromNameEx = fun_fact(
-    _sua.SetupDiClassGuidsFromNameExW, (
+_SetupDiClassGuidsFromNameEx = _sua.fun_fact(
+    "SetupDiClassGuidsFromNameExW", (
         BOOL,
         PWSTR,
         PGUID,
@@ -402,8 +405,8 @@ def remove_non_present_devices():
 
 ################################################################################
 
-_SetupDiSetClassInstallParams = fun_fact(
-    _sua.SetupDiSetClassInstallParamsW,
+_SetupDiSetClassInstallParams = _sua.fun_fact(
+    "SetupDiSetClassInstallParamsW",
     (BOOL, HANDLE, PSP_DEVINFO_DATA, PSP_PROPCHANGE_PARAMS, DWORD)
     )
 
@@ -419,8 +422,8 @@ def SetupDiSetClassInstallParams(info_set, deinda, pparams):
 
 ################################################################################
 
-_SetupDiCallClassInstaller = fun_fact(
-    _sua.SetupDiCallClassInstaller,
+_SetupDiCallClassInstaller = _sua.fun_fact(
+    "SetupDiCallClassInstaller",
     (BOOL, DWORD, HANDLE, PSP_DEVINFO_DATA)
     )
 
@@ -462,8 +465,8 @@ def disable_devices(guid=None, enumerator=None, rx=None):
 
 ################################################################################
 
-_SetupDiGetDeviceRegistryProperty = fun_fact(
-    _sua.SetupDiGetDeviceRegistryPropertyW, (
+_SetupDiGetDeviceRegistryProperty = _sua.fun_fact(
+    "SetupDiGetDeviceRegistryPropertyW", (
         BOOL,
         HANDLE,
         PSP_DEVINFO_DATA,
@@ -512,8 +515,8 @@ def desc_from_info_set(info_set, deinda):
 
 ################################################################################
 
-_SetupDiEnumDeviceInterfaces = fun_fact(
-    _sua.SetupDiEnumDeviceInterfaces, (
+_SetupDiEnumDeviceInterfaces = _sua.fun_fact(
+    "SetupDiEnumDeviceInterfaces", (
         BOOL,
         HANDLE,
         PSP_DEVINFO_DATA,
@@ -550,8 +553,8 @@ def enum_dev_interfaces(guid):
 
 ################################################################################
 
-_SetupDiGetDeviceInterfaceDetail = fun_fact(
-    _sua.SetupDiGetDeviceInterfaceDetailW, (
+_SetupDiGetDeviceInterfaceDetail = _sua.fun_fact(
+    "SetupDiGetDeviceInterfaceDetailW", (
         BOOL,
         HANDLE,
         PSP_DEVICE_INTERFACE_DATA,

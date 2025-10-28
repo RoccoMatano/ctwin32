@@ -24,23 +24,23 @@ from .wtypes import (
     WCHAR,
     )
 from . import (
+    ApiDll,
     ref,
     raise_if,
     raise_on_zero,
-    fun_fact,
     ETO_OPAQUE,
     HGDI_ERROR,
     )
 
-_gdi = ctypes.WinDLL("gdi32.dll", use_last_error=True)
+_gdi = ApiDll("gdi32.dll")
 
 ################################################################################
 
-GetDeviceCaps = fun_fact(_gdi.GetDeviceCaps, (INT, HANDLE, INT))
+GetDeviceCaps = _gdi.fun_fact("GetDeviceCaps", (INT, HANDLE, INT))
 
 ################################################################################
 
-_CreateFontIndirect = fun_fact(_gdi.CreateFontIndirectW, (HANDLE, PLOGFONT))
+_CreateFontIndirect = _gdi.fun_fact("CreateFontIndirectW", (HANDLE, PLOGFONT))
 
 def CreateFontIndirect(lf):
     res = _CreateFontIndirect(ref(lf))
@@ -49,7 +49,7 @@ def CreateFontIndirect(lf):
 
 ################################################################################
 
-_SelectObject = fun_fact(_gdi.SelectObject, (HANDLE, HANDLE, HANDLE))
+_SelectObject = _gdi.fun_fact("SelectObject", (HANDLE, HANDLE, HANDLE))
 
 def SelectObject(hdc, hobj):
     hprev = _SelectObject(hdc, hobj)
@@ -58,7 +58,7 @@ def SelectObject(hdc, hobj):
 
 ################################################################################
 
-_DeleteObject = fun_fact(_gdi.DeleteObject, (BOOL, HANDLE))
+_DeleteObject = _gdi.fun_fact("DeleteObject", (BOOL, HANDLE))
 
 def DeleteObject(hobj):
     raise_on_zero(_DeleteObject(hobj))
@@ -92,7 +92,7 @@ PTEXTMETRIC = POINTER(TEXTMETRIC)
 
 ################################################################################
 
-_GetTextMetrics = fun_fact(_gdi.GetTextMetricsW, (BOOL, HANDLE, PTEXTMETRIC))
+_GetTextMetrics = _gdi.fun_fact("GetTextMetricsW", (BOOL, HANDLE, PTEXTMETRIC))
 
 def GetTextMetrics(hdc):
     tm = TEXTMETRIC()
@@ -101,7 +101,7 @@ def GetTextMetrics(hdc):
 
 ################################################################################
 
-_GetStockObject = fun_fact(_gdi.GetStockObject, (HANDLE, INT))
+_GetStockObject = _gdi.fun_fact("GetStockObject", (HANDLE, INT))
 
 def GetStockObject(idx):
     obj = _GetStockObject(idx)
@@ -110,7 +110,7 @@ def GetStockObject(idx):
 
 ################################################################################
 
-_SetBkMode = fun_fact(_gdi.SetBkMode, (INT, HANDLE, INT))
+_SetBkMode = _gdi.fun_fact("SetBkMode", (INT, HANDLE, INT))
 
 def SetBkMode(hdc, mode):
     previous = _SetBkMode(hdc, mode)
@@ -119,7 +119,7 @@ def SetBkMode(hdc, mode):
 
 ################################################################################
 
-_SetBkColor = fun_fact(_gdi.SetBkColor, (DWORD, HANDLE, DWORD))
+_SetBkColor = _gdi.fun_fact("SetBkColor", (DWORD, HANDLE, DWORD))
 
 def SetBkColor(hdc, colorref):
     previous = _SetBkColor(hdc, colorref)
@@ -128,15 +128,15 @@ def SetBkColor(hdc, colorref):
 
 ################################################################################
 
-_TextOut = fun_fact(_gdi.TextOutW, (BOOL, HANDLE, INT, INT, PWSTR, INT))
+_TextOut = _gdi.fun_fact("TextOutW", (BOOL, HANDLE, INT, INT, PWSTR, INT))
 
 def TextOut(hdc, x, y, text):
     raise_on_zero(_TextOut(hdc, x, y, text, len(text)))
 
 ################################################################################
 
-_ExtTextOut = fun_fact(
-    _gdi.ExtTextOutW,
+_ExtTextOut = _gdi.fun_fact(
+    "ExtTextOutW",
     (BOOL, HANDLE, INT, INT, UINT, PRECT, PWSTR, UINT, PINT)
     )
 
@@ -155,7 +155,7 @@ def fill_solid_rect(hdc, rect, colorref):
 
 ################################################################################
 
-_GetObject = fun_fact(_gdi.GetObjectW, (INT, HANDLE, INT, PVOID))
+_GetObject = _gdi.fun_fact("GetObjectW", (INT, HANDLE, INT, PVOID))
 
 def GetObject(hdl):
     raise_on_zero(size := _GetObject(hdl, 0, None))

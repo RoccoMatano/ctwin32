@@ -5,7 +5,6 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     BOOL,
     HANDLE,
@@ -13,8 +12,8 @@ from .wtypes import (
     PVOID,
     )
 from . import (
+    ApiDll,
     ref,
-    fun_fact,
     raise_on_zero,
     multi_str_from_addr,
     TOKEN_READ,
@@ -24,14 +23,16 @@ from . import (
 
 ################################################################################
 
-_ue = ctypes.WinDLL("userenv.dll", use_last_error=True)
+_ue = ApiDll("userenv.dll")
 
-_DestroyEnvironmentBlock = fun_fact(
-    _ue.DestroyEnvironmentBlock, (BOOL, PVOID)
+_DestroyEnvironmentBlock = _ue.fun_fact(
+    "DestroyEnvironmentBlock",
+    (BOOL, PVOID)
     )
 
-_CreateEnvironmentBlock = fun_fact(
-    _ue.CreateEnvironmentBlock, (BOOL, PPVOID, HANDLE, BOOL)
+_CreateEnvironmentBlock = _ue.fun_fact(
+    "CreateEnvironmentBlock",
+    (BOOL, PPVOID, HANDLE, BOOL)
     )
 
 ################################################################################

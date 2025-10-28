@@ -16,6 +16,8 @@ http://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - use iphlpapi.netifaces in sample netifaces.py
+- replaced ctypes.WinDLL with ctwin32.ApiDll
+- renamed kernel.AdjustTime -> kernel.adjust_time
 
 ## [4.0.0] - 2025-10-08
 

@@ -19,15 +19,15 @@ from .wtypes import (
     WORD,
     )
 from . import (
+    ApiDll,
     ref,
     raise_on_zero,
     suppress_winerr,
-    fun_fact,
     ns_from_struct,
     ERROR_RESOURCE_TYPE_NOT_FOUND,
     )
 
-_ver = ctypes.WinDLL("version.dll", use_last_error=True)
+_ver = ApiDll("version.dll")
 
 ################################################################################
 
@@ -50,8 +50,9 @@ class VS_FIXEDFILEINFO(ctypes.Structure):
 
 ################################################################################
 
-_GetFileVersionInfoSize = fun_fact(
-    _ver.GetFileVersionInfoSizeW, (DWORD, PWSTR, PDWORD)
+_GetFileVersionInfoSize = _ver.fun_fact(
+    "GetFileVersionInfoSizeW",
+    (DWORD, PWSTR, PDWORD)
     )
 
 def GetFileVersionInfoSize(fname):
@@ -62,8 +63,9 @@ def GetFileVersionInfoSize(fname):
 
 ################################################################################
 
-_GetFileVersionInfo = fun_fact(
-    _ver.GetFileVersionInfoW, (BOOL, PWSTR, DWORD, DWORD, PVOID)
+_GetFileVersionInfo = _ver.fun_fact(
+    "GetFileVersionInfoW",
+    (BOOL, PWSTR, DWORD, DWORD, PVOID)
     )
 
 def GetFileVersionInfo(fname, size=0):
@@ -75,8 +77,9 @@ def GetFileVersionInfo(fname, size=0):
 
 ################################################################################
 
-_VerQueryValue = fun_fact(
-    _ver.VerQueryValueW, (BOOL, PVOID, PWSTR, PPVOID, PUINT)
+_VerQueryValue = _ver.fun_fact(
+    "VerQueryValueW",
+    (BOOL, PVOID, PWSTR, PPVOID, PUINT)
     )
 
 def VerQueryValue(block, subblock):

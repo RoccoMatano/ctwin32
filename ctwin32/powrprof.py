@@ -16,8 +16,8 @@ from .wtypes import (
     )
 from .ntdll import raise_failed_status
 from . import (
+    ApiDll,
     ref,
-    fun_fact,
     raise_on_zero,
     ns_from_struct,
     SystemExecutionState,
@@ -27,10 +27,10 @@ from . import (
 
 ################################################################################
 
-_popro = ctypes.WinDLL("powrprof.dll", use_last_error=True)
+_popro = ApiDll("powrprof.dll")
 
-_CallNtPowerInformation = fun_fact(
-    _popro.CallNtPowerInformation,
+_CallNtPowerInformation = _popro.fun_fact(
+    "CallNtPowerInformation",
     (LONG, LONG, PVOID, ULONG, PVOID, ULONG),
     )
 
@@ -42,8 +42,8 @@ def CallNtPowerInformation(level, outsize=0, input=None):
 
 ################################################################################
 
-_PowerInformationWithPrivileges = fun_fact(
-    _popro.PowerInformationWithPrivileges,
+_PowerInformationWithPrivileges = _popro.fun_fact(
+    "PowerInformationWithPrivileges",
     (LONG, LONG, PVOID, ULONG, PVOID, ULONG),
     )
 
@@ -83,8 +83,8 @@ def get_system_processor_power_info():
 
 ################################################################################
 
-_SetSuspendState = fun_fact(
-    _popro.SetSuspendState,
+_SetSuspendState = _popro.fun_fact(
+    "SetSuspendState",
     (BOOLEAN, BOOLEAN, BOOLEAN, BOOLEAN)
     )
 

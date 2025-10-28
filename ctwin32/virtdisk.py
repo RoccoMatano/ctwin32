@@ -17,11 +17,11 @@ from .wtypes import (
     ULARGE_INTEGER,
     ULONG,
     )
-from . import ref, fun_fact, raise_on_err
+from . import ApiDll, ref, raise_on_err
 
 from .kernel import KHANDLE, PKHANDLE
 
-_vdisk = ctypes.WinDLL("virtdisk.dll", use_last_error=True)
+_vdisk = ApiDll("virtdisk.dll")
 
 ################################################################################
 
@@ -139,8 +139,8 @@ PATTACH_VIRTUAL_DISK_PARAMETERS = POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 
-_OpenVirtualDisk = fun_fact(
-    _vdisk.OpenVirtualDisk, (
+_OpenVirtualDisk = _vdisk.fun_fact(
+    "OpenVirtualDisk", (
         DWORD,
         PVIRTUAL_STORAGE_TYPE,
         PWSTR,
@@ -167,8 +167,8 @@ def OpenVirtualDisk(storage_type, path, access_mask, flags, parameters=None):
 
 ################################################################################
 
-_AttachVirtualDisk = fun_fact(
-    _vdisk.AttachVirtualDisk, (
+_AttachVirtualDisk = _vdisk.fun_fact(
+    "AttachVirtualDisk", (
         DWORD,
         KHANDLE,
         PVOID,  # no interest in supplying a security descriptor
@@ -193,13 +193,9 @@ def AttachVirtualDisk(hdl, flags, prov_flags=0, parameters=None):
 
 ################################################################################
 
-_DetachVirtualDisk = fun_fact(
-    _vdisk.DetachVirtualDisk, (
-        DWORD,
-        KHANDLE,
-        LONG,
-        ULONG,
-        )
+_DetachVirtualDisk = _vdisk.fun_fact(
+    "DetachVirtualDisk",
+    (DWORD, KHANDLE, LONG, ULONG)
     )
 
 def DetachVirtualDisk(hdl, flags=0, prov_flags=0):
