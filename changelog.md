@@ -12,6 +12,7 @@ http://semver.org/spec/v2.0.0.html).
 
 - iphlpapi.netifaces
 - ntdll.NtQueryTimerResolution
+- sample cnt_apis.py
 
 ### Changed
 
