@@ -5,8 +5,6 @@
 #
 ################################################################################
 
-import sys
-import traceback
 import datetime as _dt
 import collections as _collections
 from enum import IntEnum as _int_enum
@@ -1381,6 +1379,8 @@ class terminate_on_exception:
         # Before we do that, we try to inform the user.
 
         try:
+            import sys                # noqa: PLC0415
+            import traceback          # noqa: PLC0415
             from ctwin32 import user  # noqa: PLC0415
             info = "".join(traceback.format_exception(typ, val, tb))
             try:

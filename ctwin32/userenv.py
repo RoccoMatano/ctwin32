@@ -7,9 +7,14 @@
 
 from .wtypes import (
     BOOL,
+    DWORD,
     HANDLE,
+    PDWORD,
     PPVOID,
     PVOID,
+    PWSTR,
+    WinError,
+    string_buffer,
     )
 from . import (
     ApiDll,
@@ -35,6 +40,11 @@ _CreateEnvironmentBlock = _ue.fun_fact(
     (BOOL, PPVOID, HANDLE, BOOL)
     )
 
+_GetUserProfileDirectory = _ue.fun_fact(
+    "GetUserProfileDirectoryW",
+    (BOOL, HANDLE, PWSTR, PDWORD)
+    )
+
 ################################################################################
 
 def _env_block_from_token(token, inherit):
@@ -47,19 +57,39 @@ def _env_block_from_token(token, inherit):
 
 ################################################################################
 
-def CreateEnvironmentBlock(token=None, inherit=False):
+def _profile_directory_from_token(token):
+    size = DWORD(0)
+    if _GetUserProfileDirectory(token, None, ref(size)):
+        raise WinError()
+    dname = string_buffer(size.value)
+    raise_on_zero(_GetUserProfileDirectory(token, dname, ref(size)))
+    return dname.value
+
+################################################################################
+
+def _func_opt_token(func, token, *args):
     if token is None:
         with advapi.OpenProcessToken(
                 kernel.GetCurrentProcess(),
                 TOKEN_READ
                 ) as t:
-            return _env_block_from_token(t, inherit)
+            return func(*(t, *args))
     else:
-        return _env_block_from_token(token, inherit)
+        return func(*(token, *args))
+
+################################################################################
+
+def CreateEnvironmentBlock(token=None, inherit=False):
+    return _func_opt_token(_env_block_from_token, token, inherit)
 
 ################################################################################
 
 def create_env_block_as_dict(token=None, inherit=False):
     return kernel.env_str_to_dict(CreateEnvironmentBlock(token, inherit))
+
+################################################################################
+
+def GetUserProfileDirectory(token=None):
+    return _func_opt_token(_profile_directory_from_token, token)
 
 ################################################################################
