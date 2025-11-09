@@ -1620,6 +1620,16 @@ def get_wow64_info(hprocess):
 
 ################################################################################
 
+_IsProcessorFeaturePresent = _k32.fun_fact(
+    "IsProcessorFeaturePresent",
+    (BOOL, DWORD)
+    )
+
+def IsProcessorFeaturePresent(feature):
+    return bool(_IsProcessorFeaturePresent(feature))
+
+################################################################################
+
 _GetStdHandle = _k32.fun_fact("GetStdHandle", (HANDLE, DWORD))
 
 def GetStdHandle(nhdl):
