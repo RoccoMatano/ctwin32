@@ -512,9 +512,10 @@ _NtGetNextProcess = _nt.fun_fact(
 
 def NtGetNextProcess(current, access, attribs=0, flags=0):
     nxt = HANDLE()
-    # have to ignore returned NTSTATUS, success/failure is conveyed by the
-    # nxt handle
-    _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
+    status = _NtGetNextProcess(current, access, attribs, flags, ref(nxt))
+    if status == STATUS_NO_MORE_ENTRIES:
+        return None
+    raise_failed_status(status)
     return nxt.value
 
 ################################################################################

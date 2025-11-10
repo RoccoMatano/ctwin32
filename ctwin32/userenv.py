@@ -13,7 +13,6 @@ from .wtypes import (
     PPVOID,
     PVOID,
     PWSTR,
-    WinError,
     string_buffer,
     )
 from . import (
@@ -21,7 +20,6 @@ from . import (
     ref,
     raise_on_zero,
     multi_str_from_addr,
-    TOKEN_READ,
     kernel,
     advapi,
     )
@@ -47,7 +45,9 @@ _GetUserProfileDirectory = _ue.fun_fact(
 
 ################################################################################
 
-def _env_block_from_token(token, inherit):
+def CreateEnvironmentBlock(token=None, inherit=False):
+    if token is None:
+        token = advapi.GetCurrentProcessToken()
     ptr = PVOID()
     raise_on_zero(_CreateEnvironmentBlock(ref(ptr), token, inherit))
     try:
@@ -57,39 +57,18 @@ def _env_block_from_token(token, inherit):
 
 ################################################################################
 
-def _profile_directory_from_token(token):
-    size = DWORD(0)
-    if _GetUserProfileDirectory(token, None, ref(size)):
-        raise WinError()
-    dname = string_buffer(size.value)
-    raise_on_zero(_GetUserProfileDirectory(token, dname, ref(size)))
-    return dname.value
-
-################################################################################
-
-def _func_opt_token(func, token, *args):
-    if token is None:
-        with advapi.OpenProcessToken(
-                kernel.GetCurrentProcess(),
-                TOKEN_READ
-                ) as t:
-            return func(*(t, *args))
-    else:
-        return func(*(token, *args))
-
-################################################################################
-
-def CreateEnvironmentBlock(token=None, inherit=False):
-    return _func_opt_token(_env_block_from_token, token, inherit)
-
-################################################################################
-
 def create_env_block_as_dict(token=None, inherit=False):
     return kernel.env_str_to_dict(CreateEnvironmentBlock(token, inherit))
 
 ################################################################################
 
 def GetUserProfileDirectory(token=None):
-    return _func_opt_token(_profile_directory_from_token, token)
+    if token is None:
+        token = advapi.GetCurrentProcessToken()
+    size = DWORD(0)
+    _GetUserProfileDirectory(token, None, ref(size))
+    dname = string_buffer(size.value)
+    raise_on_zero(_GetUserProfileDirectory(token, dname, ref(size)))
+    return dname.value
 
 ################################################################################
