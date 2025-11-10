@@ -16,6 +16,7 @@ http://semver.org/spec/v2.0.0.html).
 - sample totp_dlg.pyw
 - userenv.GetUserProfileDirectory
 - kernel.IsProcessorFeaturePresent
+- sample lsc2.py
 
 ### Changed
 
