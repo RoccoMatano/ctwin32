@@ -17,6 +17,7 @@ http://semver.org/spec/v2.0.0.html).
 - userenv.GetUserProfileDirectory
 - kernel.IsProcessorFeaturePresent
 - sample lsc2.py
+- kernel.GetComputerNameEx
 
 ### Changed
 

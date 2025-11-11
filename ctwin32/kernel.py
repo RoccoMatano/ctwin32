@@ -2322,3 +2322,36 @@ def RemoveDllDirectory(cookie):
     raise_on_zero(_RemoveDllDirectory(cookie))
 
 ################################################################################
+
+class ComputerName(_int_enum):
+    NetBIOS = 0
+    DnsHostname = 1
+    DnsDomain = 2
+    DnsFullyQualified = 3
+    PhysicalNetBIOS = 4
+    PhysicalDnsHostname = 5
+    PhysicalDnsDomain = 6
+    PhysicalDnsFullyQualified = 7
+
+    @classmethod
+    def from_param(cls, obj):
+        return int(cls(obj))
+
+
+_GetComputerNameEx = _k32.fun_fact(
+    "GetComputerNameExW",
+    (BOOL, INT, PWSTR, PDWORD)
+    )
+
+def GetComputerNameEx(name_type=ComputerName.DnsHostname):
+    size = DWORD(128)
+    while True:
+        size.value *= 2
+        res = string_buffer(size.value)
+        if _GetComputerNameEx(name_type, res, ref(size)):
+            return res.value
+        if (err := GetLastError()) == ERROR_MORE_DATA:
+            continue
+        raise_on_err(err)
+
+################################################################################
