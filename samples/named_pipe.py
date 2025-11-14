@@ -14,6 +14,20 @@ from ctwin32 import kernel, UNICODE_STRING_MAX_CHARS
 
 class NamedPipe:
 
+    class ServerConnection:
+
+        def __init__(self, hdl):
+            self.hdl = hdl
+
+        def __enter__(self):
+            kernel.ConnectNamedPipe(self.hdl)
+            return self
+
+        def __exit__(self, typ, val, tb):
+            kernel.FlushFileBuffers(self.hdl)
+            kernel.DisconnectNamedPipe(self.hdl)
+            self.hdl = None
+
     def __init__(self, name, *, server_end=False):
         self.name = name
         if server_end:
@@ -28,17 +42,12 @@ class NamedPipe:
 
     def __exit__(self, typ, val, tb):
         self.hdl.close()
+        self.hdl = None
 
     def connect(self):
         if not self.server_end:
             raise ValueError("not server")
-        kernel.ConnectNamedPipe(self.hdl)
-
-    def disconnect(self):
-        if not self.server_end:
-            raise ValueError("not server")
-        kernel.FlushFileBuffers(self.hdl)
-        kernel.DisconnectNamedPipe(self.hdl)
+        return self.ServerConnection(self.hdl)
 
     def read(self):
         return kernel.read_file_text(self.hdl, UNICODE_STRING_MAX_CHARS)
@@ -61,21 +70,18 @@ def run_server():
     with NamedPipe(PIPE_NAME, server_end=True) as pipe:
         while True:
             print("server is waiting for request")
-            pipe.connect()
-            print("server got client connection")
-
-            try:
-                txt = pipe.read()
-            except BrokenPipeError:
-                print("server broken pipe")
-                pipe.disconnect()
-                continue
-            print(f"server received '{txt}'")
-            pipe.write("".join(reversed(txt)))
-            pipe.disconnect()
-            if txt == CMD_STOP:
-                print("server stops")
-                break
+            with pipe.connect():
+                print("server got client connection")
+                try:
+                    txt = pipe.read()
+                except BrokenPipeError:
+                    print("server broken pipe")
+                    continue
+                print(f"server received '{txt}'")
+                pipe.write("".join(reversed(txt)))
+                if txt == CMD_STOP:
+                    print("server stops")
+                    break
 
 ################################################################################
 

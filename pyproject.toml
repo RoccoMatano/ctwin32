@@ -69,6 +69,7 @@ ignore = [
     "D103",     # doc strings are optional
     "D104",     # doc strings are optional
     "D105",     # doc strings are optional
+    "D106",     # doc strings are optional
     "D107",     # doc strings are optional
     "D203",     # doc strings are optional
     "D204",     # force doc string layout
