@@ -18,6 +18,8 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.IsProcessorFeaturePresent
 - sample lsc2.py
 - kernel.GetComputerNameEx
+- iphlpapi.GetIpForwardTable2
+- iphlpapi.gateways
 
 ### Changed
 

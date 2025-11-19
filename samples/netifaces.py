@@ -10,6 +10,7 @@
 from ctwin32.iphlpapi import (
     get_host_interfaces,
     netifaces,
+    gateways,
     ConvertInterfaceGuidToLuid,
     ConvertInterfaceLuidToAlias,
     ConvertInterfaceIndexToLuid,
@@ -41,3 +42,9 @@ for ifaces in netifaces(None, True):
         print(f"    MAC: {mac}")
     for nif in ifaces.ifaces:
         print(f"    {nif!r}")
+
+print("\n\ngateways:\n")
+for luid, gw in gateways().items():
+    print(f"    {ConvertInterfaceLuidToAlias(luid)}")
+    for g in gw:
+        print(f"        {g!r}")

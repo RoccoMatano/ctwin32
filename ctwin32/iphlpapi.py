@@ -370,6 +370,31 @@ class MIB_IPNET_ROW2(ctypes.Structure):
         ("ReachabilityTime", ULONG),
         )
 
+class IP_ADDRESS_PREFIX(ctypes.Structure):
+    _fields_ = (
+        ("Prefix", SOCKADDR_INET),
+        ("PrefixLength", BYTE),
+        )
+
+class MIB_IPFORWARD_ROW2(ctypes.Structure):
+    _fields_ = (
+        ("InterfaceLuid", ULONGLONG),
+        ("InterfaceIndex", ULONG),
+        ("DestinationPrefix", IP_ADDRESS_PREFIX),
+        ("NextHop", SOCKADDR_INET),
+        ("SitePrefixLength", BYTE),
+        ("ValidLifetime", ULONG),
+        ("PreferredLifetime", ULONG),
+        ("Metric", ULONG),
+        ("Protocol", INT),
+        ("Loopback", BYTE),
+        ("AutoconfigureAddress", BYTE),
+        ("Publish", BYTE),
+        ("Immortal", BYTE),
+        ("Age", ULONG),
+        ("Origin", INT),
+        )
+
 ################################################################################
 
 FreeMibTable = _iph.fun_fact("FreeMibTable", (None, PVOID))
@@ -406,6 +431,71 @@ def GetIpNetTable2(version=0):
 
     finally:
         FreeMibTable(ptr)
+
+################################################################################
+
+_GetIpForwardTable2 = _iph.fun_fact("GetIpForwardTable2", (DWORD, WORD, PPVOID))
+
+def GetIpForwardTable2(version=0):
+    ptr = PVOID()
+    raise_on_err(_GetIpForwardTable2(_ver_to_fam(version), ref(ptr)))
+    try:
+        num = ctypes.cast(ptr, PULONG).contents.value
+
+        class MIB_IPFORWARD_TABLE2(ctypes.Structure):
+            _fields_ = (
+                ("NumEntries", ULONG),
+                ("Table", MIB_IPFORWARD_ROW2 * num),
+                )
+
+        return [
+            _namespace(
+                index=e.InterfaceIndex,
+                luid=e.InterfaceLuid,
+                if_type=e.InterfaceLuid >> 48,
+                dest_pfx=_namespace(
+                    prefix=e.DestinationPrefix.Prefix.get_ipaddr(),
+                    prefix_len=e.DestinationPrefix.PrefixLength,
+                    ),
+                next_hop=e.NextHop.get_ipaddr(),
+                site_pfx_len=e.SitePrefixLength,
+                valid_lifetime=e.ValidLifetime,
+                preferred_lifetime=e.PreferredLifetime,
+                metric=e.Metric,
+                protocol=e.Protocol,
+                Loopback=bool(e.Loopback),
+                AutoconfigureAddress=bool(e.AutoconfigureAddress),
+                Publish=bool(e.Publish),
+                Immortal=bool(e.Immortal),
+                age=e.Age,
+                Origin=e.Origin,
+                )
+            for e in MIB_IPFORWARD_TABLE2.from_address(ptr.value).Table
+            ]
+
+    finally:
+        FreeMibTable(ptr)
+
+################################################################################
+
+def gateways(version=0):
+    any4 = _iaddr.IPv4Address("0.0.0.0") # noqa: S104
+    any6 = _iaddr.IPv6Address("::")
+    result = _defdict(list)
+    for row in GetIpForwardTable2(version):
+        if row.dest_pfx.prefix_len:
+            continue
+        if row.next_hop.version == 4:
+            if row.next_hop == any4:
+                continue
+        elif row.next_hop.version == 6:
+            if row.next_hop == any6:
+                continue
+        else:
+            continue
+
+        result[row.luid].append(row.next_hop)
+    return dict(result)  # no more default values
 
 ################################################################################
 

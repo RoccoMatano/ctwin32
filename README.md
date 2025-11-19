@@ -10,9 +10,9 @@
 
 ctwin32 is a pure Python module, that wraps some Windows APIs ([win32](
 https://learn.microsoft.com/en-us/windows/win32/api/)) by using
-[ctypes](https://docs.python.org/3/library/ctypes.html). Since it is my personal
-playground, the selection of supported APIs and the way those are wrapped are
-solely dictated by my needs and preferences.
+[ctypes](https://docs.python.org/3/library/ctypes.html). The selection of
+supported APIs and the way they are wrapped is largely based on my needs and
+preferences.
 
 ctwin32 is not a replacement for
 [pywin32](https://pypi.org/project/pywin32/), although it serves that purpose
