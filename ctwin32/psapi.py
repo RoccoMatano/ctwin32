@@ -9,6 +9,7 @@ import ctypes
 from .wtypes import (
     string_buffer,
     BOOL,
+    Struct,
     DWORD,
     HANDLE,
     HMODULE,
@@ -95,7 +96,7 @@ def GetModuleFileNameEx(hdl, mod):
 
 ################################################################################
 
-class MODULEINFO(ctypes.Structure):
+class MODULEINFO(Struct):
     _fields_ = (
         ("lpBaseOfDll", PVOID),
         ("SizeOfImage", DWORD),
@@ -112,7 +113,7 @@ _GetModuleInformation = _psa.fun_fact(
 def GetModuleInformation(hdl, mod):
     info = MODULEINFO()
     raise_on_zero(
-        _GetModuleInformation(hdl, mod, ref(info), ctypes.sizeof(info))
+        _GetModuleInformation(hdl, mod, ref(info), info._size_)
         )
     return ns_from_struct(info)
 

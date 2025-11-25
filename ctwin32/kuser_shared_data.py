@@ -8,7 +8,7 @@
 from .wtypes import (
     BOOLEAN,
     BYTE,
-    ctypes,
+    Struct,
     INT,
     LARGE_INTEGER,
     LONG,
@@ -21,14 +21,14 @@ from .wtypes import (
 
 ################################################################################
 
-class KSYSTEM_TIME(ctypes.Structure):
+class KSYSTEM_TIME(Struct):
     _fields_ = (
         ("LowPart", ULONG),
         ("High1Time", LONG),
         ("High2Time", LONG),
         )
 
-class XSTATE_FEATURE(ctypes.Structure):
+class XSTATE_FEATURE(Struct):
     _fields_ = (
         ("Offset", ULONG),
         ("Size", ULONG),
@@ -37,7 +37,7 @@ class XSTATE_FEATURE(ctypes.Structure):
 MAXIMUM_XSTATE_FEATURES = 64
 PROCESSOR_FEATURE_MAX = 64
 
-class XSTATE_CONFIGURATION(ctypes.Structure):
+class XSTATE_CONFIGURATION(Struct):
     _fields_ = (
         ("EnabledFeatures", ULONGLONG),
         ("EnabledVolatileFeatures", ULONGLONG),
@@ -56,7 +56,7 @@ class XSTATE_CONFIGURATION(ctypes.Structure):
 
 ################################################################################
 
-class KUSER_SHARED_DATA(ctypes.Structure):
+class KUSER_SHARED_DATA(Struct):
     _fields_ = (
         ("TickCountLowDeprecated", ULONG),
         ("TickCountMultiplier", ULONG),
@@ -232,7 +232,7 @@ def _validate():
     assert KUSER_SHARED_DATA.XState.offset == 0x3d8
     assert KUSER_SHARED_DATA.FeatureConfigurationChangeStamp.offset == 0x720
     assert KUSER_SHARED_DATA.UserPointerAuthMask.offset == 0x730
-    assert ctypes.sizeof(KUSER_SHARED_DATA) == 0x738
+    assert KUSER_SHARED_DATA._size_ == 0x738
 
 ################################################################################
 

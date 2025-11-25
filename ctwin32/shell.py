@@ -5,10 +5,10 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     string_buffer,
     BOOL,
+    Struct,
     DWORD,
     HANDLE,
     HINSTANCE,
@@ -109,7 +109,7 @@ CSIDL_FLAG_MASK               = 0xFF00
 
 ################################################################################
 
-class SHELLEXECUTEINFOW(ctypes.Structure):
+class SHELLEXECUTEINFOW(Struct):
     _fields_ = (
         ("cbSize", DWORD),
         ("fMask", DWORD),
@@ -129,7 +129,7 @@ class SHELLEXECUTEINFOW(ctypes.Structure):
         )
 
     def __init__(self, file, verb, param, direc, wait, show):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
         self.lpVerb = verb
         self.lpFile = file
         self.lpParameters = param

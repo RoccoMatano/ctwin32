@@ -16,6 +16,7 @@ from .wtypes import (
     ArgcArgvFromArgs,
     BOOL,
     BYTE,
+    Struct,
     DWORD,
     ENDIANNESS,
     FILETIME,
@@ -717,13 +718,13 @@ def AllocateLocallyUniqueId():
 
 ################################################################################
 
-class SID_AND_ATTRIBUTES(ctypes.Structure):
+class SID_AND_ATTRIBUTES(Struct):
     _fields_ = (
         ("Sid", PVOID),
         ("Attributes", DWORD),
         )
 
-class TOKEN_STATISTICS(ctypes.Structure):
+class TOKEN_STATISTICS(Struct):
     _fields_ = (
         ("TokenId", LUID),
         ("AuthenticationId", LUID),
@@ -782,7 +783,7 @@ def get_token_user(hdl):
 def get_token_groups(hdl):
     buf = GetTokenInformation(hdl, TokenGroups)
     num_groups = DWORD.from_buffer_copy(buf).value
-    class TOKEN_GROUPS(ctypes.Structure):
+    class TOKEN_GROUPS(Struct):
         _fields_ = (
             ("GroupCount", DWORD),
             ("Groups", SID_AND_ATTRIBUTES * num_groups),
@@ -795,7 +796,7 @@ def get_token_groups(hdl):
 def get_token_privileges(hdl):
     buf = GetTokenInformation(hdl, TokenPrivileges)
     num_privs = DWORD.from_buffer_copy(buf).value
-    class TOKEN_PRIVILEGES(ctypes.Structure):
+    class TOKEN_PRIVILEGES(Struct):
         _fields_ = (
             ("PrivilegeCount", DWORD),
             ("Privileges", LUID_AND_ATTRIBUTES * num_privs)
@@ -807,7 +808,7 @@ def get_token_privileges(hdl):
 
 def make_token_groups(sids_and_attrs):
     num_groups = len(sids_and_attrs)
-    class TOKEN_GROUPS(ctypes.Structure):
+    class TOKEN_GROUPS(Struct):
         _fields_ = (
             ("GroupCount", DWORD),
             ("Groups", SID_AND_ATTRIBUTES * num_groups),
@@ -957,7 +958,7 @@ def LookupPrivilegeValue(sys_name, name):
 
 ################################################################################
 
-class LUID_AND_ATTRIBUTES(ctypes.Structure):
+class LUID_AND_ATTRIBUTES(Struct):
     _fields_ = (
         ("Luid", LUID),
         ("Attributes", DWORD)
@@ -968,7 +969,7 @@ def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
     if not num_la:
         return
 
-    class TOKEN_PRIVILEGES(ctypes.Structure):
+    class TOKEN_PRIVILEGES(Struct):
         _fields_ = (
             ("PrivilegeCount", DWORD),
             ("Privileges", LUID_AND_ATTRIBUTES * num_la)
@@ -1069,7 +1070,7 @@ def SetThreadToken(tok, thrd=None):
 
 ################################################################################
 
-class ACL(ctypes.Structure):
+class ACL(Struct):
     _fields_ = (
         ("AclRevision", BYTE),
         ("Sbz1", BYTE),
@@ -1080,14 +1081,14 @@ class ACL(ctypes.Structure):
 PACL = POINTER(ACL)
 PPACL = POINTER(PACL)
 
-class ACE_HEADER(ctypes.Structure):
+class ACE_HEADER(Struct):
     _fields_ = (
         ("AceType", BYTE),
         ("AceFlags", BYTE),
         ("AceSize", WORD),
         )
 
-class ACE(ctypes.Structure):
+class ACE(Struct):
     _fields_ = (
         ("Header", ACE_HEADER),
         ("Mask", DWORD),
@@ -1099,7 +1100,7 @@ class ACE(ctypes.Structure):
 PACE = POINTER(ACE)
 PPACE = POINTER(PACE)
 
-class ACL_SIZE_INFORMATION(ctypes.Structure):
+class ACL_SIZE_INFORMATION(Struct):
     _fields_ = (
         ("AceCount", DWORD),
         ("AclBytesInUse", DWORD),
@@ -1356,7 +1357,7 @@ def StartService(handle, arglist):
 
 ################################################################################
 
-class SERVICE_STATUS(ctypes.Structure):
+class SERVICE_STATUS(Struct):
     _fields_ = (
         ("dwServiceType", DWORD),
         ("dwCurrentState", DWORD),
@@ -1391,7 +1392,7 @@ def DeleteService(service):
 
 ################################################################################
 
-class SERVICE_STATUS_PROCESS(ctypes.Structure):
+class SERVICE_STATUS_PROCESS(Struct):
     _fields_ = (
         ("dwServiceType", DWORD),
         ("dwCurrentState", DWORD),
@@ -1423,7 +1424,7 @@ def QueryServiceStatusEx(service):
             service,
             SC_STATUS_PROCESS_INFO,
             ref(status),
-            ctypes.sizeof(status),
+            status._size_,
             ref(needed)
             )
         )
@@ -1431,7 +1432,7 @@ def QueryServiceStatusEx(service):
 
 ################################################################################
 
-class ENUM_SERVICE_STATUS_PROCESS(ctypes.Structure):
+class ENUM_SERVICE_STATUS_PROCESS(Struct):
     _fields_ = (
         ("lpServiceName", PWSTR),
         ("lpDisplayName", PWSTR),
@@ -1455,7 +1456,7 @@ _EnumServicesStatusEx = _adv.fun_fact(
     )
 
 def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
-    stat_size = ctypes.sizeof(ENUM_SERVICE_STATUS_PROCESS)
+    stat_size = ENUM_SERVICE_STATUS_PROCESS._size_
     buf = byte_buffer(16 * 1024)
     needed = DWORD()
     num_ret = DWORD()
@@ -1490,7 +1491,7 @@ def EnumServicesStatusEx(scm, stype, sstate, group_name=None):
 
 ################################################################################
 
-class QUERY_SERVICE_CONFIG(ctypes.Structure):
+class QUERY_SERVICE_CONFIG(Struct):
     _fields_ = (
         ("dwServiceType", DWORD),
         ("dwStartType", DWORD),
@@ -1531,7 +1532,7 @@ def QueryServiceConfig(svc):
 
 SERVICE_MAIN_FUNCTION = ctypes.WINFUNCTYPE(None, DWORD, PPWSTR)
 
-class SERVICE_TABLE_ENTRY(ctypes.Structure):
+class SERVICE_TABLE_ENTRY(Struct):
     _fields_ = (
         ("lpServiceName", PWSTR),
         ("lpServiceProc", SERVICE_MAIN_FUNCTION),
@@ -1572,7 +1573,7 @@ def SetServiceStatus(hdl, status):
 
 ################################################################################
 
-class CREDENTIAL_ATTRIBUTE(ctypes.Structure):
+class CREDENTIAL_ATTRIBUTE(Struct):
     _fields_ = (
         ("Keyword", PWSTR),
         ("Flags", DWORD),
@@ -1581,7 +1582,7 @@ class CREDENTIAL_ATTRIBUTE(ctypes.Structure):
         )
 PCREDENTIAL_ATTRIBUTE = POINTER(CREDENTIAL_ATTRIBUTE)
 
-class CREDENTIAL(ctypes.Structure):
+class CREDENTIAL(Struct):
     _fields_ = (
         ("Flags", DWORD),
         ("Type", DWORD),
@@ -1732,7 +1733,7 @@ def OpenEventLog(source, server=None):
 
 ################################################################################
 
-class EVENTLOGRECORD(ctypes.Structure):
+class EVENTLOGRECORD(Struct):
     _fields_ = (
         ("Length", DWORD),
         ("Reserved", DWORD),
@@ -1783,7 +1784,7 @@ def _evt_from_buf(buf, offs):
             ctypes.string_at(addr + elr.UserSidOffset, elr.UserSidLength)
             )
     data = ctypes.string_at(addr + elr.DataOffset, elr.DataLength)
-    p_str = addr + ctypes.sizeof(EVENTLOGRECORD)
+    p_str = addr + EVENTLOGRECORD._size_
     src_name = ctypes.wstring_at(p_str)
     p_str += (len(src_name) + 1) * WCHAR_SIZE
     computer_name = ctypes.wstring_at(p_str)

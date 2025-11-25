@@ -13,6 +13,8 @@ from .wtypes import (
     BOOL,
     CallbackContext,
     CallbackContextPtr,
+    Struct,
+    Union,
     DWORD,
     HINSTANCE,
     HRESULT,
@@ -95,7 +97,7 @@ def _load_comctl():
     kernel.ReleaseActCtx(ctx)
 
     # verify DLL version
-    class DLLVERSIONINFO(ctypes.Structure):
+    class DLLVERSIONINFO(Struct):
         _fields_ = (
             ("cbSize", DWORD),
             ("dwMajorVersion", DWORD),
@@ -104,19 +106,19 @@ def _load_comctl():
             ("dwPlatformID", DWORD),
             )
     dvi = DLLVERSIONINFO()
-    dvi.cbSize = ctypes.sizeof(dvi)
+    dvi.cbSize = dvi._size_
     raise_on_hr(comctl.DllGetVersion(ref(dvi)))
     if dvi.dwMajorVersion < 6:
         raise OSError("need at least version 6 of comctl32")
 
     # register window classes
-    class INITCOMMONCONTROLSEX(ctypes.Structure):
+    class INITCOMMONCONTROLSEX(Struct):
         _fields_ = (
             ("dwSize", DWORD),
             ("dwICC", DWORD),
             )
     icc = INITCOMMONCONTROLSEX()
-    icc.dwSize = ctypes.sizeof(icc)
+    icc.dwSize = icc._size_
     icc.dwICC = 0xffff
     raise_on_zero(comctl.InitCommonControlsEx(ref(icc)))
 
@@ -181,7 +183,7 @@ def _TskDlgCb(hwnd, msg, wp, lp, ctxt):
 
 # ALL TASKDIALOG STRUCTURES NEED AN ALIGNMENT OF 1 (_pack_ = 1)!!!
 
-class TASKDIALOG_BUTTON(ctypes.Structure):
+class TASKDIALOG_BUTTON(Struct):
     _pack_ = 1
     _fields_ = (
         ("nButtonID", INT),
@@ -190,15 +192,15 @@ class TASKDIALOG_BUTTON(ctypes.Structure):
 
 PTASKDIALOG_BUTTON = POINTER(TASKDIALOG_BUTTON)
 
-class _TD_MAIN_ICON(ctypes.Union):
+class _TD_MAIN_ICON(Union):
     _pack_ = 1
     _fields_ = (("hMainIcon", HANDLE), ("pszMainIcon", PWSTR))
 
-class _TD_FOOTER_ICON(ctypes.Union):
+class _TD_FOOTER_ICON(Union):
     _pack_ = 1
     _fields_ = (("hFooterIcon", HANDLE), ("pszFooterIcon", PWSTR))
 
-class TASKDIALOGCONFIG(ctypes.Structure):
+class TASKDIALOGCONFIG(Struct):
     _pack_ = 1
     _anonymous_ = ("_main_icon", "_footer_icon")
     _fields_ = (
@@ -229,7 +231,7 @@ class TASKDIALOGCONFIG(ctypes.Structure):
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 PTASKDIALOGCONFIG = POINTER(TASKDIALOGCONFIG)
 

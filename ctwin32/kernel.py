@@ -18,6 +18,8 @@ from .wtypes import (
     CallbackContext,
     CallbackContextPtr,
     CHAR,
+    Struct,
+    Union,
     DWORD,
     FILETIME,
     HANDLE,
@@ -185,7 +187,7 @@ PFHANDLE = POINTER(FHANDLE)
 
 ################################################################################
 
-class SECURITY_ATTRIBUTES(ctypes.Structure):
+class SECURITY_ATTRIBUTES(Struct):
     _fields_ = (
         ("nLength", DWORD),
         ("lpSecurityDescriptor", PVOID),
@@ -193,7 +195,7 @@ class SECURITY_ATTRIBUTES(ctypes.Structure):
         )
 
     def __init__(self):
-        self.nLength = ctypes.sizeof(self)
+        self.nLength = self._size_
 
 PSECURITY_ATTRIBUTES = POINTER(SECURITY_ATTRIBUTES)
 
@@ -308,20 +310,20 @@ def FlushFileBuffers(hdl):
 
 ################################################################################
 
-class _DUMMY_OVRLPD_STRUCT(ctypes.Structure):
+class _DUMMY_OVRLPD_STRUCT(Struct):
     _fields_ = (
         ("Offset", DWORD),
         ("OffsetHigh", DWORD),
         )
 
-class _DUMMY_OVRLPD_UNION(ctypes.Union):
+class _DUMMY_OVRLPD_UNION(Union):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", _DUMMY_OVRLPD_STRUCT),
         ("Pointer", PVOID),
         )
 
-class OVERLAPPED(ctypes.Structure):
+class OVERLAPPED(Struct):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("Internal", ULONG_PTR),
@@ -880,7 +882,7 @@ def ExpandEnvironmentStrings(template):
 
 ################################################################################
 
-class PROCESS_INFORMATION(ctypes.Structure):
+class PROCESS_INFORMATION(Struct):
     _fields_ = (
         ("hProcess", KHANDLE),
         ("hThread", KHANDLE),
@@ -899,7 +901,7 @@ PPROCESS_INFORMATION = POINTER(PROCESS_INFORMATION)
 
 ################################################################################
 
-class STARTUPINFO(ctypes.Structure):
+class STARTUPINFO(Struct):
     _fields_ = (
         ("cb", DWORD),
         ("lpReserved", PWSTR),
@@ -922,18 +924,18 @@ class STARTUPINFO(ctypes.Structure):
         )
 
     def __init__(self):
-        self.cb = ctypes.sizeof(STARTUPINFO)
+        self.cb = self._size_
 
 PSTARTUPINFO = POINTER(STARTUPINFO)
 
-class STARTUPINFOEX(ctypes.Structure):
+class STARTUPINFOEX(Struct):
     _fields_ = (
         ("StartupInfo", STARTUPINFO),
         ("lpAttributeList", PVOID),
         )
 
     def __init__(self, attr_lst=None):
-        self.StartupInfo.cb = ctypes.sizeof(STARTUPINFOEX)
+        self.StartupInfo.cb = self._size_
         self.lpAttributeList = attr_lst
 
 ################################################################################
@@ -1107,13 +1109,13 @@ def AssignProcessToJobObject(job, proc):
 
 ################################################################################
 
-class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(ctypes.Structure):
+class JOBOBJECT_ASSOCIATE_COMPLETION_PORT(Struct):
     _fields_ = (
         ("CompletionKey", PVOID),
         ("CompletionPort", HANDLE),
         )
 
-class JOBOBJECT_BASIC_ACCOUNTING_INFORMATION(ctypes.Structure):
+class JOBOBJECT_BASIC_ACCOUNTING_INFORMATION(Struct):
     _fields_ = (
         ("TotalUserTime", LARGE_INTEGER),
         ("TotalKernelTime", LARGE_INTEGER),
@@ -1253,7 +1255,7 @@ def SetCurrentDirectory(path):
 
 ################################################################################
 
-class ACTCTX(ctypes.Structure):
+class ACTCTX(Struct):
     _fields_ = (
         ("cbSize", ULONG),
         ("dwFlags", DWORD),
@@ -1267,7 +1269,7 @@ class ACTCTX(ctypes.Structure):
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 PACTCTX = POINTER(ACTCTX)
 
@@ -1502,21 +1504,21 @@ MESSAGE_RESOURCE_ANSI = 0
 MESSAGE_RESOURCE_UNICODE = 1
 MESSAGE_RESOURCE_UTF8 = 2
 
-class MESSAGE_RESOURCE_ENTRY(ctypes.Structure):
+class MESSAGE_RESOURCE_ENTRY(Struct):
     _fields_ = (
         ("Length", WORD),
         ("Flags", WORD),
         ("Text", BYTE),  # an array of (Length - offsetof(Text)) bytes
     )
 
-class MESSAGE_RESOURCE_BLOCK(ctypes.Structure):
+class MESSAGE_RESOURCE_BLOCK(Struct):
     _fields_ = (
         ("LowId", DWORD),
         ("HighId", DWORD),
         ("OffsetToEntries", DWORD),
     )
 
-class MESSAGE_RESOURCE_DATA(ctypes.Structure):
+class MESSAGE_RESOURCE_DATA(Struct):
     _fields_ = (
         ("NumberOfBlocks", DWORD),
         ("Blocks", MESSAGE_RESOURCE_BLOCK),  # an array of NumberOfBlocks
@@ -1527,7 +1529,7 @@ def load_message_string(hmod, msg_id):
     for name in get_resource_names(hmod, RT_MESSAGETABLE):
         addr, _ = get_resource_info(hmod, name, RT_MESSAGETABLE)
         nblocks = MESSAGE_RESOURCE_DATA.from_address(addr).NumberOfBlocks
-        bsize = ctypes.sizeof(MESSAGE_RESOURCE_BLOCK)
+        bsize = MESSAGE_RESOURCE_BLOCK._size_
         bbase = addr + MESSAGE_RESOURCE_DATA.Blocks.offset
         for b in range(nblocks):
             block = MESSAGE_RESOURCE_BLOCK.from_address(bbase + b * bsize)
@@ -1554,7 +1556,7 @@ def load_message_string(hmod, msg_id):
 
 ################################################################################
 
-class SYSTEM_INFO(ctypes.Structure):
+class SYSTEM_INFO(Struct):
     _fields_ = (
         ("wProcessorArchitecture", WORD),
         ("wReserved", WORD),
@@ -1660,13 +1662,13 @@ def SetConsoleTextAttribute(hcon, attr):
 
 ################################################################################
 
-class COORD(ctypes.Structure):
+class COORD(Struct):
     _fields_ = (
         ("X", SHORT),
         ("Y", SHORT),
         )
 
-class SMALL_RECT(ctypes.Structure):
+class SMALL_RECT(Struct):
     _fields_ = (
         ("Left", SHORT),
         ("Top", SHORT),
@@ -1674,7 +1676,7 @@ class SMALL_RECT(ctypes.Structure):
         ("Bottom", SHORT),
         )
 
-class CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
+class CONSOLE_SCREEN_BUFFER_INFO(Struct):
     _fields_ = (
         ("dwSize", COORD),
         ("dwCursorPosition", COORD),
@@ -1795,12 +1797,12 @@ def GetNumberOfConsoleInputEvents(hdl):
 
 ################################################################################
 
-class FOCUS_EVENT_RECORD(ctypes.Structure):
+class FOCUS_EVENT_RECORD(Struct):
     _fields_ = (
         ("bSetFocus", BOOL),
         )
 
-class KEY_EVENT_RECORD(ctypes.Structure):
+class KEY_EVENT_RECORD(Struct):
     _fields_ = (
         ("bKeyDown", BOOL),
         ("wRepeatCount", WORD),
@@ -1810,12 +1812,12 @@ class KEY_EVENT_RECORD(ctypes.Structure):
         ("dwControlKeyState", DWORD),
         )
 
-class MENU_EVENT_RECORD(ctypes.Structure):
+class MENU_EVENT_RECORD(Struct):
     _fields_ = (
         ("dwCommandId", UINT),
         )
 
-class MOUSE_EVENT_RECORD(ctypes.Structure):
+class MOUSE_EVENT_RECORD(Struct):
     _fields_ = (
         ("dwMousePosition", COORD),
         ("dwButtonState", DWORD),
@@ -1823,12 +1825,12 @@ class MOUSE_EVENT_RECORD(ctypes.Structure):
         ("dwEventFlags", DWORD),
         )
 
-class WINDOW_BUFFER_SIZE_RECORD(ctypes.Structure):
+class WINDOW_BUFFER_SIZE_RECORD(Struct):
     _fields_ = (
         ("dwSize", COORD),
         )
 
-class INPUT_RECORD_EVENT_UNION(ctypes.Union):
+class INPUT_RECORD_EVENT_UNION(Union):
     _fields_ = (
         ("KeyEvent", KEY_EVENT_RECORD),
         ("MouseEvent", MOUSE_EVENT_RECORD),
@@ -1837,7 +1839,7 @@ class INPUT_RECORD_EVENT_UNION(ctypes.Union):
         ("FocusEvent", FOCUS_EVENT_RECORD),
         )
 
-class INPUT_RECORD(ctypes.Structure):
+class INPUT_RECORD(Struct):
     _fields_ = (
         ("EventType", WORD),
         ("Event", INPUT_RECORD_EVENT_UNION),
@@ -2027,7 +2029,7 @@ POWER_REQUEST_CONTEXT_VERSION = 0
 POWER_REQUEST_CONTEXT_SIMPLE_STRING = 1
 POWER_REQUEST_CONTEXT_DETAILED_STRING = 2
 
-class REASON_CONTEXT_DETAILED(ctypes.Structure):
+class REASON_CONTEXT_DETAILED(Struct):
     _fields_ = (
         ("LocalizedReasonModule", HMODULE),
         ("LocalizedReasonId", ULONG),
@@ -2035,13 +2037,13 @@ class REASON_CONTEXT_DETAILED(ctypes.Structure):
         ("ReasonStrings", PPWSTR),
         )
 
-class REASON_CONTEXT_UNION(ctypes.Union):
+class REASON_CONTEXT_UNION(Union):
     _fields_ = (
         ("Detailed", REASON_CONTEXT_DETAILED),
         ("SimpleReasonString", PWSTR),
         )
 
-class REASON_CONTEXT(ctypes.Structure):
+class REASON_CONTEXT(Struct):
     _fields_ = (
         ("Version", ULONG),
         ("Flags", DWORD),
@@ -2222,7 +2224,7 @@ def get_proc_env_as_dict(hdl):
 
 ################################################################################
 
-class BY_HANDLE_FILE_INFORMATION(ctypes.Structure):
+class BY_HANDLE_FILE_INFORMATION(Struct):
     _fields_ = (
         ("dwFileAttributes", DWORD),
         ("ftCreationTime", FILETIME),

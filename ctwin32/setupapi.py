@@ -11,6 +11,7 @@ from .wtypes import (
     byte_buffer,
     string_buffer,
     BOOL,
+    Struct,
     DWORD,
     GUID,
     HANDLE,
@@ -58,7 +59,7 @@ _SUA_PACK = 8 if PTR_HAS_64_BITS else 1
 
 ################################################################################
 
-class SP_DEVINFO_DATA(ctypes.Structure):
+class SP_DEVINFO_DATA(Struct):
     _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
@@ -68,13 +69,13 @@ class SP_DEVINFO_DATA(ctypes.Structure):
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 PSP_DEVINFO_DATA = POINTER(SP_DEVINFO_DATA)
 
 ################################################################################
 
-class SP_CLASSINSTALL_HEADER(ctypes.Structure):
+class SP_CLASSINSTALL_HEADER(Struct):
     _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
@@ -83,7 +84,7 @@ class SP_CLASSINSTALL_HEADER(ctypes.Structure):
 
 ################################################################################
 
-class SP_PROPCHANGE_PARAMS(ctypes.Structure):
+class SP_PROPCHANGE_PARAMS(Struct):
     _pack_ = _SUA_PACK
     _fields_ = (
         ("ClassInstallHeader", SP_CLASSINSTALL_HEADER),
@@ -93,7 +94,7 @@ class SP_PROPCHANGE_PARAMS(ctypes.Structure):
         )
 
     def __init__(self, func, change, scope=DICS_FLAG_CONFIGSPECIFIC, prof=0):
-        self.ClassInstallHeader.cbSize = ctypes.sizeof(self.ClassInstallHeader)
+        self.ClassInstallHeader.cbSize = self.ClassInstallHeader._size_
         self.ClassInstallHeader.InstallFunction = func
         self.StateChange = change
         self.Scope = scope
@@ -103,7 +104,7 @@ PSP_PROPCHANGE_PARAMS = POINTER(SP_PROPCHANGE_PARAMS)
 
 ################################################################################
 
-class SP_DEVICE_INTERFACE_DATA(ctypes.Structure):
+class SP_DEVICE_INTERFACE_DATA(Struct):
     _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
@@ -119,7 +120,7 @@ PSP_DEVICE_INTERFACE_DATA = POINTER(SP_DEVICE_INTERFACE_DATA)
 
 ################################################################################
 
-class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
+class SP_DEVICE_INTERFACE_DETAIL_DATA(Struct):
     _pack_ = _SUA_PACK
     _fields_ = (
         ("cbSize", DWORD),
@@ -129,7 +130,7 @@ class SP_DEVICE_INTERFACE_DETAIL_DATA(ctypes.Structure):
 def make_dev_iface_detail(size):
     buf = byte_buffer(size)
     ifd = SP_DEVICE_INTERFACE_DETAIL_DATA.from_buffer(buf)
-    ifd.cbSize = ctypes.sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA)
+    ifd.cbSize = ifd._size_
     offs = SP_DEVICE_INTERFACE_DETAIL_DATA.DevicePath.offset
     return buf, ctypes.addressof(buf) + offs
 
@@ -416,7 +417,7 @@ def SetupDiSetClassInstallParams(info_set, deinda, pparams):
             info_set,
             deinda,
             pparams,
-            ctypes.sizeof(SP_PROPCHANGE_PARAMS)
+            SP_PROPCHANGE_PARAMS._size_
             )
         )
 

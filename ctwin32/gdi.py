@@ -5,11 +5,11 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     BOOL,
     BYTE,
     byte_buffer,
+    Struct,
     DWORD,
     HANDLE,
     INT,
@@ -65,7 +65,7 @@ def DeleteObject(hobj):
 
 ################################################################################
 
-class TEXTMETRIC(ctypes.Structure):
+class TEXTMETRIC(Struct):
     _fields_ = (
         ("tmHeight", LONG),
         ("tmAscent", LONG),

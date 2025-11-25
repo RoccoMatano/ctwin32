@@ -15,6 +15,8 @@ from .wtypes import (
     string_buffer,
     BOOLEAN,
     BYTE,
+    Struct,
+    Union,
     FILETIME,
     HANDLE,
     LARGE_INTEGER,
@@ -99,7 +101,7 @@ def raise_failed_status(status):
 
 ################################################################################
 
-class SYSTEM_PROCESS_ID_INFORMATION(ctypes.Structure):
+class SYSTEM_PROCESS_ID_INFORMATION(Struct):
     _fields_ = (
         ("ProcessId", HANDLE),
         ("ImageName", UNICODE_STRING),
@@ -107,7 +109,7 @@ class SYSTEM_PROCESS_ID_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class CLIENT_ID(ctypes.Structure):
+class CLIENT_ID(Struct):
     _fields_ = (
         ("UniqueProcess", LONG_PTR),
         ("UniqueThread", LONG_PTR)
@@ -115,7 +117,7 @@ class CLIENT_ID(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEM_THREAD_INFORMATION(ctypes.Structure):
+class SYSTEM_THREAD_INFORMATION(Struct):
     _fields_ = (
         ("KernelTime", LARGE_INTEGER),
         ("UserTime", LARGE_INTEGER),
@@ -132,7 +134,7 @@ class SYSTEM_THREAD_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
+class SYSTEM_PROCESS_INFORMATION(Struct):
     _fields_ = (
         ("NextEntryOffset", ULONG),
         ("NumberOfThreads", ULONG),
@@ -174,7 +176,7 @@ class SYSTEM_PROCESS_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEM_BASIC_INFORMATION(ctypes.Structure):
+class SYSTEM_BASIC_INFORMATION(Struct):
     _fields_ = (
         ("Reserved", ULONG),
         ("TimerResolution", ULONG),
@@ -191,7 +193,7 @@ class SYSTEM_BASIC_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION(ctypes.Structure):
+class SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION(Struct):
     _fields_ = (
         ("IdleTime", LARGE_INTEGER),
         ("KernelTime", LARGE_INTEGER),
@@ -203,7 +205,7 @@ class SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEM_HANDLE_TABLE_ENTRY_INFO(ctypes.Structure):
+class SYSTEM_HANDLE_TABLE_ENTRY_INFO(Struct):
     _fields_ = (
         ("Object", PVOID),
         ("UniqueProcessId", UINT_PTR),
@@ -217,7 +219,7 @@ class SYSTEM_HANDLE_TABLE_ENTRY_INFO(ctypes.Structure):
 
 ################################################################################
 
-class PROCESS_BASIC_INFORMATION(ctypes.Structure):
+class PROCESS_BASIC_INFORMATION(Struct):
     _fields_ = (
         ("ExitStatus", INT),
         ("PebBaseAddress", LONG_PTR),
@@ -229,7 +231,7 @@ class PROCESS_BASIC_INFORMATION(ctypes.Structure):
 
 ################################################################################
 
-class PROCESS_EXTENDED_BASIC_INFORMATION(ctypes.Structure):
+class PROCESS_EXTENDED_BASIC_INFORMATION(Struct):
     _fields_ = (
         ("Size", LONG_PTR),
         ("BasicInfo", PROCESS_BASIC_INFORMATION),
@@ -237,7 +239,7 @@ class PROCESS_EXTENDED_BASIC_INFORMATION(ctypes.Structure):
         )
 
     def __init__(self):
-        self.Size = ctypes.sizeof(self)
+        self.Size = self._size_
 
 class PROCESS_EXTENDED_BASIC_FLAGS(_int_flag):
     IsProtectedProcess   = 1
@@ -252,7 +254,7 @@ class PROCESS_EXTENDED_BASIC_FLAGS(_int_flag):
 
 ################################################################################
 
-class OBJECT_ATTRIBUTES(ctypes.Structure):
+class OBJECT_ATTRIBUTES(Struct):
     _fields_ = (
         ("Length", ULONG),
         ("RootDirectory", HANDLE),
@@ -264,7 +266,7 @@ class OBJECT_ATTRIBUTES(ctypes.Structure):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.Length = ctypes.sizeof(self)
+        self.Length = self._size_
 
 def obj_attr(name, root=None, attr=0):
     name = wtypes.UnicodeStrBuffer(name).ptr if name else None
@@ -273,7 +275,7 @@ def obj_attr(name, root=None, attr=0):
 ################################################################################
 
 def _make_handle_info(num_entries):
-    class _handle_info_t(ctypes.Structure):
+    class _handle_info_t(Struct):
         _fields_ = (
             ("NumberOfHandles", UINT_PTR),
             ("Reserved", UINT_PTR),
@@ -376,7 +378,7 @@ def _enum_proc_worker(extract_func):
     raise_failed_status(status)
 
     res = []
-    pinfo_size = ctypes.sizeof(SYSTEM_PROCESS_INFORMATION)
+    pinfo_size = SYSTEM_PROCESS_INFORMATION._size_
     offs, offs_inc = 0, 1
     while offs_inc:
         pi = SYSTEM_PROCESS_INFORMATION.from_buffer(buf, offs)
@@ -443,7 +445,6 @@ def proc_path_from_pid(pid):
         return "system"
 
     buf = string_buffer(512)
-    size = ctypes.sizeof(SYSTEM_PROCESS_ID_INFORMATION)
     spii = SYSTEM_PROCESS_ID_INFORMATION()
     spii.ProcessId = ctypes.cast(pid, HANDLE)
     spii.ImageName.Length = 0
@@ -454,7 +455,7 @@ def proc_path_from_pid(pid):
         status = NtQuerySystemInformation(
             SystemProcessIdInformation,
             ref(spii),
-            size,
+            spii._size_,
             None
             )
         if status != STATUS_INFO_LENGTH_MISMATCH:
@@ -480,12 +481,12 @@ def get_handles(pid=-1):
     hi = _make_handle_info(1)
     rlen = ULONG(0)
     while True:
-        _NtQuerySystemInformation(info, ref(hi), ctypes.sizeof(hi), ref(rlen))
+        _NtQuerySystemInformation(info, ref(hi), hi._size_, ref(rlen))
         hi = _make_handle_info(hi.NumberOfHandles)
         status = _NtQuerySystemInformation(
             info,
             ref(hi),
-            ctypes.sizeof(hi),
+            hi._size_,
             ref(rlen)
             )
         if status == STATUS_INFO_LENGTH_MISMATCH:
@@ -532,13 +533,13 @@ def pid_from_handle(proc_handle):
 
 ################################################################################
 
-class _DUMMY_STATUS_UNION(ctypes.Union):
+class _DUMMY_STATUS_UNION(Union):
     _fields_ = (
         ("Status", LONG),
         ("Pointer", PVOID),
         )
 
-class IO_STATUS_BLOCK(ctypes.Structure):
+class IO_STATUS_BLOCK(Struct):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", _DUMMY_STATUS_UNION),
@@ -548,7 +549,7 @@ PIO_STATUS_BLOCK = POINTER(IO_STATUS_BLOCK)
 
 ################################################################################
 
-class FILE_DIRECTORY_INFORMATION(ctypes.Structure):
+class FILE_DIRECTORY_INFORMATION(Struct):
     _fields_ = (
         ("NextEntryOffset", ULONG),
         ("FileIndex", ULONG),
@@ -705,7 +706,7 @@ def get_wow64_proc_env_blk(proc_handle):
 
 ################################################################################
 
-class THREAD_BASIC_INFORMATION(ctypes.Structure):
+class THREAD_BASIC_INFORMATION(Struct):
     _fields_ = (
         ("ExitStatus", LONG),
         ("TebBaseAddress", PVOID),
@@ -729,13 +730,12 @@ def NtQueryInformationThread(thdl, tinfo, buf, buf_size, p_ret_len):
 
 def get_thread_basic_info(thdl):
     tbi = THREAD_BASIC_INFORMATION()
-    size = ctypes.sizeof(tbi)
     raise_failed_status(
         NtQueryInformationThread(
             thdl,
             ThreadBasicInformation,
             ref(tbi),
-            size,
+            tbi._size_,
             None
             )
         )
@@ -798,7 +798,7 @@ def NtOpenDirectoryObject(acc, obj_attr):
 
 ################################################################################
 
-class OBJECT_DIRECTORY_INFORMATION(ctypes.Structure):
+class OBJECT_DIRECTORY_INFORMATION(Struct):
     _fields_ = (
         ("Name", UNICODE_STRING),
         ("TypeName", UNICODE_STRING),
@@ -835,7 +835,7 @@ def NtQueryDirectoryObject(hdir):
                 if info.Name.Length == 0:
                     break
                 res.append((str(info.Name), str(info.TypeName)))
-                addr += ctypes.sizeof(OBJECT_DIRECTORY_INFORMATION)
+                addr += info._size_
             restart = False
             if stat != STATUS_MORE_ENTRIES:
                 break

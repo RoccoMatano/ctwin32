@@ -21,6 +21,8 @@ from . import (
     )
 from .wtypes import (
     BYTE,
+    Struct,
+    Union,
     DWORD,
     PTR_HAS_64_BITS,
     PVOID,
@@ -32,20 +34,7 @@ from .wtypes import (
 
 ################################################################################
 
-class classproperty(property):
-    def __get__(self, owner, owner_type):
-        return self.fget(owner_type)
-
-################################################################################
-
-class SizedStruct(ctypes.Structure):
-    @classproperty
-    def _size_(cls): # noqa: N805 this IS a class method
-        return ctypes.sizeof(cls)
-
-################################################################################
-
-class IMAGE_FILE_HEADER(SizedStruct):
+class IMAGE_FILE_HEADER(Struct):
     _fields_ = (
         ("Machine", WORD),
         ("NumberOfSections", WORD),
@@ -58,7 +47,7 @@ class IMAGE_FILE_HEADER(SizedStruct):
 
 ################################################################################
 
-class IMAGE_DATA_DIRECTORY(SizedStruct):
+class IMAGE_DATA_DIRECTORY(Struct):
     _fields_ = (
         ("VirtualAddress", DWORD),
         ("Size", DWORD),
@@ -66,7 +55,7 @@ class IMAGE_DATA_DIRECTORY(SizedStruct):
 
 ################################################################################
 
-class IMAGE_OPTIONAL_HEADER32(SizedStruct):
+class IMAGE_OPTIONAL_HEADER32(Struct):
     _fields_ = (
         ("Magic", WORD),
         ("MajorLinkerVersion", BYTE),
@@ -103,7 +92,7 @@ class IMAGE_OPTIONAL_HEADER32(SizedStruct):
 
 ################################################################################
 
-class IMAGE_OPTIONAL_HEADER64(SizedStruct):
+class IMAGE_OPTIONAL_HEADER64(Struct):
     _fields_ = (
         ("Magic", WORD),
         ("MajorLinkerVersion", BYTE),
@@ -139,7 +128,7 @@ class IMAGE_OPTIONAL_HEADER64(SizedStruct):
 
 ################################################################################
 
-class IMAGE_SECTION_HEADER(SizedStruct):
+class IMAGE_SECTION_HEADER(Struct):
     _fields_ = (
         ("Name", BYTE * IMAGE_SIZEOF_SHORT_NAME),
         ("VirtualSize", DWORD),
@@ -155,7 +144,7 @@ class IMAGE_SECTION_HEADER(SizedStruct):
 
 ################################################################################
 
-class IMAGE_EXPORT_DIRECTORY(SizedStruct):
+class IMAGE_EXPORT_DIRECTORY(Struct):
     _fields_ = (
         ("Characteristics", DWORD),
         ("TimeDateStamp", DWORD),
@@ -172,13 +161,13 @@ class IMAGE_EXPORT_DIRECTORY(SizedStruct):
 
 ################################################################################
 
-class IID_UNION(ctypes.Union):
+class IID_UNION(Union):
     _fields_ = (
         ("Characteristics", DWORD),
         ("OriginalFirstThunk", DWORD),
         )
 
-class IMAGE_IMPORT_DESCRIPTOR(SizedStruct):
+class IMAGE_IMPORT_DESCRIPTOR(Struct):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("anon", IID_UNION),
@@ -190,7 +179,7 @@ class IMAGE_IMPORT_DESCRIPTOR(SizedStruct):
 
 ################################################################################
 
-class IMAGE_DELAYLOAD_DESCRIPTOR(SizedStruct):
+class IMAGE_DELAYLOAD_DESCRIPTOR(Struct):
     _fields_ = (
         ("Attributes", DWORD),
         ("DllNameRVA", DWORD),
@@ -234,7 +223,7 @@ class pemap:
             self.name = fname
             self.key = str(fname).split("\\")[-1].lower()
             self.file_hdr = IMAGE_FILE_HEADER.from_address(fhaddr)
-            ohaddr = fhaddr + ctypes.sizeof(IMAGE_FILE_HEADER)
+            ohaddr = fhaddr + IMAGE_FILE_HEADER._size_
             self.opt_hdr = IMAGE_OPTIONAL_HEADER64.from_address(ohaddr)
             self.is64bit = True
             if self.opt_hdr.Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC:
@@ -242,7 +231,7 @@ class pemap:
                 self.opt_hdr = IMAGE_OPTIONAL_HEADER32.from_address(ohaddr)
 
             secaddr = ohaddr + self.file_hdr.SizeOfOptionalHeader
-            size = ctypes.sizeof(IMAGE_SECTION_HEADER)
+            size = IMAGE_SECTION_HEADER._size_
             self.sections = [
                 IMAGE_SECTION_HEADER.from_address(secaddr + i * size)
                 for i in range(self.file_hdr.NumberOfSections)
@@ -372,7 +361,7 @@ class pemap:
 
 ################################################################################
 
-class API_SET_NAMESPACE(SizedStruct):
+class API_SET_NAMESPACE(Struct):
     _fields_ = (
         ("Version", ULONG),
         ("Size", ULONG),
@@ -383,7 +372,7 @@ class API_SET_NAMESPACE(SizedStruct):
         ("HashFactor", ULONG),
         )
 
-class API_SET_NAMESPACE_ENTRY(SizedStruct):
+class API_SET_NAMESPACE_ENTRY(Struct):
     _fields_ = (
         ("Flags", ULONG),
         ("NameOffset", ULONG),
@@ -393,7 +382,7 @@ class API_SET_NAMESPACE_ENTRY(SizedStruct):
         ("ValueCount", ULONG),
         )
 
-class API_SET_VALUE_ENTRY(SizedStruct):
+class API_SET_VALUE_ENTRY(Struct):
     _fields_ = (
         ("Flags", ULONG),
         ("NameOffset", ULONG),
@@ -419,7 +408,7 @@ class ApiSet():
     ############################################################################
 
     def _get_entry_info(self, idx, for_lookup):
-        ENTRY_SIZE = ctypes.sizeof(API_SET_NAMESPACE_ENTRY)
+        ENTRY_SIZE = API_SET_NAMESPACE_ENTRY._size_
         addr = self.entry_addr + idx * ENTRY_SIZE
         entry = API_SET_NAMESPACE_ENTRY.from_address(addr)
         str_len = (
@@ -438,7 +427,7 @@ class ApiSet():
                 res_len = value.ValueLength // WCHAR_SIZE
                 res_addr = self.base + value.ValueOffset
                 yield ctypes.wstring_at(res_addr, res_len)
-            value_addr += ctypes.sizeof(API_SET_VALUE_ENTRY)
+            value_addr += API_SET_VALUE_ENTRY._size_
 
     ############################################################################
 

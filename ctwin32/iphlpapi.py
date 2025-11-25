@@ -15,6 +15,8 @@ from .wtypes import (
     byte_buffer,
     string_buffer,
     BYTE,
+    Struct,
+    Union,
     DWORD,
     GUID,
     INT,
@@ -61,21 +63,21 @@ GAA_FLAG_SKIP_DNS_INFO               = 0x0800
 
 ################################################################################
 
-class _STRUCTURE(ctypes.Structure):
+class _STRUCTURE(Struct):
     _fields_ = (("Length", ULONG), ("Flags", ULONG))
 
-class _UNION(ctypes.Union):
+class _UNION(Union):
     _fields_ = (("Alignment", ULONGLONG), ("s", _STRUCTURE))
     _anonymous_ = ("s",)
 
-class SOCKADDR(ctypes.Structure):
+class SOCKADDR(Struct):
     _fields_ = (("sa_family", WORD), ("sa_data", BYTE * 14))
 
 PSOCKADDR = POINTER(SOCKADDR)
 
 ################################################################################
 
-class SOCKET_ADDRESS(ctypes.Structure):
+class SOCKET_ADDRESS(Struct):
     _fields_ = (
         ("lpSockaddr", PSOCKADDR),
         ("iSockaddrLength", INT)
@@ -84,7 +86,7 @@ PSOCKET_ADDRESS = POINTER(SOCKET_ADDRESS)
 
 ################################################################################
 
-class IP_ADAPTER_UNICAST_ADDRESS(ctypes.Structure):
+class IP_ADAPTER_UNICAST_ADDRESS(Struct):
     pass
 PIP_ADAPTER_UNICAST_ADDRESS = POINTER(IP_ADAPTER_UNICAST_ADDRESS)
 
@@ -97,7 +99,7 @@ IP_ADAPTER_UNICAST_ADDRESS._fields_ = (
 
 ################################################################################
 
-class IP_ADAPTER_PREFIX(ctypes.Structure):
+class IP_ADAPTER_PREFIX(Struct):
     pass
 PIP_ADAPTER_PREFIX = POINTER(IP_ADAPTER_PREFIX)
 IP_ADAPTER_PREFIX._fields_ = (
@@ -109,7 +111,7 @@ IP_ADAPTER_PREFIX._fields_ = (
 
 ################################################################################
 
-class IP_ADAPTER_ADDRESSES(ctypes.Structure):
+class IP_ADAPTER_ADDRESSES(Struct):
     pass
 PIP_ADAPTER_ADDRESSES = POINTER(IP_ADAPTER_ADDRESSES)
 IP_ADAPTER_ADDRESSES._fields_ = (
@@ -138,7 +140,7 @@ IP_ADAPTER_ADDRESSES._fields_ = (
 
 ################################################################################
 
-class S_UN_B(ctypes.Structure):
+class S_UN_B(Struct):
     _fields_ = (
         ("s_b1", BYTE),
         ("s_b2", BYTE),
@@ -146,23 +148,23 @@ class S_UN_B(ctypes.Structure):
         ("s_b4", BYTE)
         )
 
-class S_UN_W(ctypes.Structure):
+class S_UN_W(Struct):
     _fields_ = (("s_w1", WORD), ("s_w2", WORD))
 
-class S_UN(ctypes.Union):
+class S_UN(Union):
     _fields_ = (
         ("S_un_b", S_UN_B),
         ("S_un_w", S_UN_W),
         ("S_addr", ULONG.__ctype_be__)
         )
 
-class IN_ADDR(ctypes.Structure):
+class IN_ADDR(Struct):
     _fields_ = (("S_un", S_UN),)
 PIN_ADDR = POINTER(IN_ADDR)
 
 ################################################################################
 
-class SOCKADDR_IN(ctypes.Structure):
+class SOCKADDR_IN(Struct):
     _fields_ = (
         ("sin_family", WORD),
         ("sin_port", WORD),
@@ -173,13 +175,13 @@ PSOCKADDR_IN = POINTER(SOCKADDR_IN)
 
 ################################################################################
 
-class IN6_ADDR(ctypes.Union):
+class IN6_ADDR(Union):
     _fields_ = (("Byte", BYTE * 16), ("Word", WORD * 8))
 PIN6_ADDR = POINTER(IN6_ADDR)
 
 ################################################################################
 
-class SOCKADDR_IN6(ctypes.Structure):
+class SOCKADDR_IN6(Struct):
     _fields_ = (
         ("sin6_family", WORD),
         ("sin6_port", WORD),
@@ -191,7 +193,7 @@ PSOCKADDR_IN6 = POINTER(SOCKADDR_IN6)
 
 ################################################################################
 
-class SOCKADDR_INET(ctypes.Union):
+class SOCKADDR_INET(Union):
     _fields_ = (
         ("Ipv4", SOCKADDR_IN),
         ("Ipv6", SOCKADDR_IN6),
@@ -358,7 +360,7 @@ def netifaces(version=4, include_loopback=False):
 
 IF_MAX_PHYS_ADDRESS_LENGTH = 32
 
-class MIB_IPNET_ROW2(ctypes.Structure):
+class MIB_IPNET_ROW2(Struct):
     _fields_ = (
         ("Address", SOCKADDR_INET),
         ("InterfaceIndex", ULONG),
@@ -370,13 +372,13 @@ class MIB_IPNET_ROW2(ctypes.Structure):
         ("ReachabilityTime", ULONG),
         )
 
-class IP_ADDRESS_PREFIX(ctypes.Structure):
+class IP_ADDRESS_PREFIX(Struct):
     _fields_ = (
         ("Prefix", SOCKADDR_INET),
         ("PrefixLength", BYTE),
         )
 
-class MIB_IPFORWARD_ROW2(ctypes.Structure):
+class MIB_IPFORWARD_ROW2(Struct):
     _fields_ = (
         ("InterfaceLuid", ULONGLONG),
         ("InterfaceIndex", ULONG),
@@ -409,7 +411,7 @@ def GetIpNetTable2(version=0):
     try:
         num = ctypes.cast(ptr, PULONG).contents.value
 
-        class MIB_IPNETTABLE2(ctypes.Structure):
+        class MIB_IPNETTABLE2(Struct):
             _fields_ = (
                 ("NumEntries", ULONG),
                 ("Table", MIB_IPNET_ROW2 * num),
@@ -442,7 +444,7 @@ def GetIpForwardTable2(version=0):
     try:
         num = ctypes.cast(ptr, PULONG).contents.value
 
-        class MIB_IPFORWARD_TABLE2(ctypes.Structure):
+        class MIB_IPFORWARD_TABLE2(Struct):
             _fields_ = (
                 ("NumEntries", ULONG),
                 ("Table", MIB_IPFORWARD_ROW2 * num),

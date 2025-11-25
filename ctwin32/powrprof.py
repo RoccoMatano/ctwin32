@@ -9,6 +9,7 @@ import ctypes
 from .wtypes import (
     byte_buffer,
     BOOLEAN,
+    Struct,
     ENDIANNESS,
     LONG,
     PVOID,
@@ -65,7 +66,7 @@ def get_system_execution_state():
 
 ################################################################################
 
-class PROCESSOR_POWER_INFORMATION(ctypes.Structure):
+class PROCESSOR_POWER_INFORMATION(Struct):
     _fields_ = (
         ("Number", ULONG),
         ("MaxMhz", ULONG),
@@ -78,7 +79,7 @@ class PROCESSOR_POWER_INFORMATION(ctypes.Structure):
 def get_system_processor_power_info():
     nump = kernel.GetSystemInfo().dwNumberOfProcessors
     PPIN = PROCESSOR_POWER_INFORMATION * nump
-    bts = CallNtPowerInformation(ProcessorInformation, ctypes.sizeof(PPIN))
+    bts = CallNtPowerInformation(ProcessorInformation, PPIN._size_)
     return [ns_from_struct(i) for i in PPIN.from_buffer_copy(bts)]
 
 ################################################################################

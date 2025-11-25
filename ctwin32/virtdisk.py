@@ -5,9 +5,10 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     BOOL,
+    Struct,
+    Union,
     DWORD,
     GUID,
     LONG,
@@ -72,7 +73,7 @@ ATTACH_VIRTUAL_DISK_VERSION_2 = 2
 
 ################################################################################
 
-class VIRTUAL_STORAGE_TYPE(ctypes.Structure):
+class VIRTUAL_STORAGE_TYPE(Struct):
     _fields_ = (
         ("DeviceId", ULONG),
         ("VendorId", GUID),
@@ -81,19 +82,19 @@ PVIRTUAL_STORAGE_TYPE = POINTER(VIRTUAL_STORAGE_TYPE)
 
 ################################################################################
 
-class _OVDP_VERSION1(ctypes.Structure):
+class _OVDP_VERSION1(Struct):
     _fields_ = (
         ("RWDepth", ULONG),
         )
 
-class _OVDP_VERSION2(ctypes.Structure):
+class _OVDP_VERSION2(Struct):
     _fields_ = (
         ("GetInfoOnly", BOOL),
         ("ReadOnly", BOOL),
         ("ResiliencyGuid", GUID),
         )
 
-class _OVDP_VERSION3(ctypes.Structure):
+class _OVDP_VERSION3(Struct):
     _fields_ = (
         ("GetInfoOnly", BOOL),
         ("ReadOnly", BOOL),
@@ -101,38 +102,38 @@ class _OVDP_VERSION3(ctypes.Structure):
         ("SnapshotId", GUID),
         )
 
-class _OVDP_UNION(ctypes.Union):
+class _OVDP_UNION(Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),
         ("Version2", _OVDP_VERSION2),
         ("Version3", _OVDP_VERSION3),
         )
 
-class OPEN_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
+class OPEN_VIRTUAL_DISK_PARAMETERS(Struct):
     _fields_ = (("Version", LONG), ("u", _OVDP_UNION))
     _anonymous_ = ("u",)
 POPEN_VIRTUAL_DISK_PARAMETERS = POINTER(OPEN_VIRTUAL_DISK_PARAMETERS)
 
 ################################################################################
 
-class _AVDP_VERSION1(ctypes.Structure):
+class _AVDP_VERSION1(Struct):
     _fields_ = (
         ("Reserved", ULONG),
         )
 
-class _AVDP_VERSION2(ctypes.Structure):
+class _AVDP_VERSION2(Struct):
     _fields_ = (
         ("RestrictedOffset", ULARGE_INTEGER),
         ("RestrictedLength", ULARGE_INTEGER),
         )
 
-class _AVDP_UNION(ctypes.Union):
+class _AVDP_UNION(Union):
     _fields_ = (
         ("Version1", _OVDP_VERSION1),
         ("Version2", _OVDP_VERSION2),
         )
 
-class ATTACH_VIRTUAL_DISK_PARAMETERS(ctypes.Structure):
+class ATTACH_VIRTUAL_DISK_PARAMETERS(Struct):
     _fields_ = (("Version", LONG), ("u", _AVDP_UNION))
     _anonymous_ = ("u",)
 PATTACH_VIRTUAL_DISK_PARAMETERS = POINTER(ATTACH_VIRTUAL_DISK_PARAMETERS)

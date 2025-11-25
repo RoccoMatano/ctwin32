@@ -16,6 +16,7 @@ from . import (
     )
 from .wtypes import (
     CHAR,
+    Struct,
     FILETIME,
     HANDLE,
     INT,
@@ -55,14 +56,14 @@ _sec = ApiDll("secur32.dll")
 
 ################################################################################
 
-class LSA_LAST_INTER_LOGON_INFO(ctypes.Structure):
+class LSA_LAST_INTER_LOGON_INFO(Struct):
     _fields_ = (
         ("LastSuccessfulLogon", LARGE_INTEGER),
         ("LastFailedLogon", LARGE_INTEGER),
         ("FailedAttemptCountSinceLastSuccessfulLogon", ULONG),
         )
 
-class SECURITY_LOGON_SESSION_DATA(ctypes.Structure):
+class SECURITY_LOGON_SESSION_DATA(Struct):
     _fields_ = (
         ("Size", ULONG),
         ("LogonId", LUID),
@@ -195,7 +196,7 @@ def LsaConnectUntrusted():
 
 ################################################################################
 
-class LSA_STRING(ctypes.Structure):
+class LSA_STRING(Struct):
     _fields_ = (
         ("Length", WORD),
         ("MaximumLength", WORD),
@@ -214,7 +215,7 @@ def LsaStrFromStr(init):
     if isinstance(init, str):
         init = init.encode(get_ansi_encoding())
 
-    class SELF_CONTAINED_LSAS(ctypes.Structure):
+    class SELF_CONTAINED_LSAS(Struct):
         _fields_ = (
             ("ls", LSA_STRING),
             ("buf", CHAR * (1 + len(init))),
@@ -254,7 +255,7 @@ def LsaLookupAuthenticationPackage(hlsa, name):
 
 TOKEN_SOURCE_LENGTH = 8
 
-class TOKEN_SOURCE(ctypes.Structure):
+class TOKEN_SOURCE(Struct):
     _fields_ = (
         ("SourceName", CHAR * TOKEN_SOURCE_LENGTH),
         ("SourceIdentifier", LUID),
@@ -264,7 +265,7 @@ PTOKEN_SOURCE = POINTER(TOKEN_SOURCE)
 
 ################################################################################
 
-class QUOTA_LIMITS(ctypes.Structure):
+class QUOTA_LIMITS(Struct):
     _fields_ = (
         ("PagedPoolLimit", SIZE_T),
         ("NonPagedPoolLimit", SIZE_T),

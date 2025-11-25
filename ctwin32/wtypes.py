@@ -97,6 +97,45 @@ def WinError(code=None, descr=None):
 
 ################################################################################
 
+def _ct_repr(cto):
+    if isinstance(cto, (ctypes.Structure, ctypes.Union)):
+        str_items = [
+            f"    {n}={_ct_repr(getattr(cto, n))}," for n, *_ in cto._fields_
+            ]
+        return "\n".join([f"{type(cto).__name__}(", *str_items, "    )"])
+    if isinstance(cto, ctypes.Array):
+        return f"[{', '.join(_ct_repr(e) for e in cto)}]"
+    if isinstance(cto, ctypes._Pointer):
+        value = ctypes.c_void_p.from_buffer(cto).value or 0
+        return f"{type(cto).__name__}({value:#x})"
+    return repr(cto)
+
+################################################################################
+
+class classproperty(property):
+    def __get__(self, owner, owner_type):
+        return self.fget(owner_type)
+
+################################################################################
+
+class Union(ctypes.Union):
+    @classproperty
+    def _size_(cls): # noqa: N805 this IS a class method
+        return ctypes.sizeof(cls)
+    def __repr__(self):
+        return _ct_repr(self)
+
+################################################################################
+
+class Struct(ctypes.Structure):
+    @classproperty
+    def _size_(cls): # noqa: N805 this IS a class method
+        return ctypes.sizeof(cls)
+    def __repr__(self):
+        return _ct_repr(self)
+
+################################################################################
+
 # some structure definitions
 
 class GUID(ULONG * 4):         # using ULONG for correct alignment
@@ -138,7 +177,7 @@ class GUID(ULONG * 4):         # using ULONG for correct alignment
 
 ################################################################################
 
-class FILETIME(ctypes.Structure):
+class FILETIME(Struct):
     "Time in 100 nanosecond steps since January 1, 1601 (UTC)"
     # cannot represent FILETIME as ctypes.c_ulonglong since that would change
     # the alignment
@@ -177,7 +216,7 @@ class FILETIME(ctypes.Structure):
 
 ################################################################################
 
-class SYSTEMTIME(ctypes.Structure):
+class SYSTEMTIME(Struct):
     _fields_ = (
         ("wYear",         WORD),
         ("wMonth",        WORD),
@@ -235,15 +274,9 @@ class SYSTEMTIME(ctypes.Structure):
         self.wDayOfWeek = 0 if st.tm_wday == 6 else st.tm_wday + 1
         return self
 
-    ############################################################################
-
-    def __repr__(self):
-        flds = ", ".join([f"{n}={getattr(self, n)}" for n, _ in self._fields_])
-        return f"{self.__class__.__name__}({flds})"
-
 ################################################################################
 
-class POINT(ctypes.Structure):
+class POINT(Struct):
     _fields_ = (
         ("x", LONG),
         ("y", LONG)
@@ -259,12 +292,9 @@ class POINT(ctypes.Structure):
     def copy(self):
         return self.__class__(self.x, self.y)
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self.x}, {self.y})"
-
 ################################################################################
 
-class RECT(ctypes.Structure):
+class RECT(Struct):
     _fields_ = (
         ("left", LONG),
         ("top", LONG),
@@ -287,13 +317,9 @@ class RECT(ctypes.Structure):
     def copy(self):
         return self.__class__(self.left, self.top, self.right, self.bottom)
 
-    def __repr__(self):
-        name = self.__class__.__name__
-        return f"{name}({self.left}, {self.top}, {self.right}, {self.bottom})"
-
 ################################################################################
 
-class LUID(ctypes.Structure):
+class LUID(Struct):
     _fields_ = (
         ("LowPart", DWORD),
         ("HighPart", LONG)
@@ -313,7 +339,7 @@ class LUID(ctypes.Structure):
 
 ################################################################################
 
-class CallbackContext(ctypes.Structure):
+class CallbackContext(Struct):
     _fields_ = (
         ("callback", ctypes.py_object),
         ("context", ctypes.py_object)
@@ -321,7 +347,7 @@ class CallbackContext(ctypes.Structure):
 
 ################################################################################
 
-class LOGFONT(ctypes.Structure):
+class LOGFONT(Struct):
     _fields_ = (
         ("lfHeight", LONG),
         ("lfWidth", LONG),
@@ -341,7 +367,7 @@ class LOGFONT(ctypes.Structure):
 
 ################################################################################
 
-class OSVERSIONINFOEX(ctypes.Structure):
+class OSVERSIONINFOEX(Struct):
     _fields_ = (
         ("dwOSVersionInfoSize", DWORD),
         ("dwMajorVersion", DWORD),
@@ -357,11 +383,11 @@ class OSVERSIONINFOEX(ctypes.Structure):
         )
 
     def __init__(self):
-        self.dwOSVersionInfoSize = ctypes.sizeof(self)
+        self.dwOSVersionInfoSize = self._size_
 
 ################################################################################
 
-class WIN32_FIND_DATA(ctypes.Structure):
+class WIN32_FIND_DATA(Struct):
     _fields_ = (
         ("dwFileAttributes", DWORD),
         ("ftCreationTime", FILETIME),
@@ -514,7 +540,7 @@ class ArgcArgvFromArgs():
             self._argc = len(args)
             chain = "\0".join(args) + "\0"
 
-            class ArgumentBuffer(ctypes.Structure):
+            class ArgumentBuffer(Struct):
                 _fields_ = (
                     ("pointers", PWSTR * self._argc),
                     ("strings", WCHAR * (wchar_len_sz(chain) - 1)),
@@ -537,7 +563,7 @@ class ArgcArgvFromArgs():
 
 ################################################################################
 
-class UNICODE_STRING(ctypes.Structure):
+class UNICODE_STRING(Struct):
     _fields_ = (
         ("Length", WORD),
         ("MaximumLength", WORD),
@@ -561,7 +587,7 @@ def UnicodeStrBuffer(init):
         ws = init
         init = "\0" * init
 
-    class SELF_CONTAINED_US(ctypes.Structure):
+    class SELF_CONTAINED_US(Struct):
         _fields_ = (
             ("us", UNICODE_STRING),
             ("buf", WCHAR * ws),
@@ -589,7 +615,7 @@ def UnicodeStrArray(strings):
     chain = "\0".join(strings)
     buf_len = wchar_len_sz(chain)
 
-    class SELF_CONTAINED_USA(ctypes.Structure):
+    class SELF_CONTAINED_USA(Struct):
         _fields_ = (
             ("us", UNICODE_STRING * num_strings),
             ("buf", WCHAR * buf_len),

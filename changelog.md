@@ -20,12 +20,15 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.GetComputerNameEx
 - iphlpapi.GetIpForwardTable2
 - iphlpapi.gateways
+- wtypes.Struct and wtypes.Union
 
 ### Changed
 
 - use iphlpapi.netifaces in sample netifaces.py
 - replaced ctypes.WinDLL with ctwin32.ApiDll
 - renamed kernel.AdjustTime -> kernel.adjust_time
+- use wtypes.Struct and wtypes.Union instead of ctypes.Structure and
+  ctypes.Union
 
 ## [4.0.0] - 2025-10-08
 

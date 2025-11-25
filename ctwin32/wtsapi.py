@@ -5,9 +5,9 @@
 #
 ################################################################################
 
-import ctypes
 from .wtypes import (
     BOOL,
+    Struct,
     DWORD,
     HANDLE,
     LONG,
@@ -27,7 +27,7 @@ from . import (
 
 _wts = ApiDll("wtsapi32.dll")
 
-class WTS_SESSION_INFO(ctypes.Structure):
+class WTS_SESSION_INFO(Struct):
     _fields_ = (
         ("SessionId", DWORD),
         ("pWinStationName", PWSTR),

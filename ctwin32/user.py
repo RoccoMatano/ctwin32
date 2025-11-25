@@ -15,6 +15,8 @@ from .wtypes import (
     BYTE,
     CallbackContext,
     CallbackContextPtr,
+    Struct,
+    Union,
     DWORD,
     HANDLE,
     HINSTANCE,
@@ -361,7 +363,7 @@ def AdjustWindowRectEx(rc, style, has_menu, exstyle):
 
 ################################################################################
 
-class WINDOWPLACEMENT(ctypes.Structure):
+class WINDOWPLACEMENT(Struct):
     _fields_ = (
         ("length", UINT),
         ("flags", UINT),
@@ -372,7 +374,7 @@ class WINDOWPLACEMENT(ctypes.Structure):
         )
 
     def __init__(self, f=0, s=1, mi=(0, 0), ma=(0, 0), no=(0, 0, 0, 0)):
-        self.length = ctypes.sizeof(WINDOWPLACEMENT)
+        self.length = self._size_
         self.flags = f
         self.showCmd = s
         self.ptMinPosition = mi
@@ -470,7 +472,7 @@ def MessageBox(hwnd, text, caption, flags):
 
 ################################################################################
 
-class MOUSEINPUT(ctypes.Structure):
+class MOUSEINPUT(Struct):
     _fields_ = (
         ("dx", LONG),
         ("dy", LONG),
@@ -480,7 +482,7 @@ class MOUSEINPUT(ctypes.Structure):
         ("dwExtraInfo", UINT_PTR),
         )
 
-class KEYBDINPUT(ctypes.Structure):
+class KEYBDINPUT(Struct):
     _fields_ = (
         ("wVk", WORD),
         ("wScan", WORD),
@@ -489,21 +491,21 @@ class KEYBDINPUT(ctypes.Structure):
         ("dwExtraInfo", UINT_PTR),
         )
 
-class HARDWAREINPUT(ctypes.Structure):
+class HARDWAREINPUT(Struct):
     _fields_ = (
         ("uMsg", DWORD),
         ("wParamL", WORD),
         ("wParamH", WORD),
         )
 
-class _DUMMY_INPUT_UNION(ctypes.Union):
+class _DUMMY_INPUT_UNION(Union):
     _fields_ = (
         ("mi", MOUSEINPUT),
         ("ki", KEYBDINPUT),
         ("hi", HARDWAREINPUT),
         )
 
-class INPUT(ctypes.Structure):
+class INPUT(Struct):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("type", DWORD),
@@ -512,7 +514,7 @@ class INPUT(ctypes.Structure):
 
     def copy(self):
         other = INPUT()
-        ctypes.memmove(ref(other), ref(self), ctypes.sizeof(INPUT))
+        ctypes.memmove(ref(other), ref(self), other._size_)
         return other
 
     def as_keyup(self):
@@ -550,7 +552,7 @@ def SendInput(inputs):
             ptr = ctypes.cast(inputs, PINPUT)
         except Exception as e:
             raise TypeError(f"expected INPUT or list of INPUTs: {e}") from e
-    raise_on_zero(_SendInput(num, ptr, ctypes.sizeof(INPUT)))
+    raise_on_zero(_SendInput(num, ptr, INPUT._size_))
 
 ################################################################################
 
@@ -583,7 +585,7 @@ def MonitorFromWindow(hwnd, flags=MONITOR_DEFAULTTOPRIMARY):
 
 ################################################################################
 
-class MONITORINFOEX(ctypes.Structure):
+class MONITORINFOEX(Struct):
     _fields_ = (
         ("cbSize", DWORD),
         ("rcMonitor", RECT),
@@ -593,7 +595,7 @@ class MONITORINFOEX(ctypes.Structure):
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 PMONITORINFOEX = POINTER(MONITORINFOEX)
 
@@ -683,7 +685,7 @@ def DefWindowProc(hwnd, msg, wp, lp):
 
 ################################################################################
 
-class CREATESTRUCT(ctypes.Structure):
+class CREATESTRUCT(Struct):
     _fields_ = (
         ("lpCreateParams", PVOID),
         ("hInstance", HANDLE),
@@ -709,7 +711,7 @@ WNDPROC = ctypes.WINFUNCTYPE(
     LPARAM
     )
 
-class WNDCLASS(ctypes.Structure):
+class WNDCLASS(Struct):
     _fields_ = (
         ("style", UINT),
         ("lpfnWndProc", WNDPROC),
@@ -727,7 +729,7 @@ PWNDCLASS = POINTER(WNDCLASS)
 
 ################################################################################
 
-class MSG(ctypes.Structure):
+class MSG(Struct):
     _fields_ = (
         ("hWnd", HWND),
         ("message", UINT),
@@ -744,7 +746,7 @@ PMSG = POINTER(MSG)
 
 ################################################################################
 
-class PAINTSTRUCT(ctypes.Structure):
+class PAINTSTRUCT(Struct):
     _fields_ = (
         ("hdc", HANDLE),
         ("fErase", BOOL),
@@ -1308,21 +1310,21 @@ def CreateIconFromResourceEx(
 
 ################################################################################
 
-class GUITHREADINFO(ctypes.Structure):
+class GUITHREADINFO(Struct):
     _fields_ = (
-        ("cbSize",        DWORD),
-        ("flags",         DWORD),
-        ("hwndActive",    HWND),
-        ("hwndFocus",     HWND),
-        ("hwndCapture",   HWND),
+        ("cbSize", DWORD),
+        ("flags", DWORD),
+        ("hwndActive", HWND),
+        ("hwndFocus", HWND),
+        ("hwndCapture", HWND),
         ("hwndMenuOwner", HWND),
-        ("hwndMoveSize",  HWND),
-        ("hwndCaret",     HWND),
-        ("rcCaret",       RECT),
+        ("hwndMoveSize", HWND),
+        ("hwndCaret", HWND),
+        ("rcCaret", RECT),
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 PGUITHREADINFO = POINTER(GUITHREADINFO)
 
@@ -1345,28 +1347,28 @@ _SystemParametersInfo = _usr.fun_fact(
 
 ################################################################################
 
-class NONCLIENTMETRICS(ctypes.Structure):
+class NONCLIENTMETRICS(Struct):
     _fields_ = (
-        ("cbSize",             UINT),
-        ("iBorderWidth",       INT),
-        ("iScrollWidth",       INT),
-        ("iScrollHeight",      INT),
-        ("iCaptionWidth",      INT),
-        ("iCaptionHeight",     INT),
-        ("lfCaptionFont",      LOGFONT),
-        ("iSmCaptionWidth",    INT),
-        ("iSmCaptionHeight",   INT),
-        ("lfSmCaptionFont",    LOGFONT),
-        ("iMenuWidth",         INT),
-        ("iMenuHeight",        INT),
-        ("lfMenuFont",         LOGFONT),
-        ("lfStatusFont",       LOGFONT),
-        ("lfMessageFont",      LOGFONT),
+        ("cbSize", UINT),
+        ("iBorderWidth", INT),
+        ("iScrollWidth", INT),
+        ("iScrollHeight", INT),
+        ("iCaptionWidth", INT),
+        ("iCaptionHeight", INT),
+        ("lfCaptionFont", LOGFONT),
+        ("iSmCaptionWidth", INT),
+        ("iSmCaptionHeight", INT),
+        ("lfSmCaptionFont", LOGFONT),
+        ("iMenuWidth", INT),
+        ("iMenuHeight", INT),
+        ("lfMenuFont", LOGFONT),
+        ("lfStatusFont", LOGFONT),
+        ("lfMessageFont", LOGFONT),
         ("iPaddedBorderWidth", INT),
         )
 
     def __init__(self):
-        self.cbSize = ctypes.sizeof(self)
+        self.cbSize = self._size_
 
 def get_non_client_metrics():
     ncm = NONCLIENTMETRICS()
@@ -1381,7 +1383,7 @@ def get_non_client_metrics():
     return ncm
 
 def set_non_client_metrics(ncm, winini=SPIF_UPDATEINIFILE | SPIF_SENDCHANGE):
-    ncm.cbSize = ctypes.sizeof(ncm)
+    ncm.cbSize = ncm._size_
     raise_on_zero(
         _SystemParametersInfo(
             SPI_SETNONCLIENTMETRICS,
@@ -1424,7 +1426,7 @@ def get_work_area():
 
 ################################################################################
 
-class DLGTEMPLATE(ctypes.Structure):
+class DLGTEMPLATE(Struct):
     _pack_ = 2  # for correct length
     _fields_ = (
         ("style", DWORD),
@@ -1438,7 +1440,7 @@ class DLGTEMPLATE(ctypes.Structure):
 
 ################################################################################
 
-class DLGTEMPLATEEX(ctypes.Structure):
+class DLGTEMPLATEEX(Struct):
     _pack_ = 2  # for correct length
     _fields_ = (
         ("dlgVer", WORD),
@@ -1455,7 +1457,7 @@ class DLGTEMPLATEEX(ctypes.Structure):
 
 ################################################################################
 
-class DLGITEMTEMPLATE(ctypes.Structure):
+class DLGITEMTEMPLATE(Struct):
     _pack_ = 2  # for correct length
     _fields_ = (
         ("style", DWORD),
@@ -1469,7 +1471,7 @@ class DLGITEMTEMPLATE(ctypes.Structure):
 
 ################################################################################
 
-class NMHDR(ctypes.Structure):
+class NMHDR(Struct):
     _fields_ = (
         ("hwndFrom", HWND),
         ("idFrom", UINT_PTR),
@@ -1482,7 +1484,7 @@ MSDN_LAST = MSDN_FIRST + 50
 
 MSDN_ACTIVATE = MSDN_FIRST + 1
 
-class NM_MSD_ACTIVATE(ctypes.Structure):
+class NM_MSD_ACTIVATE(Struct):
     _fields_ = (
         ("hdr", NMHDR),
         ("is_active", BOOL),
@@ -1589,7 +1591,7 @@ except (FileNotFoundError, AttributeError):
 
 ################################################################################
 
-class _WINDOWCOMPOSITIONATTRIBDATA(ctypes.Structure):
+class _WINDOWCOMPOSITIONATTRIBDATA(Struct):
     _fields_ = (
         ("Attrib", UINT),
         ("pvData", PVOID),
@@ -1643,7 +1645,7 @@ def GetUserObjectInformation(hdl, idx):
 
 ################################################################################
 
-class USEROBJECTFLAGS(ctypes.Structure):
+class USEROBJECTFLAGS(Struct):
     _fields_ = (
         ("fInherit", BOOL),
         ("fReserved", BOOL),
@@ -1658,7 +1660,7 @@ def is_interactive_process():
 
 ################################################################################
 
-class RAWINPUTHEADER(ctypes.Structure):
+class RAWINPUTHEADER(Struct):
     _fields_ = (
         ("dwType", DWORD),
         ("dwSize", DWORD),
@@ -1666,20 +1668,20 @@ class RAWINPUTHEADER(ctypes.Structure):
         ("wParam", WPARAM),
         )
 
-class ButtonFlagsData(ctypes.Structure):
+class ButtonFlagsData(Struct):
     _fields_ = (
         ("usButtonFlags", WORD),
         ("usButtonData", SHORT),
         )
 
-class ButtonFlagsDataUnion(ctypes.Union):
+class ButtonFlagsDataUnion(Union):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("ulButtons", ULONG),
         ("anon", ButtonFlagsData),
         )
 
-class RAWMOUSE(ctypes.Structure):
+class RAWMOUSE(Struct):
     _anonymous_ = ("anon",)
     _fields_ = (
         ("usFlags", WORD),
@@ -1689,7 +1691,7 @@ class RAWMOUSE(ctypes.Structure):
         ("lLastY", LONG),
         ("ulExtraInformation", ULONG),
         )
-class RAWKEYBOARD(ctypes.Structure):
+class RAWKEYBOARD(Struct):
     _fields_ = (
         ("MakeCode", WORD),
         ("Flags", WORD),
@@ -1699,27 +1701,27 @@ class RAWKEYBOARD(ctypes.Structure):
         ("ExtraInformation", ULONG),
         )
 
-class RAWHID(ctypes.Structure):
+class RAWHID(Struct):
     _fields_ = (
         ("dwSizeHid", DWORD),
         ("dwCount", DWORD),
         ("bRawData", BYTE * 1),
         )
 
-class RAWINPUTDATA(ctypes.Union):
+class RAWINPUTDATA(Union):
     _fields_ = (
         ("mouse", RAWMOUSE),
         ("keyboard", RAWKEYBOARD),
         ("hid", RAWHID),
         )
 
-class RAWINPUT(ctypes.Structure):
+class RAWINPUT(Struct):
     _fields_ = (
         ("header", RAWINPUTHEADER),
         ("data", RAWINPUTDATA),
         )
 
-class RAWINPUTDEVICE(ctypes.Structure):
+class RAWINPUTDEVICE(Struct):
     _fields_ = (
         ("usUsagePage", WORD),
         ("usUsage", WORD),
@@ -1738,26 +1740,26 @@ def RegisterRawInputDevices(raw_imp_devs):
     size = len(raw_imp_devs)
     arr = (RAWINPUTDEVICE * size)(*raw_imp_devs)
     raise_on_zero(
-        _RegisterRawInputDevices(ref(arr), size, ctypes.sizeof(RAWINPUTDEVICE))
+        _RegisterRawInputDevices(ref(arr), size, RAWINPUTDEVICE._size_)
         )
 
 ################################################################################
 
 def _make_raw_hid_input(buf, size, count):
-    class REAL_RAWHID(ctypes.Structure):
+    class REAL_RAWHID(Struct):
         _fields_ = (
             ("dwSizeHid", DWORD),
             ("dwCount", DWORD),
             ("bRawData", BYTE * (size * count)),
             )
-    class REAL_RAWINPUTDATA(ctypes.Union):
+    class REAL_RAWINPUTDATA(Union):
         _fields_ = (
             ("mouse", RAWMOUSE),
             ("keyboard", RAWKEYBOARD),
             ("hid", REAL_RAWHID),
             )
 
-    class REAL_RAWINPUT(ctypes.Structure):
+    class REAL_RAWINPUT(Struct):
         _fields_ = (
             ("header", RAWINPUTHEADER),
             ("data", REAL_RAWINPUTDATA),
@@ -1779,19 +1781,19 @@ def GetRawInputData(hRaw):
         RID_INPUT,
         None,
         ref(size),
-        ctypes.sizeof(RAWINPUTHEADER)
+        RAWINPUTHEADER._size_
         )
     raise_if(res != 0)
 
     # use at least enough as needed by RAWINPUT (keyboard data will be shorter)
-    size.value = max(size.value, ctypes.sizeof(RAWINPUT))
+    size.value = max(size.value, RAWINPUT._size_)
     buf = byte_buffer(size.value)
     res = _GetRawInputData(
         hRaw,
         RID_INPUT,
         ref(buf),
         ref(size),
-        ctypes.sizeof(RAWINPUTHEADER)
+        RAWINPUTHEADER._size_
         )
     raise_if(res < 1)
 

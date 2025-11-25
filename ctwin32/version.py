@@ -9,6 +9,7 @@ import ctypes
 from .wtypes import (
     byte_buffer,
     BOOL,
+    Struct,
     DWORD,
     PDWORD,
     PPVOID,
@@ -31,7 +32,7 @@ _ver = ApiDll("version.dll")
 
 ################################################################################
 
-class VS_FIXEDFILEINFO(ctypes.Structure):
+class VS_FIXEDFILEINFO(Struct):
     _fields_ = (
         ("dwSignature", DWORD),
         ("dwStrucVersion", DWORD),
@@ -116,7 +117,7 @@ _str_info_names = [
     "SpecialBuild",
     ]
 
-class _LANG_CP(ctypes.Structure):
+class _LANG_CP(Struct):
     _fields_ = (
         ("lang", WORD),
         ("cp", WORD),
@@ -130,7 +131,7 @@ def get_string_info(fname, block=None):
         block = GetFileVersionInfo(fname)
 
     lc_array = VerQueryValue(block, r"\VarFileInfo\Translation")
-    if (len(lc_array) % ctypes.sizeof(_LANG_CP)) != 0:
+    if (len(lc_array) % _LANG_CP._size_) != 0:
         raise ValueError("invalid version resource")
 
     # just take the first language
