@@ -21,6 +21,7 @@ http://semver.org/spec/v2.0.0.html).
 - iphlpapi.GetIpForwardTable2
 - iphlpapi.gateways
 - wtypes.Struct and wtypes.Union
+- sample duimli.py
 
 ### Changed
 
