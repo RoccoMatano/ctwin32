@@ -398,7 +398,7 @@ def RegEnumValue(key, index):
             )
         if err == 0:
             break
-        elif err == ERROR_MORE_DATA:
+        if err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
             value = byte_buffer(vlen.value)
         else:
@@ -445,7 +445,7 @@ def RegQueryValueEx(key, name):
             )
         if err == 0:
             break
-        elif err == ERROR_MORE_DATA:
+        if err == ERROR_MORE_DATA:
             vlen = DWORD(vlen.value * 2)
             value = byte_buffer(vlen.value)
         else:
@@ -752,7 +752,7 @@ def GetTokenInformation(hdl, cls):
         buf = byte_buffer(size)
         if _GetTokenInformation(hdl, cls, buf, size, ref(rlen)):
             return buf.raw[:rlen.value]
-        elif (err := GetLastError()) != ERROR_INSUFFICIENT_BUFFER:
+        if (err := GetLastError()) != ERROR_INSUFFICIENT_BUFFER:
             raise WinError(err)
 
 ################################################################################
@@ -1838,12 +1838,10 @@ def ReadEventLog(hdl, flags=None, offs=0, size=16384):
             if err == ERROR_HANDLE_EOF:
                 got = 0
                 break
-            elif err == ERROR_INSUFFICIENT_BUFFER:
+            if err == ERROR_INSUFFICIENT_BUFFER:
                 continue
-            else:
-                raise WinError(err)
-        else:
-            break
+            raise WinError(err)
+        break
 
     res = []
     offs = 0

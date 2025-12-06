@@ -246,15 +246,14 @@ def get_service_pid(name):
             status = advapi.QueryServiceStatusEx(svc)
             if status.dwProcessId:
                 return status.dwProcessId
-            else:
-                advapi.StartService(svc, [])
-                deadline = time.time() + 2
+            advapi.StartService(svc, [])
+            deadline = time.time() + 2
+            status = advapi.QueryServiceStatusEx(svc)
+            while not status.dwProcessId:
+                if time.time() >= deadline:
+                    raise OSError("timeout waiting for service to start")
                 status = advapi.QueryServiceStatusEx(svc)
-                while not status.dwProcessId:
-                    if time.time() >= deadline:
-                        raise OSError("timeout waiting for service to start")
-                    status = advapi.QueryServiceStatusEx(svc)
-                return status.dwProcessId
+            return status.dwProcessId
 
 ################################################################################
 

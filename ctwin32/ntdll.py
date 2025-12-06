@@ -56,6 +56,11 @@ from . import (
     SystemProcessInformation,
     SystemProcessIdInformation,
     SystemExtendedHandleInformation,
+    STATUS_BUFFER_OVERFLOW,
+    STATUS_BUFFER_TOO_SMALL,
+    STATUS_INFO_LENGTH_MISMATCH,
+    STATUS_MORE_ENTRIES,
+    STATUS_NO_MORE_ENTRIES,
     ThreadBasicInformation,
     ThreadPriority,
     ProcessCommandLineInformation,
@@ -66,21 +71,9 @@ from . import (
 
 _nt = ApiDll("ntdll.dll")
 
-def _ntstatus(status):
-    return LONG(status).value
-
 ################################################################################
 
 RtlGetCurrentPeb = _nt.fun_fact("RtlGetCurrentPeb", (PVOID,))
-
-################################################################################
-
-STATUS_INFO_LENGTH_MISMATCH = _ntstatus(0xC0000004)
-STATUS_BUFFER_OVERFLOW = _ntstatus(0x80000005)
-STATUS_BUFFER_TOO_SMALL = _ntstatus(0xC0000023)
-STATUS_INVALID_SIGNATURE = _ntstatus(0xC000A000)
-STATUS_MORE_ENTRIES = _ntstatus(0x00000105)
-STATUS_NO_MORE_ENTRIES= _ntstatus(0x8000001A)
 
 ################################################################################
 
@@ -441,7 +434,7 @@ def proc_path_from_pid(pid):
 
     if pid == 0:
         return "idle"
-    elif pid == 4:
+    if pid == 4:
         return "system"
 
     buf = string_buffer(512)

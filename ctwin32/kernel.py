@@ -268,8 +268,7 @@ def ReadFile(hdl, size_or_buf):
     raise_on_zero(_ReadFile(hdl, buf, size, ref(num_read), None))
     if buf_created:
         return buf.raw[:num_read.value], num_read.value
-    else:
-        return buf, num_read.value
+    return buf, num_read.value
 
 ################################################################################
 
@@ -2170,7 +2169,7 @@ def GetVolumePathNamesForVolumeName(vol):
         ok = _GetVolumePathNamesForVolumeName(vol, buf, size, ref(size))
         if ok:
             return multi_str_from_ubuf(buf, size.value)
-        elif (err := GetLastError()) != ERROR_MORE_DATA:
+        if (err := GetLastError()) != ERROR_MORE_DATA:
             raise_on_err(err)
 
 ################################################################################

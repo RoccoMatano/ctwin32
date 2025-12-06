@@ -41,6 +41,8 @@ http://semver.org/spec/v2.0.0.html).
 - renamed kernel.AdjustTime -> kernel.adjust_time
 - use wtypes.Struct and wtypes.Union instead of ctypes.Structure and
   ctypes.Union
+- move constants from \_\_init\_\_.py to \_constants.py while keeping them
+  available in \_\_init\_\_.py
 
 ## [4.0.0] - 2025-10-08
 

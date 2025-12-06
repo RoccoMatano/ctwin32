@@ -22,7 +22,6 @@ from .wtypes import (
 from . import (
     ApiDll,
     ERROR_INVALID_DATA,
-    ntdll,
     setupapi,
     ref,
     raise_on_zero,
@@ -71,9 +70,9 @@ PHIDP_CAPS = POINTER(HIDP_CAPS)
 FACILITY_HID_ERROR_CODE = 0x11
 
 def _hidp_error_code(severity, code):
-    return ntdll._ntstatus(
+    return NTSTATUS(
         (severity << 28) | (FACILITY_HID_ERROR_CODE << 16) | code
-        )
+        ).value
 
 HIDP_STATUS_SUCCESS                 = _hidp_error_code(0x0,0)
 HIDP_STATUS_NULL                    = _hidp_error_code(0x8,1)

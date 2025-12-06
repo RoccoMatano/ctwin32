@@ -28,8 +28,7 @@ def env_var_root(system=False, access=KEY_READ):
     if system:
         pth = r"SYSTEM\CurrentControlSet\Control\Session Manager"
         return advapi.RegOpenKeyEx(advapi.HKLM, pth, access)
-    else:
-        return advapi.HKCU
+    return advapi.HKCU
 
 ################################################################################
 

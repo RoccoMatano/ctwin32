@@ -1210,8 +1210,7 @@ _GetClipboardFormatName = _usr.fun_fact(
 def GetClipboardFormatName(fmt_atom):
     bufsize = 1024
     buf = string_buffer(bufsize)
-    if _GetClipboardFormatName(fmt_atom, buf, bufsize) == 0:
-        raise WinError()
+    raise_on_zero(_GetClipboardFormatName(fmt_atom, buf, bufsize))
     return buf.value
 
 ################################################################################

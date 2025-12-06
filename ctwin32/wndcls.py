@@ -397,26 +397,27 @@ class SimpleWnd(BaseWnd):
         # back to the python interpreter - those would simply be ignored.
         # Therefore any exception has to terminate the process.
         with kernel.terminate_on_exception():
-            if msg != WM_NCCREATE:
-                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
-                    self = ctypes.cast(self_prop, ctypes.py_object).value
-                    res = self.on_message(msg, wp, lp)
-                    if msg == WM_NCDESTROY:
-                        self.del_prop(_PROP_SELF)
-                        self.hwnd = None
-                    return res
 
-                # Some kind of messages may arrive before WM_NCCREATE
-                # (e.g. WM_GETMINMAXINFO), i.e. still self_prop == None.
-                return user.DefWindowProc(hwnd, msg, wp, lp)
+            if msg == WM_NCCREATE:
+                cparam = user.CREATESTRUCT.from_address(lp).lpCreateParams
+                self = ctypes.cast(cparam, ctypes.py_object).value
+                if isinstance(self, SimpleWnd):
+                    self.hwnd = hwnd
+                    self.set_prop(_PROP_SELF, cparam)
+                    return self.on_message(msg, wp, lp)
+                raise TypeError("not derived from SimpleWnd")
 
-            cparam = user.CREATESTRUCT.from_address(lp).lpCreateParams
-            self = ctypes.cast(cparam, ctypes.py_object).value
-            if isinstance(self, SimpleWnd):
-                self.hwnd = hwnd
-                self.set_prop(_PROP_SELF, cparam)
-                return self.on_message(msg, wp, lp)
-            raise TypeError("not derived from SimpleWnd")
+            if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
+                self = ctypes.cast(self_prop, ctypes.py_object).value
+                res = self.on_message(msg, wp, lp)
+                if msg == WM_NCDESTROY:
+                    self.del_prop(_PROP_SELF)
+                    self.hwnd = None
+                return res
+
+            # Some kind of messages may arrive before WM_NCCREATE
+            # (e.g. WM_GETMINMAXINFO), i.e. still self_prop == None.
+            return user.DefWindowProc(hwnd, msg, wp, lp)
 
     ############################################################################
 
@@ -567,43 +568,41 @@ class BaseDlg(BaseWnd):
         # back to the python interpreter - those would simply be ignored.
         # Therefore any exception has to terminate the process.
         with kernel.terminate_on_exception():
-            if msg != WM_INITDIALOG:
-                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
-                    self = ctypes.cast(self_prop, ctypes.py_object).value
-                    if msg == WM_COMMAND:
-                        return self.on_command(
-                            LOWORD(wp),
-                            HIWORD(wp),
-                            HWND(lp)
-                            )
-                    elif msg == WM_NOTIFY:
-                        return self.on_notify(
-                            UINT(wp).value,
-                            ctypes.cast(lp, user.PNMHDR)
-                            )
-                    else:
-                        if msg == WM_ACTIVATE and self.parent:
-                            hdr = user.NMHDR(
-                                hwnd,
-                                user.GetDlgCtrlID(hwnd),
-                                user.MSDN_ACTIVATE
-                                )
-                            ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
-                            self.parent.send_notify(ref(ma.hdr))
-                        res = self.on_message(msg, wp, lp)
-                        if (msg == WM_NCDESTROY):
-                            self.del_prop(_PROP_SELF)
-                            self.hwnd = None
-                        return res
-                else:
-                    return False
-            else:
+            if msg == WM_INITDIALOG:
                 self = ctypes.cast(lp, ctypes.py_object).value
                 if isinstance(self, BaseDlg):
                     self.hwnd = hwnd
                     self.set_prop(_PROP_SELF, lp)
                     return self.on_init_dialog()
                 raise TypeError("not derived from BaseDlg")
+
+            if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
+                self = ctypes.cast(self_prop, ctypes.py_object).value
+                if msg == WM_COMMAND:
+                    return self.on_command(
+                        LOWORD(wp),
+                        HIWORD(wp),
+                        HWND(lp)
+                        )
+                if msg == WM_NOTIFY:
+                    return self.on_notify(
+                        UINT(wp).value,
+                        ctypes.cast(lp, user.PNMHDR)
+                        )
+                if msg == WM_ACTIVATE and self.parent:
+                    hdr = user.NMHDR(
+                        hwnd,
+                        user.GetDlgCtrlID(hwnd),
+                        user.MSDN_ACTIVATE
+                        )
+                    ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
+                    self.parent.send_notify(ref(ma.hdr))
+                res = self.on_message(msg, wp, lp)
+                if (msg == WM_NCDESTROY):
+                    self.del_prop(_PROP_SELF)
+                    self.hwnd = None
+                return res
+            return False
 
     ############################################################################
 

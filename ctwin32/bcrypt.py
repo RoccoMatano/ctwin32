@@ -20,8 +20,8 @@ from .wtypes import (
     ScdToBeClosed,
     ULONG,
     )
-from . import ApiDll, ref
-from .ntdll import raise_failed_status, STATUS_INVALID_SIGNATURE
+from . import ApiDll, ref, STATUS_INVALID_SIGNATURE
+from .ntdll import raise_failed_status
 
 _bcr = ApiDll("bcrypt.dll")
 

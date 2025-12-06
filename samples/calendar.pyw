@@ -56,16 +56,15 @@ class CalendarWnd(wndcls.SimpleWnd):
             self.adjust_window_rect(control)
             return 0
 
-        elif msg == WM_SETFOCUS:
+        if msg == WM_SETFOCUS:
             self.cal.set_focus()
             return 0
 
-        elif msg == WM_DESTROY:
+        if msg == WM_DESTROY:
             user.PostQuitMessage(0)
             return 0
 
-        else:
-            return self.def_win_proc(msg, wp, lp)
+        return self.def_win_proc(msg, wp, lp)
 
 ################################################################################
 

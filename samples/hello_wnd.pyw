@@ -47,7 +47,7 @@ class HelloWnd(wndcls.SimpleWnd):
             self.font = gdi.CreateFontIndirect(lf)
             return 0
 
-        elif msg == WM_PAINT:
+        if msg == WM_PAINT:
             hdc, ps = self.begin_paint()
             oldfont = gdi.SelectObject(hdc, self.font)
             user.DrawText(
@@ -60,12 +60,12 @@ class HelloWnd(wndcls.SimpleWnd):
             self.end_paint(ps)
             return 0
 
-        elif msg == WM_DESTROY:
+        if msg == WM_DESTROY:
             gdi.DeleteObject(self.font)
             user.PostQuitMessage(0)
             return 0
 
-        elif msg == WM_CONTEXTMENU:
+        if msg == WM_CONTEXTMENU:
             tdi = "TaskDialogIndirect"
             url = f"https://www.google.com/search?q={tdi}"
             tdc = comctl.TASKDIALOGCONFIG()
@@ -83,8 +83,7 @@ class HelloWnd(wndcls.SimpleWnd):
             comctl.tsk_dlg_callback(tdc, td_follow_link)
             return 0
 
-        else:
-            return self.def_win_proc(msg, wp, lp)
+        return self.def_win_proc(msg, wp, lp)
 
 ################################################################################
 
