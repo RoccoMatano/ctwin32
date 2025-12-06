@@ -441,7 +441,7 @@ def proc_path_from_pid(pid):
 
     if pid == 0:
         return "idle"
-    elif pid == 4:
+    if pid == 4:
         return "system"
 
     buf = string_buffer(512)

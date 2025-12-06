@@ -139,7 +139,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
         if msg == WM_CREATE:
             return self.on_create()
 
-        elif msg == WM_SIZE:
+        if msg == WM_SIZE:
             self.y_lines = ((lp >> 16) & 0xffff) // self.char_height - 1
             self.scroll_rect.right  = lp & 0xffff
             self.scroll_rect.top    = self.char_height
@@ -147,7 +147,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
             self.invalidate_rect(erase=True)
             return 0
 
-        elif WM_KEYFIRST <= msg < WM_KEYLAST:
+        if WM_KEYFIRST <= msg < WM_KEYLAST:
             self.history.pop()
             self.history.insert(0, HistoryEntry(msg, wp, lp))
 
@@ -156,16 +156,15 @@ class KeyViewWnd(wndcls.SimpleWnd):
             user.ScrollWindow(self.hwnd, 0, -self.char_height, rc, rc)
             return self.def_win_proc(msg, wp, lp)
 
-        elif msg == WM_PAINT:
+        if msg == WM_PAINT:
             return self.on_paint()
 
-        elif msg == WM_DESTROY:
+        if msg == WM_DESTROY:
             gdi.DeleteObject(self.font)
             user.PostQuitMessage(0)
             return 0
 
-        else:
-            return self.def_win_proc(msg, wp, lp)
+        return self.def_win_proc(msg, wp, lp)
 
 ################################################################################
 

@@ -38,10 +38,9 @@ def simple_py_aes_encrypt(data, key):
         rng = range(0, len(data), blen)
         aes = pyaes.AESModeOfOperationCBC(key, None)
         return b"".join(aes.encrypt(data[i:i + blen]) for i in rng)
-    else:
-        aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
-        encryptor = aes.encryptor()
-        return encryptor.update(data) + encryptor.finalize()
+    aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
+    encryptor = aes.encryptor()
+    return encryptor.update(data) + encryptor.finalize()
 
 ################################################################################
 
@@ -51,10 +50,9 @@ def simple_py_aes_decrypt(data, key):
         rng = range(0, len(data), blen)
         aes = pyaes.AESModeOfOperationCBC(key, None)
         return b"".join(aes.decrypt(data[i:i + blen]) for i in rng)
-    else:
-        aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
-        decryptor = aes.decryptor()
-        return decryptor.update(data) + decryptor.finalize()
+    aes = Cipher(algorithms.AES(key), modes.CBC(b"\0" * blen))
+    decryptor = aes.decryptor()
+    return decryptor.update(data) + decryptor.finalize()
 
 ################################################################################
 

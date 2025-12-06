@@ -204,10 +204,9 @@ class SOCKADDR_INET(Union):
         fam = self.Ipv4.sin_family
         if fam == AF_INET:
             return _iaddr.IPv4Address(self.Ipv4.sin_addr.S_un.S_addr)
-        elif fam == AF_INET6:
+        if fam == AF_INET6:
             return _iaddr.IPv6Address(bytes(self.Ipv6.sin6_addr.Byte))
-        else:
-            raise ValueError(f"unsupported address family: {fam}")
+        raise ValueError(f"unsupported address family: {fam}")
 
 ################################################################################
 
@@ -231,14 +230,13 @@ def _sock_addr_to_ip_addr(p_sock_addr):
     if fam == AF_INET:
         addr = ctypes.cast(p_sock_addr, PSOCKADDR_IN).contents
         return _iaddr.IPv4Address(addr.sin_addr.S_un.S_addr)
-    elif fam == AF_INET6:
+    if fam == AF_INET6:
         addr = ctypes.cast(p_sock_addr, PSOCKADDR_IN6).contents
         ip = _iaddr.IPv6Address(bytes(addr.sin6_addr.Byte))
         if addr.sin6_scope_id:
             ip = _iaddr.IPv6Address(f"{ip}%{addr.sin6_scope_id}")
         return ip
-    else:
-        raise ValueError(f"unsupported address family: {fam}")
+    raise ValueError(f"unsupported address family: {fam}")
 
 ################################################################################
 

@@ -67,7 +67,7 @@ def byte_buffer(init, size=None):
             size = 1 + len(init)
         (buf := (CHAR * size)()).value = init
         return buf
-    elif isinstance(init, int):
+    if isinstance(init, int):
         return (CHAR * init)()
     raise TypeError(init)
 
@@ -80,7 +80,7 @@ def string_buffer(init, size=None):
             size = wchar_len_sz(init)
         (buf := (WCHAR * size)()).value = init
         return buf
-    elif isinstance(init, int):
+    if isinstance(init, int):
         return (WCHAR * init)()
     raise TypeError(init)
 
