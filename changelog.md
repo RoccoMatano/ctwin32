@@ -22,6 +22,17 @@ http://semver.org/spec/v2.0.0.html).
 - iphlpapi.gateways
 - wtypes.Struct and wtypes.Union
 - sample duimli.py
+- module hid with functions
+    - HidD_GetAttributes
+    - HidD_GetPreparsedData
+    - HidD_FreePreparsedData
+    - HidP_GetCaps
+    - HidD_GetSerialNumberString,
+    - HidD_GetManufacturerString
+    - HidD_GetProductString
+    - HidD_SetNumInputBuffers
+    - hid_get_caps
+    - enum_hid_devs
 
 ### Changed
 
