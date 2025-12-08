@@ -385,12 +385,17 @@ def _enum_proc_worker(extract_func):
 
 ################################################################################
 
+def _pi_img_name_to_str(pi):
+    return (
+        str(pi.ImageName) if pi.ImageName.Buffer else
+        ("idle" if not pi.UniqueProcessId else "system")
+        )
+
+################################################################################
+
 def _extract_basic_proc_info(pi, ti):
     return _namespace(
-        name=(
-            str(pi.ImageName) if pi.ImageName.Buffer else
-            ("idle" if not pi.UniqueProcessId else "system")
-            ),
+        name=_pi_img_name_to_str(pi),
         pid=pi.UniqueProcessId or 0,
         tids=[i.ClientId.UniqueThread for i in ti],
         )
@@ -399,6 +404,7 @@ def _extract_basic_proc_info(pi, ti):
 
 def _extract_full_proc_info(pi, ti):
     pins = ns_from_struct(pi)
+    pins.ImageName = _pi_img_name_to_str(pi)
     del pins.NextEntryOffset
     pins.Threads = [ns_from_struct(t) for t in ti]
     return pins
