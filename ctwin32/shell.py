@@ -189,7 +189,7 @@ _CommandLineToArgv = _sh.fun_fact("CommandLineToArgvW", (PPWSTR, PWSTR, PINT))
 
 def CommandLineToArgv(cmdline):
     # CommandLineToArgv gets leading white space wrong
-    cmdline = cmdline.lstrip(" \t")
+    cmdline = cmdline.lstrip()
     if not cmdline:
         return []
 
