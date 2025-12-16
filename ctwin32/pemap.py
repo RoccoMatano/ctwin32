@@ -10,6 +10,7 @@ from . import (
     kernel,
     ntdll,
     ERROR_BAD_EXE_FORMAT,
+    ERROR_INVALID_DATA,
     FILE_MAP_READ,
     GENERIC_READ,
     IMAGE_DOS_SIGNATURE,
@@ -29,6 +30,7 @@ from .wtypes import (
     ULONG,
     ULONGLONG,
     WCHAR_SIZE,
+    WinError,
     WORD,
     )
 
@@ -403,7 +405,7 @@ class ApiSet():
             self.count = apiset.Count
             self.entry_addr = base + apiset.EntryOffset
         else:
-            self.base = self.count = self.entry_addr = None
+            raise WinError(ERROR_INVALID_DATA)
 
     ############################################################################
 

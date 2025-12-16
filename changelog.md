@@ -27,7 +27,7 @@ http://semver.org/spec/v2.0.0.html).
     - HidD_GetPreparsedData
     - HidD_FreePreparsedData
     - HidP_GetCaps
-    - HidD_GetSerialNumberString,
+    - HidD_GetSerialNumberString
     - HidD_GetManufacturerString
     - HidD_GetProductString
     - HidD_SetNumInputBuffers
@@ -43,6 +43,7 @@ http://semver.org/spec/v2.0.0.html).
   ctypes.Union
 - move constants from \_\_init\_\_.py to \_constants.py while keeping them
   available in \_\_init\_\_.py
+- raise exception in pemap.ApiSet().\_\_init\_\_
 
 ## [4.0.0] - 2025-10-08
 
