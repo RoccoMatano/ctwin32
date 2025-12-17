@@ -31,7 +31,7 @@ class ApiDll:
         # in ctypes' C code -> don't change its name!
         self._handle = _ctypes.LoadLibrary(
             name,
-            LOAD_LIBRARY_SEARCH_DEFAULT_DIRS # noqa: F405
+            LOAD_LIBRARY_SEARCH_DEFAULT_DIRS # noqa: F405 from _constants
             )  & (_sys.maxsize * 2 + 1)
         self._name = name
 

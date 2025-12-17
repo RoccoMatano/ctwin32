@@ -1003,7 +1003,7 @@ _GetCursorPos = _usr.fun_fact("GetCursorPos", (BOOL, PPOINT))
 
 def GetCursorPos():
     pt = POINT()
-    raise_on_zero(GetCursorPos(ref(pt)))
+    raise_on_zero(_GetCursorPos(ref(pt)))
     return pt
 
 ################################################################################

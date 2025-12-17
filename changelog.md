@@ -34,6 +34,10 @@ http://semver.org/spec/v2.0.0.html).
     - hid_get_caps
     - enum_hid_devs
 
+### Fixed
+
+- fix dysfunctional user.GetCursorPos
+
 ### Changed
 
 - use iphlpapi.netifaces in sample netifaces.py
@@ -44,6 +48,7 @@ http://semver.org/spec/v2.0.0.html).
 - move constants from \_\_init\_\_.py to \_constants.py while keeping them
   available in \_\_init\_\_.py
 - raise exception in pemap.ApiSet().\_\_init\_\_
+- in sample hello_wnd.pyw place task dialog at mouse cursor
 
 ## [4.0.0] - 2025-10-08
 

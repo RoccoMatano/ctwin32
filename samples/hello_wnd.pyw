@@ -16,6 +16,7 @@ from ctwin32 import (
     WM_CREATE,
     WM_PAINT,
     WM_DESTROY,
+    WS_CHILD,
     DT_CENTER,
     DT_SINGLELINE,
     DT_VCENTER,
@@ -33,6 +34,12 @@ from ctwin32.wtypes import LOGFONT
 def td_follow_link(hwnd, msg, wp, lp, ctxt):
     if msg == TDN_HYPERLINK_CLICKED:
         shell.ShellExecuteEx(ctypes.wstring_at(lp))
+
+################################################################################
+
+class DummyWnd(wndcls.SimpleWnd):
+    def on_message(self, msg, wp, lp):
+        return self.def_win_proc(msg, wp, lp)
 
 ################################################################################
 
@@ -66,21 +73,31 @@ class HelloWnd(wndcls.SimpleWnd):
             return 0
 
         if msg == WM_CONTEXTMENU:
-            tdi = "TaskDialogIndirect"
-            url = f"https://www.google.com/search?q={tdi}"
-            tdc = comctl.TASKDIALOGCONFIG()
-            tdc.hwndParent = self.hwnd
-            tdc.dwFlags = (
-                TDF_ALLOW_DIALOG_CANCELLATION |
-                TDF_ENABLE_HYPERLINKS |
-                TDF_POSITION_RELATIVE_TO_WINDOW
-                )
-            tdc.dwCommonButtons = TDCBF_CLOSE_BUTTON
-            tdc.pszWindowTitle = "TaskDialog Sample"
-            tdc.pszMainIcon = TD_INFORMATION_ICON
-            tdc.pszMainInstruction = f"Showing off {tdi}!"
-            tdc.pszContent = f'Search Google for <a href="{url}">{tdi}</a>.'
-            comctl.tsk_dlg_callback(tdc, td_follow_link)
+            # child window placed at mouse cursor that is used as the parent
+            # for TaskDialog in order to be able to place that dialog
+            cp = wndcls.WndCreateParams(style=WS_CHILD, parent=self.hwnd)
+            pos = self.get_cursor_pos()
+            cp.left = pos.x
+            cp.top = pos.y
+            placed = DummyWnd(cp)
+            try:
+                tdi = "TaskDialogIndirect"
+                url = f"https://www.google.com/search?q={tdi}"
+                tdc = comctl.TASKDIALOGCONFIG()
+                tdc.hwndParent = placed.hwnd
+                tdc.dwFlags = (
+                    TDF_ALLOW_DIALOG_CANCELLATION |
+                    TDF_ENABLE_HYPERLINKS |
+                    TDF_POSITION_RELATIVE_TO_WINDOW
+                    )
+                tdc.dwCommonButtons = TDCBF_CLOSE_BUTTON
+                tdc.pszWindowTitle = "TaskDialog Sample"
+                tdc.pszMainIcon = TD_INFORMATION_ICON
+                tdc.pszMainInstruction = f"Showing off {tdi}!"
+                tdc.pszContent = f'Search Google for <a href="{url}">{tdi}</a>.'
+                comctl.tsk_dlg_callback(tdc, td_follow_link)
+            finally:
+                placed.destroy()
             return 0
 
         return self.def_win_proc(msg, wp, lp)
