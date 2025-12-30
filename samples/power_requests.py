@@ -22,8 +22,10 @@ from ctwin32 import (
 from ctwin32.wtypes import (
     INT,
     SIZE_T,
+    Struct,
     ULONG,
     ULONG_PTR,
+    Union,
     USHORT,
     )
 
@@ -35,7 +37,7 @@ DIAGNOSTIC_REASON_DETAILED_STRING = 0x00000002
 DIAGNOSTIC_REASON_NOT_SPECIFIED = 0x80000000
 DIAGNOSTIC_REASON_INVALID_FLAGS = ~ 0x80000007
 
-class _COUNTED_REASON_CTXT1(ctypes.Structure):
+class _COUNTED_REASON_CTXT1(Struct):
     _fields_ = (
         ("ResourceFileNameOffset", ULONG_PTR),
         ("ResourceReasonId", USHORT),
@@ -43,14 +45,14 @@ class _COUNTED_REASON_CTXT1(ctypes.Structure):
         ("SubstitutionStringsOffset", ULONG),
         )
 
-class _COUNTED_REASON_CTXT2(ctypes.Union):
+class _COUNTED_REASON_CTXT2(Union):
     _anonymous_ = ("_anon1",)
     _fields_ = (
         ("_anon1", _COUNTED_REASON_CTXT1),
         ("SimpleStringOffset", ULONG_PTR),
         )
 
-class COUNTED_REASON_CONTEXT_RELATIVE(ctypes.Structure):
+class COUNTED_REASON_CONTEXT_RELATIVE(Struct):
     _anonymous_ = ("_anon1",)
     _fields_ = (
         ("Flags", ULONG),
@@ -62,27 +64,27 @@ KERNEL_REQUESTER = 0
 PROCESS_REQUESTER = 1
 SERVICE_REQUESTER = 2
 
-class _DIAG_BUFF1(ctypes.Structure):
+class _DIAG_BUFF1(Struct):
     _fields_ = (
         ("ProcessImageNameOffset", ULONG_PTR),
         ("ProcessId", ULONG),
         ("ServiceTag", ULONG),
         )
 
-class _DIAG_BUFF2(ctypes.Structure):
+class _DIAG_BUFF2(Struct):
     _fields_ = (
         ("DeviceDescriptionOffset", ULONG_PTR),
         ("DevicePathOffset", ULONG_PTR),
         )
 
-class _DIAG_BUFF3(ctypes.Union):
+class _DIAG_BUFF3(Union):
     _anonymous_ = ("_anon1", "_anon2")
     _fields_ = (
         ("_anon1", _DIAG_BUFF1),
         ("_anon2", _DIAG_BUFF2),
         )
 
-class DIAGNOSTIC_BUFFER(ctypes.Structure):
+class DIAGNOSTIC_BUFFER(Struct):
     _anonymous_ = ("_anon3",)
     _fields_ = (
         ("Size", SIZE_T),
@@ -95,7 +97,7 @@ class DIAGNOSTIC_BUFFER(ctypes.Structure):
 
 POWER_REQUEST_SUPPORTED_TYPES = 6
 
-class POWER_REQUEST(ctypes.Structure):
+class POWER_REQUEST(Struct):
     _fields_ = (
         ("SupportedRequestMask", ULONG),
         ("PowerRequestCount", ULONG * POWER_REQUEST_SUPPORTED_TYPES),
@@ -142,7 +144,7 @@ def get_power_requests():
 
     count = ULONG.from_buffer(buf).value
 
-    class POWER_REQUEST_LIST(ctypes.Structure):
+    class POWER_REQUEST_LIST(Struct):
         _fields_ = (
             ("Count", ULONG),
             ("PowerRequestOffsets", ULONG_PTR * count),

@@ -34,6 +34,7 @@ from ctwin32 import (
 from ctwin32.wtypes import (
     PSTR,
     PVOID,
+    Struct,
     WORD,
     )
 from ctwin32.version import VS_FIXEDFILEINFO
@@ -45,7 +46,7 @@ from ctwin32.version import VS_FIXEDFILEINFO
 # https://devblogs.microsoft.com/oldnewthing/20061221-02/?p=28643
 # https://devblogs.microsoft.com/oldnewthing/20061222-00/?p=28623
 
-class VS_NODE(ctypes.Structure):
+class VS_NODE(Struct):
     _fields_ = (
         ("node_size", WORD),
         ("value_size", WORD),
@@ -71,7 +72,7 @@ def parse_version_resource(ver_res_bytes):
     def parse_ver_node(ver_res_bytes, offs):
         info = VS_NODE.from_buffer_copy(ver_res_bytes, offs)
         end = offs + info.node_size
-        offs += ctypes.sizeof(VS_NODE)
+        offs += VS_NODE._size_
         addr = ctypes.cast(PSTR(ver_res_bytes), PVOID).value + offs
         strng = ctypes.wstring_at(addr)
         return strng, dword_align(offs + (len(strng) + 1) * 2), end, info
@@ -83,14 +84,14 @@ def parse_version_resource(ver_res_bytes):
     name, offs, end_root, root = parse_ver_node(ver_res_bytes, 0)
     valid = (
         root.type == 0 and
-        root.value_size == ctypes.sizeof(VS_FIXEDFILEINFO) and
+        root.value_size == VS_FIXEDFILEINFO._size_ and
         name == "VS_VERSION_INFO"
         )
     if not valid:
         raise INVALID
 
     fix = VS_FIXEDFILEINFO.from_buffer_copy(ver_res_bytes, offs)
-    offs += ctypes.sizeof(VS_FIXEDFILEINFO)
+    offs += VS_FIXEDFILEINFO._size_
     fix = {f: getattr(fix, f) for f, _ in fix._fields_}
     result = SimpleNamespace(fixed_info=fix, string_info={})
     # sizeof(VS_FIXEDFILEINFO) is a multiple of DWORDs -> no padding required

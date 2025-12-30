@@ -29,13 +29,13 @@ from ctwin32 import (
     FILE_DEVICE_DVD,
     FILE_DEVICE_DISK,
     )
-from ctwin32.wtypes import INT, ULONG, GUID
+from ctwin32.wtypes import INT, ULONG, GUID, Struct
 
 ################################################################################
 
 # from winioctl.h
 
-class STORAGE_DEVICE_NUMBER(ctypes.Structure):
+class STORAGE_DEVICE_NUMBER(Struct):
     _fields_ = (
         ("DeviceType", INT),
         ("DeviceNumber", ULONG),
@@ -54,7 +54,7 @@ def get_drive_type_number(file_name):
             vol,
             IOCTL_STORAGE_GET_DEVICE_NUMBER,
             None,
-            ctypes.sizeof(STORAGE_DEVICE_NUMBER)
+            STORAGE_DEVICE_NUMBER._size_
             )
     sdn = STORAGE_DEVICE_NUMBER.from_buffer(sdn)
     return sdn.DeviceType, sdn.DeviceNumber

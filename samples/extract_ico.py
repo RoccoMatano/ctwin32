@@ -25,13 +25,13 @@ from ctwin32 import (
     RT_GROUP_ICON,
     RT_ICON,
     )
-from ctwin32.wtypes import BYTE, WORD, DWORD
+from ctwin32.wtypes import BYTE, WORD, DWORD, Struct
 
 ################################################################################
 
 # https://docs.microsoft.com/en-us/previous-versions/ms997538(v=msdn.10)
 
-class ICONDIR_HEADER(ctypes.Structure):
+class ICONDIR_HEADER(Struct):
     _fields_ = (
         ("reserved", WORD),
         ("type", WORD),
@@ -39,7 +39,7 @@ class ICONDIR_HEADER(ctypes.Structure):
         )
 
 # ico file
-class ICONDIRENTRY(ctypes.Structure):
+class ICONDIRENTRY(Struct):
     _fields_ = (
         ("width", BYTE),
         ("height", BYTE),
@@ -52,7 +52,7 @@ class ICONDIRENTRY(ctypes.Structure):
         )
 
 # icon resource
-class GRPICONDIRENTRY(ctypes.Structure):
+class GRPICONDIRENTRY(Struct):
     _pack_ = 2
     _fields_ = (
         ("width", BYTE),
@@ -79,7 +79,7 @@ def print_lzma_b85(data):
 
 def get_ico_file_info(filename):
     with open(filename, "rb") as file:
-        dta = file.read(ctypes.sizeof(ICONDIR_HEADER))
+        dta = file.read(ICONDIR_HEADER._size_)
         idh = ICONDIR_HEADER.from_buffer_copy(dta)
         ICON_ENTRIES = ICONDIRENTRY * idh.count
         dta = file.read(ctypes.sizeof(ICON_ENTRIES))
@@ -111,7 +111,7 @@ def get_executable_file_info(hmod):
     for i in ids:
         addr, _ = kernel.get_resource_info(hmod, i, RT_GROUP_ICON)
         idh = ICONDIR_HEADER.from_address(addr)
-        addr += ctypes.sizeof(ICONDIR_HEADER)
+        addr += ICONDIR_HEADER._size_
         ICON_ENTRIES = GRPICONDIRENTRY * idh.count
         entries = ICON_ENTRIES.from_address(addr)
         image_info = [

@@ -30,6 +30,7 @@ from ctwin32 import (
     WinRestrictedCodeSid,
     )
 from ctwin32.wtypes import (
+    Struct,
     WCHAR,
     wchar_len_sz,
     WCHAR_SIZE,
@@ -75,7 +76,7 @@ def kerb_s4u_logon(upn, realm, flags=0):
     wlu = wchar_len_sz(upn)     # aka 'user name'
     wlr = wchar_len_sz(realm)   # aka 'domain name'
 
-    class KERB_S4U_LOGON(ctypes.Structure):
+    class KERB_S4U_LOGON(Struct):
         KerbS4ULogon = 12
         _fields_ = (
             ("MessageType", ULONG),

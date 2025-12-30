@@ -25,12 +25,13 @@ from ctwin32 import (
     )
 from ctwin32.wtypes import (
     GUID,
+    Struct,
     ULONG,
     )
 
 ################################################################################
 
-class USB_CYCLE_PORT_PARAMS(ctypes.Structure):
+class USB_CYCLE_PORT_PARAMS(Struct):
     _fields_ = (
         ("ConnectionIndex", ULONG),
         ("StatusReturned", ULONG),
@@ -73,7 +74,7 @@ def restart_usb_port(device_id):
             METHOD_BUFFERED,
             FILE_ANY_ACCESS
             )
-        olen = ctypes.sizeof(USB_CYCLE_PORT_PARAMS)
+        olen = USB_CYCLE_PORT_PARAMS._size_
         params = USB_CYCLE_PORT_PARAMS(portnumber, 0)
         buf = kernel.DeviceIoControl(hhub, ioctl, params, olen)
 

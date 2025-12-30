@@ -32,6 +32,7 @@ from .wtypes import (
     POINTER,
     PPWSTR,
     PSIZE_T,
+    PTR_HAS_64_BITS,
     PULONG_PTR,
     PUSHORT,
     PVOID,
@@ -2204,7 +2205,7 @@ def get_proc_env_as_dict(hdl):
         # type, offs process params, offs env ptr, offs env len
         typ, opp, oep, oel = t32
     else:
-        typ, opp, oep, oel = t64 if ctypes.sizeof(PVOID) == 8 else t32
+        typ, opp, oep, oel = t64 if PTR_HAS_64_BITS else t32
         peb = ntdll.get_proc_env_blk(hdl)
     isize = ctypes.sizeof(typ)
 

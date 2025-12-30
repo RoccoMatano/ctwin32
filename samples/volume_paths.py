@@ -16,13 +16,13 @@ from ctwin32 import (
     ERROR_NOT_SUPPORTED,
     GENERIC_EXECUTE,
     )
-from ctwin32.wtypes import ULONG, LARGE_INTEGER
+from ctwin32.wtypes import Struct, ULONG, LARGE_INTEGER
 
 ################################################################################
 
 IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS = 0x00560000
 
-class DISK_EXTENT(ctypes.Structure):
+class DISK_EXTENT(Struct):
     _fields_ = (
         ("DiskNumber", ULONG),
         ("StartingOffset", LARGE_INTEGER),
@@ -33,7 +33,7 @@ def get_disk_extends(buf):
 
     num = ULONG.from_buffer(buf).value
 
-    class VOLUME_DISK_EXTENTS(ctypes.Structure):
+    class VOLUME_DISK_EXTENTS(Struct):
         _fields_ = (
             ("NumberOfDiskExtents", ULONG),
             ("Extents", DISK_EXTENT * num),
