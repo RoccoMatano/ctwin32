@@ -49,6 +49,9 @@ http://semver.org/spec/v2.0.0.html).
   available in \_\_init\_\_.py
 - raise exception in pemap.ApiSet().\_\_init\_\_
 - in sample hello_wnd.pyw place task dialog at mouse cursor
+- extend sample print_reparse_points.py to show where reparse points of type
+  IO_REPARSE_TAG_APPEXECLINK and IO_REPARSE_TAG_LX_SYMLINK point to
+
 
 ## [4.0.0] - 2025-10-08
 

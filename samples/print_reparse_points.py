@@ -14,21 +14,36 @@ from ctwin32 import (
     FILE_ATTRIBUTE_REPARSE_POINT,
     FILE_FLAG_OPEN_REPARSE_POINT,
     FILE_FLAG_BACKUP_SEMANTICS,
-    IO_REPARSE_TAG_SYMLINK,
+    IO_REPARSE_TAG_APPEXECLINK,
+    IO_REPARSE_TAG_LX_SYMLINK,
     IO_REPARSE_TAG_MOUNT_POINT,
+    IO_REPARSE_TAG_SYMLINK,
     )
 from ctwin32.wtypes import (
     BYTE,
+    CHAR,
+    Struct,
     ULONG,
+    Union,
     USHORT,
     WCHAR,
+    WCHAR_SIZE,
+    wchar_len_sz,
     )
 from ctwin32.kernel import create_file, DeviceIoControl, iter_dir
 
 ################################################################################
 
-class RP_DATA_SYMLINK(ctypes.Structure):
+class REPARSE_DATA_HEADER(Struct):
     _fields_ = (
+        ("ReparseTag", ULONG),
+        ("ReparseDataLength", USHORT),
+        ("Reserved", USHORT),
+        )
+
+class RP_DATA_SYMLINK(Struct):
+    _fields_ = (
+        ("_hdr", REPARSE_DATA_HEADER),
         ("SubstituteNameOffset", USHORT),
         ("SubstituteNameLength", USHORT),
         ("PrintNameOffset", USHORT),
@@ -36,36 +51,41 @@ class RP_DATA_SYMLINK(ctypes.Structure):
         ("Flags", ULONG),
         ("PathBuffer", WCHAR * 1),
         )
+    _anonymous_ = ("_hdr",)
 
-class RP_DATA_MOUNTPOINT(ctypes.Structure):
+class RP_DATA_MOUNTPOINT(Struct):
     _fields_ = (
+        ("_hdr", REPARSE_DATA_HEADER),
         ("SubstituteNameOffset", USHORT),
         ("SubstituteNameLength", USHORT),
         ("PrintNameOffset", USHORT),
         ("PrintNameLength", USHORT),
         ("PathBuffer", WCHAR * 1),
         )
+    _anonymous_ = ("_hdr",)
 
-class RP_DATA_GENERIC(ctypes.Structure):
+class RP_DATA_APPEXECLINK(Struct):
     _fields_ = (
-        ("DataBuffer", BYTE * 1),
+        ("_hdr", REPARSE_DATA_HEADER),
+        ("Version", ULONG),
+        ("StringList", WCHAR * 1),
+        # 'StringList' is a multistring (Consecutive UTF-16 strings each ending
+        # with a NUL). There are normally 4 strings here. Ex:
+        # Package ID : L"Microsoft.WindowsTerminal_8wekyb3d8bbwe"
+        # Entry Point: L"Microsoft.WindowsTerminal_8wekyb3d8bbwe!App"
+        # Executable : L"<PATH>\wt.exe"
+        # Appl. Type : L"0"  # int as string. "0" = Desktop bridge application;
+        #                      else sandboxed UWP application
         )
+    _anonymous_ = ("_hdr",)
 
-class RP_DATA_UN(ctypes.Union):
+class RP_DATA_LX_SYMLINK(Struct):
     _fields_ = (
-        ("SymbolicLinkReparseBuffer", RP_DATA_SYMLINK),
-        ("MountPointReparseBuffer", RP_DATA_MOUNTPOINT),
-        ("GenericReparseBuffer", RP_DATA_GENERIC),
+        ("_hdr", REPARSE_DATA_HEADER),
+        ("Version", ULONG),
+        ("Target", CHAR * 1),
         )
-
-class REPARSE_DATA_BUFFER(ctypes.Structure):
-    _fields_ = (
-        ("ReparseTag", ULONG),
-        ("ReparseDataLength", USHORT),
-        ("Reserved", USHORT),
-        ("_anon", RP_DATA_UN),
-        )
-    _anonymous_ = ("_anon",)
+    _anonymous_ = ("_hdr",)
 
 FSCTL_GET_REPARSE_POINT = 0x000900a8
 
@@ -80,29 +100,36 @@ def readlink(link, get_subst_name=False):
                 buf = DeviceIoControl(hdl, FSCTL_GET_REPARSE_POINT, None, size)
                 break
             size *= 2
-    rpd = REPARSE_DATA_BUFFER.from_buffer(buf)
-    if rpd.ReparseTag == IO_REPARSE_TAG_SYMLINK:
-        path_buff = (
-            ctypes.addressof(rpd) +
-            REPARSE_DATA_BUFFER.SymbolicLinkReparseBuffer.offset +
-            RP_DATA_SYMLINK.PathBuffer.offset
-            )
-        src = rpd.SymbolicLinkReparseBuffer
-    elif rpd.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT:
-        path_buff = (
-            ctypes.addressof(rpd) +
-            REPARSE_DATA_BUFFER.MountPointReparseBuffer.offset +
-            RP_DATA_MOUNTPOINT.PathBuffer.offset
-            )
-        src = rpd.MountPointReparseBuffer
+    tag = ULONG.from_buffer(buf).value
+    addr = ctypes.addressof(buf)
+
+    if tag == IO_REPARSE_TAG_APPEXECLINK:
+        addr += RP_DATA_APPEXECLINK.StringList.offset
+        for i in range(2):
+            addr += wchar_len_sz(ctypes.wstring_at(addr)) * WCHAR_SIZE
+        return ctypes.wstring_at(addr)
+
+    elif tag == IO_REPARSE_TAG_LX_SYMLINK:
+        addr += RP_DATA_LX_SYMLINK.Target.offset
+        return ctypes.string_at(addr).decode(errors='backslashreplace')
+
+    elif tag == IO_REPARSE_TAG_SYMLINK:
+        rpd = RP_DATA_SYMLINK.from_buffer(buf)
+        path_buff = addr + RP_DATA_SYMLINK.PathBuffer.offset
+
+    elif tag == IO_REPARSE_TAG_MOUNT_POINT:
+        rpd = RP_DATA_MOUNTPOINT.from_buffer(buf)
+        path_buff = addr + RP_DATA_MOUNTPOINT.PathBuffer.offset
+
     else:
-        raise RuntimeError(f"unhandled tag: 0x{rpd.ReparseTag:08x}")
+        raise RuntimeError(f"unhandled tag: 0x{tag:08x}")
+
     if get_subst_name:
-        saddr = path_buff + src.SubstituteNameOffset
-        slen = src.SubstituteNameLength // 2
+        saddr = path_buff + rpd.SubstituteNameOffset
+        slen = rpd.SubstituteNameLength // WCHAR_SIZE
     else:
-        saddr = path_buff + src.PrintNameOffset
-        slen = src.PrintNameLength // 2
+        saddr = path_buff + rpd.PrintNameOffset
+        slen = rpd.PrintNameLength // WCHAR_SIZE
 
     return ctypes.wstring_at(saddr, slen)
 
@@ -111,15 +138,20 @@ def readlink(link, get_subst_name=False):
 reparse_tags = {
     v: k for k, v in vars(ctwin32).items() if k.startswith("IO_REPARSE_TAG_")
     }
-follow = (IO_REPARSE_TAG_SYMLINK, IO_REPARSE_TAG_MOUNT_POINT)
+follow = (
+    IO_REPARSE_TAG_APPEXECLINK,
+    IO_REPARSE_TAG_LX_SYMLINK,
+    IO_REPARSE_TAG_MOUNT_POINT,
+    IO_REPARSE_TAG_SYMLINK,
+    )
 
 for directory, info in iter_dir(os.environ["SYSTEMDRIVE"]):
     if info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT:
         rpp = rf"{directory}\{info.cFileName}"
-        if info.dwReserved0 in reparse_tags:
-            tag = reparse_tags[info.dwReserved0]
-        else:
-            tag = f"UNKNOWN: 0x{info.dwReserved0:08x}"
+        tag = reparse_tags.get(
+            info.dwReserved0,
+            f"UNKNOWN: 0x{info.dwReserved0:08x}"
+            )
         if info.dwReserved0 in follow:
             print(f"{tag:32} {rpp}\n    -> {readlink(rpp)}")
         else:
