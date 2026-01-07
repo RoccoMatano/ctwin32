@@ -11,7 +11,6 @@
 ################################################################################
 
 import sys
-import ctypes
 from ctwin32 import (
     advapi,
     cfgmgr,

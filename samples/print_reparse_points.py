@@ -20,11 +20,9 @@ from ctwin32 import (
     IO_REPARSE_TAG_SYMLINK,
     )
 from ctwin32.wtypes import (
-    BYTE,
     CHAR,
     Struct,
     ULONG,
-    Union,
     USHORT,
     WCHAR,
     WCHAR_SIZE,
@@ -105,15 +103,15 @@ def readlink(link, get_subst_name=False):
 
     if tag == IO_REPARSE_TAG_APPEXECLINK:
         addr += RP_DATA_APPEXECLINK.StringList.offset
-        for i in range(2):
+        for _ in range(2):
             addr += wchar_len_sz(ctypes.wstring_at(addr)) * WCHAR_SIZE
         return ctypes.wstring_at(addr)
 
-    elif tag == IO_REPARSE_TAG_LX_SYMLINK:
+    if tag == IO_REPARSE_TAG_LX_SYMLINK:
         addr += RP_DATA_LX_SYMLINK.Target.offset
-        return ctypes.string_at(addr).decode(errors='backslashreplace')
+        return ctypes.string_at(addr).decode(errors="backslashreplace")
 
-    elif tag == IO_REPARSE_TAG_SYMLINK:
+    if tag == IO_REPARSE_TAG_SYMLINK:
         rpd = RP_DATA_SYMLINK.from_buffer(buf)
         path_buff = addr + RP_DATA_SYMLINK.PathBuffer.offset
 

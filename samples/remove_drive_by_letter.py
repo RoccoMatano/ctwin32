@@ -19,7 +19,6 @@
 
 import sys
 import time
-import ctypes
 
 from ctwin32 import (
     kernel,
