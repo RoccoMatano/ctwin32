@@ -24,7 +24,7 @@ from ctwin32 import (
 
 ################################################################################
 
-def env_var_root(system=False, access=KEY_READ):
+def env_var_root(*, system=False, access=KEY_READ):
     if system:
         pth = r"SYSTEM\CurrentControlSet\Control\Session Manager"
         return advapi.RegOpenKeyEx(advapi.HKLM, pth, access)
@@ -37,8 +37,8 @@ def env_var_key(root, access=KEY_READ):
 
 ################################################################################
 
-def is_persistent_env_var(name, system=False):
-    with env_var_root(system) as root:
+def is_persistent_env_var(name, *, system=False):
+    with env_var_root(system=system) as root:
         with env_var_key(root) as key:
             result = False
             try:
@@ -63,9 +63,9 @@ def broadcast_env_change():
 
 ################################################################################
 
-def persist_env_var(name, value, system=False, do_broadcast=False):
+def persist_env_var(name, value, *, system=False, do_broadcast=False):
     access = KEY_WRITE | KEY_READ
-    with env_var_root(system, access) as root:
+    with env_var_root(system=system, access=access) as root:
         with env_var_key(root, access) as key:
             if not value:
                 advapi.RegDeleteValue(key, name)
@@ -76,16 +76,16 @@ def persist_env_var(name, value, system=False, do_broadcast=False):
 
 ################################################################################
 
-def persist_user_env_block(nv_dict, system=False):
+def persist_user_env_block(nv_dict, *, system=False):
     for n, v in nv_dict.items():
-        persist_env_var(n, v, system, False)
+        persist_env_var(n, v, system=system)
     broadcast_env_change()
 
 ################################################################################
 
-def get_env_block(system=False):
-    with env_var_root(system) as root:
-        with env_var_key(root, KEY_READ) as key:
+def get_env_block(*, system=False):
+    with env_var_root(system=system) as root:
+        with env_var_key(root) as key:
             return {
                 nam: val for nam, val, typ in advapi.reg_enum_values(key)
                 if typ in (REG_SZ, REG_EXPAND_SZ)
@@ -121,7 +121,7 @@ def parse_args():
 ################################################################################
 
 def main(name, value, system, verbose):
-    persist_env_var(name, value, system, True)
+    persist_env_var(name, value, system=system, do_broadcast=True)
     if verbose:
         print(f"variables for {'system' if args.system else 'user'}:")
         for k, v in get_env_block(args.system).items():

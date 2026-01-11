@@ -150,7 +150,7 @@ def ShellExecuteEx(
         verb=None,
         param=None,
         direc=None,
-        wait=False,
+        wait=False,     # noqa: FBT002
         show=SW_SHOW
         ):
     sei = SHELLEXECUTEINFOW(str(file), verb, param, direc, wait, show)

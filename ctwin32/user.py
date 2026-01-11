@@ -1272,7 +1272,7 @@ def ScrollWindow(hwnd, x, y, scroll_rect=None, clip_rect=None):
 
 _GetKeyNameText = _usr.fun_fact("GetKeyNameTextW", (INT, LONG, PWSTR, INT))
 
-def GetKeyNameText(lparam, expect_empty=False):
+def GetKeyNameText(lparam, *, expect_empty=False):
     size = ret = 32
     while ret >= size - 1:
         size *= 2
@@ -1292,6 +1292,7 @@ def CreateIconFromResourceEx(
         data,
         cx=0,
         cy=0,
+        *,
         is_icon=True,
         default_size=False
         ):
@@ -1556,15 +1557,15 @@ try:
     # build_window_list(parent, 0) -> EnumChildWindows(parent, ...)
     # build_window_list(0, tid) -> EnumThreadWindows(tid, ...)
 
-    def build_window_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
-        enum_children = bool(parent_wnd)
+    def build_window_list(parent, thread_id, hdesk=0, *, hide_immersive=True):
+        enum_children = bool(parent)
         allocated = 512
         while True:
             array = (allocated * PVOID)()
             received = DWORD()
             status = _NtUserBuildHwndList(
                 hdesk,
-                parent_wnd,
+                parent,
                 enum_children,
                 hide_immersive,
                 thread_id,
@@ -1585,7 +1586,7 @@ try:
         return array[:received - 1]
 
 except (FileNotFoundError, AttributeError):
-    def build_window_list(parent_wnd, thread_id, hdesk=0, hide_immersive=True):
+    def build_window_list(parent, thread_id, hdesk=0, *, hide_immersive=True):
         raise NotImplementedError
 
 ################################################################################

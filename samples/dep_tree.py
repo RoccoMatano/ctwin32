@@ -33,7 +33,7 @@ API_SET = ApiSet()
 
 ################################################################################
 
-def get_known_dlls(for_wow=False):
+def get_known_dlls(*, for_wow=False):
     sdir = Path(
         kernel.GetSystemDirectory() if not for_wow
         else kernel.GetSystemWow64Directory()
@@ -48,7 +48,7 @@ def get_known_dlls(for_wow=False):
 
 ################################################################################
 
-def get_dll_search_dirs(mod_path, for_wow=False):
+def get_dll_search_dirs(mod_path, *, for_wow=False):
     nodup = set()
     result = []
     def append(sd):
@@ -180,8 +180,8 @@ def get_dep_tree(filename, delayed, static):
     with pemap(filename) as pe:
         imports = Imports(pe.key, pe.name)
         search_info = (
-            get_known_dlls(pe.is_wow()),
-            get_dll_search_dirs(Path(pe.name).parent, pe.is_wow())
+            get_known_dlls(for_wow=pe.is_wow()),
+            get_dll_search_dirs(Path(pe.name).parent, for_wow=pe.is_wow())
             )
     while unresolved := imports.get_unresolved():
         for path in unresolved:

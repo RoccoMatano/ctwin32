@@ -823,7 +823,7 @@ def make_token_groups(sids_and_attrs):
 
 ################################################################################
 
-def running_as_system(consider_impersonation=False):
+def running_as_system(*, consider_impersonation=False):
     token = (
         GetCurrentThreadEffectiveToken() if consider_impersonation
         else GetCurrentProcessToken()
@@ -923,7 +923,7 @@ def create_process_as_user(
         arglist,
         cflags=0,
         startup_info=None,
-        inherit=False,
+        inherit=False,      # noqa: FBT002
         env=None,
         curdir=None,
         proc_attr=None,
@@ -964,7 +964,7 @@ class LUID_AND_ATTRIBUTES(Struct):
         ("Attributes", DWORD)
         )
 
-def AdjustTokenPrivileges(token, luids_and_attributes, disable_all=False):
+def AdjustTokenPrivileges(token, luids_and_attributes, *, disable_all=False):
     num_la = len(luids_and_attributes)
     if not num_la:
         return

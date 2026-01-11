@@ -27,7 +27,7 @@ while True:
         break
 
 print("\n\nInterfaces by adapter:")
-for guid, ifaces in get_host_interfaces(None, True).items():
+for guid, ifaces in get_host_interfaces(None, include_loopback=True).items():
     alias = ConvertInterfaceLuidToAlias(ConvertInterfaceGuidToLuid(guid))
     print(f"\nAdapter: {alias}, {guid}")
     for nif in ifaces:
@@ -35,7 +35,7 @@ for guid, ifaces in get_host_interfaces(None, True).items():
 
 
 print("\n\nnetifaces:")
-for ifaces in netifaces(None, True):
+for ifaces in netifaces(None, include_loopback=True):
     print(f"\nIndex: {ifaces.idx}, Adapter: {ifaces.alias}, {ifaces.guid}")
     if ifaces.phys_addr:
         mac = ":".join(f"{b:02X}" for b in ifaces.phys_addr)

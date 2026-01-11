@@ -86,7 +86,6 @@ ignore = [
     "EM101",    # total BS
     "EM102",    # use of f-strings in exception constructors
     "ERA001",   # Prone to false positives
-    "FBT002",   # boolean-default-value-positional-argument
     "FBT003",   # boolean-positional-value-in-call
     "G004",     # logging f-strings is not that bad
     "I001",     # tastes differ

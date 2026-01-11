@@ -63,7 +63,7 @@ _WTSDisconnectSession = _wts.fun_fact(
     (BOOL, HANDLE, DWORD, BOOL)
     )
 
-def WTSDisconnectSession(session_id, server=None, wait=True):
+def WTSDisconnectSession(session_id, server=None, *, wait=True):
     raise_on_zero(_WTSDisconnectSession(server, session_id, wait))
 
 ################################################################################

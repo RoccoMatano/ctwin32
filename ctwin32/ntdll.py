@@ -306,7 +306,7 @@ _RtlAdjustPrivilege = _nt.fun_fact(
     (NTSTATUS, ULONG, BOOLEAN, BOOLEAN, PBOOLEAN)
     )
 
-def RtlAdjustPrivilege(priv, enable, thread_priv=False):
+def RtlAdjustPrivilege(priv, enable, *, thread_priv=False):
     prev = BOOLEAN()
     status = _RtlAdjustPrivilege(priv, enable, thread_priv, ref(prev))
     raise_failed_status(status)

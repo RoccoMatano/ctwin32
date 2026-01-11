@@ -89,7 +89,7 @@ FSCTL_GET_REPARSE_POINT = 0x000900a8
 
 ################################################################################
 
-def readlink(link, get_subst_name=False):
+def readlink(link, *, get_subst_name=False):
     flags = FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS
     with create_file(link, 0, 0, flags) as hdl:
         size = 512

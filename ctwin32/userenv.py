@@ -45,7 +45,7 @@ _GetUserProfileDirectory = _ue.fun_fact(
 
 ################################################################################
 
-def CreateEnvironmentBlock(token=None, inherit=False):
+def CreateEnvironmentBlock(token=None, *, inherit=False):
     if token is None:
         token = advapi.GetCurrentProcessToken()
     ptr = PVOID()
@@ -57,7 +57,7 @@ def CreateEnvironmentBlock(token=None, inherit=False):
 
 ################################################################################
 
-def create_env_block_as_dict(token=None, inherit=False):
+def create_env_block_as_dict(token=None, *, inherit=False):
     return kernel.env_str_to_dict(CreateEnvironmentBlock(token, inherit))
 
 ################################################################################

@@ -387,7 +387,7 @@ def get_non_present_info_set():
 
 ################################################################################
 
-def enum_info_set(info_set, cleanup=True):
+def enum_info_set(info_set, *, cleanup=True):
     deinda = SP_DEVINFO_DATA()
     idx = 0
     try:

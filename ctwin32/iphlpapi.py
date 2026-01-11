@@ -323,7 +323,7 @@ def _get_phy_and_ifaces(version, include_loopback):
 
 ################################################################################
 
-def get_host_interfaces(version=4, include_loopback=False):
+def get_host_interfaces(version=4, *, include_loopback=False):
     "returns a dict that maps adapters giuds to a list of ip interfaces"
     phys_and_if = _get_phy_and_ifaces(version, include_loopback)
     return {g: lst[1:] for g, lst in phys_and_if.items()}
@@ -345,7 +345,7 @@ def _guid_to_idx_and_alias(guid):
 
 ################################################################################
 
-def netifaces(version=4, include_loopback=False):
+def netifaces(version=4, *, include_loopback=False):
     "returns a list of Iface objects describing the network adapters"
     result = []
     phys_and_if = _get_phy_and_ifaces(version, include_loopback)

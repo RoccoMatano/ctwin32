@@ -128,7 +128,7 @@ class BaseWnd:
     def hide(self):
         user.ShowWindow(self.hwnd, SW_HIDE)
 
-    def enable(self, enabled=True):
+    def enable(self, enabled=True):     # noqa: FBT002
         user.EnableWindow(self.hwnd, enabled)
 
     def disable(self):
@@ -143,7 +143,7 @@ class BaseWnd:
     def set_focus(self):
         return BaseWnd(user.SetFocus(self.hwnd))
 
-    def invalidate_rect(self, rc=None, erase=False):
+    def invalidate_rect(self, rc=None, *, erase=False):
         user.InvalidateRect(self.hwnd, rc, erase)
 
     def update(self):
@@ -155,7 +155,7 @@ class BaseWnd:
     def get_menu(self):
         return user.GetMenu(self.hwnd)
 
-    def move(self, rc, repaint=True):
+    def move(self, rc, *, repaint=True):
         user.MoveWindow(
             self.hwnd,
             rc.left,
@@ -793,7 +793,7 @@ class InputDlg(BaseDlg):
 
     ############################################################################
 
-    def ask(self, question, caption="", password=False):
+    def ask(self, question, caption="", *, password=False):
         self.question = question
         self.password = password
         template = dlg_template(

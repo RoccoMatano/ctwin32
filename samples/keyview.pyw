@@ -122,7 +122,7 @@ class KeyViewWnd(wndcls.SimpleWnd):
             if then.msg in self.CHAR_MSG:
                 middle = f"          {then.wp:#06x}      {chr(then.wp)} "
             else:
-                kn = user.GetKeyNameText(then.lp, True)
+                kn = user.GetKeyNameText(then.lp, expect_empty=True)
                 middle = f" {then.wp:3} {kn:<18} "
             end = f"{rep:6}  {scan:4}     {ext:>3} {alt:>4} {prev:>6} {now:>4}"
             line = f" {name:<13}{middle}{end}"

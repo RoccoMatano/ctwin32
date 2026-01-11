@@ -1064,7 +1064,7 @@ def create_process(
         arglist,
         cflags=0,
         startup_info=None,
-        inherit=False,
+        inherit=False,      # noqa: FBT002
         env=None,
         curdir=None,
         proc_attr=None,
@@ -1898,7 +1898,7 @@ _FindFirstFile = _k32.fun_fact(
     (HANDLE, PWSTR, PWIN32_FIND_DATA)
     )
 
-def FindFirstFile(name, ignore_not_found=False):
+def FindFirstFile(name, *, ignore_not_found=False):
     find_data = WIN32_FIND_DATA()
     hdl = FFHANDLE(_FindFirstFile(name, ref(find_data)))
     if not hdl.is_valid():
@@ -1924,10 +1924,10 @@ def FindNextFile(hdl):
 
 ################################################################################
 
-def iter_dir(directory, ignore_access_denied=True):
+def iter_dir(directory, *, ignore_access_denied=True):
     pattern = str(directory) + "\\*"
     try:
-        hdl, info = FindFirstFile(pattern, True)
+        hdl, info = FindFirstFile(pattern, ignore_not_found=True)
     except OSError as e:
         if ignore_access_denied and e.winerror == ERROR_ACCESS_DENIED:
             return
@@ -1943,7 +1943,8 @@ def iter_dir(directory, ignore_access_denied=True):
                 )
             if is_sub:
                 sub = rf"{directory}\{info.cFileName}"
-                yield from iter_dir(sub, ignore_access_denied)
+                ign = ignore_access_denied
+                yield from iter_dir(sub, ignore_access_denied=ign)
 
             info = FindNextFile(hdl)
             if info is None:
