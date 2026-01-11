@@ -55,13 +55,13 @@ class ApiDll:
 
 def raise_if(condition):
     if condition:
-        raise WinError
+        raise WinError()
 
 ################################################################################
 
 def raise_on_zero(value):
     if value == 0 or getattr(value, "value", 1) is None:
-        raise WinError
+        raise WinError()
 
 ################################################################################
 

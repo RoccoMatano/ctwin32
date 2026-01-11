@@ -88,14 +88,12 @@ def string_buffer(init, size=None):
 
 # error handling based on ctypes error shadow copy
 
-class WinError(OSError):
-
-    def __init__(self, code=None, descr=None):
-        if code is None:
-            code = ctypes.get_last_error()
-        if descr is None:
-            descr = ctypes.FormatError(code).strip()
-        super().__init__(None, descr, None, code)
+def WinError(code=None, descr=None):
+    if code is None:
+        code = ctypes.get_last_error()
+    if descr is None:
+        descr = ctypes.FormatError(code).strip()
+    return OSError(None, descr, None, code)
 
 ################################################################################
 
@@ -510,7 +508,7 @@ class ScdToBeClosed():
 
     def raise_on_invalid(self):
         if int(self) == self.invalid_value:
-            raise WinError
+            raise WinError()
 
 ################################################################################
 
