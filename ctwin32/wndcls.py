@@ -85,6 +85,9 @@ class BaseWnd:
     def __init__(self, hwnd=None):
         self.hwnd = hwnd
 
+    def __bool__(self):
+        return self.hwnd is not None
+
     def def_win_proc(self, msg, wp, lp):
         return user.DefWindowProc(self.hwnd, msg, wp, lp)
 
@@ -114,7 +117,7 @@ class BaseWnd:
             self.hwnd,
             WM_NOTIFY,
             nmhdr.idFrom,
-            LPARAM(ctypes.cast(ref(nmhdr), PVOID).value)
+            ctypes.addressof(nmhdr)
             )
 
     def destroy(self):
@@ -355,7 +358,7 @@ class BaseWnd:
 ################################################################################
 
 class WndCreateParams:
-    def __init__(self, name="", icon=0, style=WS_OVERLAPPEDWINDOW, parent=0):
+    def __init__(self, name="", icon=0, style=WS_OVERLAPPEDWINDOW, parent=None):
         self.cls = user.WNDCLASS(
             style=CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS,
             hInstance=kernel.GetModuleHandle(None),
@@ -367,8 +370,11 @@ class WndCreateParams:
         self.ex_style = 0
         self.left = self.top = self.width = self.height = CW_USEDEFAULT
         self.menu = None
-        self.parent = parent
         self.name = name
+        if parent is None or isinstance(parent, BaseWnd):
+            self.parent = parent
+        else:
+            self.parent = BaseWnd(parent)
 
 ################################################################################
 
@@ -446,7 +452,7 @@ class SimpleWnd(BaseWnd):
             wcp.top,
             wcp.width,
             wcp.height,
-            wcp.parent,
+            None if wcp.parent is None else wcp.parent.hwnd,
             wcp.menu,
             wcp.cls.hInstance,
             id(self)
@@ -551,7 +557,10 @@ class BaseDlg(BaseWnd):
 
     def __init__(self, parent=None):
         super().__init__()
-        self.parent = parent
+        if parent is None or isinstance(parent, BaseWnd):
+            self.parent = parent
+        else:
+            self.parent = BaseWnd(parent)
 
     ############################################################################
 
@@ -587,16 +596,12 @@ class BaseDlg(BaseWnd):
                 if msg == WM_NOTIFY:
                     return self.on_notify(
                         UINT(wp).value,
-                        ctypes.cast(lp, user.PNMHDR)
+                        ctypes.cast(lp, user.PNMHDR).contents
                         )
                 if msg == WM_ACTIVATE and self.parent:
-                    hdr = user.NMHDR(
-                        hwnd,
-                        user.GetDlgCtrlID(hwnd),
-                        user.MSDN_ACTIVATE
-                        )
+                    hdr = user.NMHDR(hwnd, 0, user.MSDN_ACTIVATE)
                     ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
-                    self.parent.send_notify(ref(ma.hdr))
+                    self.parent.send_notify(ma.hdr)
                 res = self.on_message(msg, wp, lp)
                 if (msg == WM_NCDESTROY):
                     self.del_prop(_PROP_SELF)
@@ -609,7 +614,7 @@ class BaseDlg(BaseWnd):
     def create_modeless(self, template):
         return user.CreateDialogIndirectParam(
             template,
-            self.parent,
+            self.parent.hwnd if self.parent else None,
             self._dlg_proc_,
             id(self)
             )
@@ -619,7 +624,7 @@ class BaseDlg(BaseWnd):
     def do_modal(self, template):
         return user.DialogBoxIndirectParam(
             template,
-            self.parent,
+            self.parent.hwnd if self.parent else None,
             self._dlg_proc_,
             id(self)
             )
@@ -636,7 +641,10 @@ class BaseDlg(BaseWnd):
         user.EndDialog(self.hwnd, IDCANCEL)
         return True
 
-    def on_notify(self, ctrl_id, pnmhdr):
+    def on_notify(self, ctrl_id, nmhdr):
+        if self.parent and nmhdr.code == user.MSDN_ACTIVATE:
+            self.parent.send_notify(nmhdr)
+            return True
         return False
 
     def __del__(self):
@@ -659,12 +667,8 @@ class BaseDlg(BaseWnd):
 
     def send_destroy_request(self):
         if self.parent:
-            md = user.NM_MSD_DESTROY(
-                self.hwnd,
-                user.GetDlgCtrlID(self.hwnd),
-                user.MSDN_DESTROY
-                )
-            self.parent.send_notify(ref(md))
+            md = user.NM_MSD_DESTROY(self.hwnd, 0, user.MSDN_DESTROY)
+            self.parent.send_notify(md)
         else:
             self.destroy()
 
