@@ -33,6 +33,7 @@ http://semver.org/spec/v2.0.0.html).
     - HidD_SetNumInputBuffers
     - hid_get_caps
     - enum_hid_devs
+- user.IsDialogMessage
 
 ### Fixed
 

@@ -1489,6 +1489,7 @@ class NM_MSD_ACTIVATE(Struct):
         ("hdr", NMHDR),
         ("is_active", BOOL),
         )
+PNM_MSD_ACTIVATE = POINTER(NM_MSD_ACTIVATE)
 
 MSDN_DESTROY = MSDN_FIRST + 2
 NM_MSD_DESTROY = NMHDR
@@ -1534,6 +1535,10 @@ _EndDialog = _usr.fun_fact("EndDialog", (BOOL, HWND, INT_PTR))
 
 def EndDialog(hdlg, result):
     raise_on_zero(_EndDialog(hdlg, result))
+
+################################################################################
+
+IsDialogMessage = _usr.fun_fact("IsDialogMessageW", (BOOL, HWND, PMSG))
 
 ################################################################################
 
