@@ -11,18 +11,16 @@ from collections import defaultdict as _defdict
 
 import ctypes
 from .wtypes import (
-    byte_buffer,
-    string_buffer,
     BOOLEAN,
     BYTE,
-    Struct,
-    Union,
+    byte_buffer,
     FILETIME,
+    GUID,
     HANDLE,
+    INT,
     LARGE_INTEGER,
     LONG,
     LONG_PTR,
-    INT,
     NTSTATUS,
     OSVERSIONINFOEX,
     PBOOLEAN,
@@ -32,12 +30,15 @@ from .wtypes import (
     PUNICODE_STRING,
     PVOID,
     SIZE_T,
+    string_buffer,
+    Struct,
     UINT_PTR,
     ULARGE_INTEGER,
     ULONG,
     ULONG_PTR,
-    UNICODE_STRING,
     UnicodeStrBuffer,
+    UNICODE_STRING,
+    Union,
     WCHAR,
     WCHAR_SIZE,
     WinError,
@@ -45,28 +46,29 @@ from .wtypes import (
     )
 from . import (
     ApiDll,
-    ref,
+    DIRECTORY_QUERY,
+    ERROR_NO_MORE_FILES,
+    GENERIC_READ,
     kernel,
     ns_from_struct,
-    suppress_winerr,
-    wtypes,
-    ERROR_NO_MORE_FILES,
-    DIRECTORY_QUERY,
-    GENERIC_READ,
-    SystemProcessInformation,
-    SystemProcessIdInformation,
-    SystemExtendedHandleInformation,
+    ProcessBasicInformation,
+    ProcessCommandLineInformation,
+    ProcessImageFileName,
+    ProcessWow64Information,
+    ref,
     STATUS_BUFFER_OVERFLOW,
     STATUS_BUFFER_TOO_SMALL,
     STATUS_INFO_LENGTH_MISMATCH,
     STATUS_MORE_ENTRIES,
     STATUS_NO_MORE_ENTRIES,
+    suppress_winerr,
+    SystemEnvironmentNameInformation,
+    SystemExtendedHandleInformation,
+    SystemProcessIdInformation,
+    SystemProcessInformation,
     ThreadBasicInformation,
     ThreadPriority,
-    ProcessCommandLineInformation,
-    ProcessImageFileName,
-    ProcessBasicInformation,
-    ProcessWow64Information,
+    wtypes,
     )
 
 _nt = ApiDll("ntdll.dll")
@@ -889,5 +891,63 @@ def NtQueryTimerResolution():
     cur = ULONG(0)
     raise_failed_status(_NtQueryTimerResolution(ref(min), ref(max), ref(cur)))
     return min.value, max.value, cur.value
+
+################################################################################
+
+class VARIABLE_NAME(Struct):
+    _fields_ = (
+        ("NextEntryOffset", ULONG),
+        ("VendorGuid", GUID),
+        ("Name", WCHAR * 1),
+        )
+
+class VARIABLE_NAME_AND_VALUE(Struct):
+    _fields_ = (
+        ("NextEntryOffset", ULONG),
+        ("ValueOffset", ULONG),
+        ("ValueLength", ULONG),
+        ("Attributes", ULONG),
+        ("VendorGuid", GUID),
+        ("Name", WCHAR * 1), # up to ValueOffset
+        # followed by ("Value", BYTE * ValueLength)
+        )
+
+_NtEnumerateSystemEnvironmentValuesEx = _nt.fun_fact(
+    "NtEnumerateSystemEnvironmentValuesEx",
+    (NTSTATUS, ULONG, PVOID, PULONG)
+    )
+
+def NtEnumerateSystemEnvironmentValuesEx(info_cls):
+    size = ULONG(0)
+    stat = _NtEnumerateSystemEnvironmentValuesEx(info_cls, None, ref(size))
+    if stat != STATUS_BUFFER_TOO_SMALL:
+        raise_failed_status(stat)
+
+    buf = byte_buffer(size.value)
+    raise_failed_status(
+        _NtEnumerateSystemEnvironmentValuesEx(info_cls, buf, ref(size))
+        )
+
+    addr = ctypes.addressof(buf)
+    next_offs = 1
+    result = []
+    if info_cls == SystemEnvironmentNameInformation:
+        noffs = VARIABLE_NAME.Name.offset
+        while next_offs:
+            vn = VARIABLE_NAME.from_address(addr)
+            name = ctypes.wstring_at(addr + noffs)
+            result.append((vn.VendorGuid, name))
+            next_offs = vn.NextEntryOffset
+            addr += next_offs
+    else:
+        noffs = VARIABLE_NAME_AND_VALUE.Name.offset
+        while next_offs:
+            vnv = VARIABLE_NAME_AND_VALUE.from_address(addr)
+            name = ctypes.wstring_at(addr + noffs)
+            value = ctypes.string_at(addr + vnv.ValueOffset, vnv.ValueLength)
+            result.append((vnv.VendorGuid, vnv.Attributes, name, value))
+            next_offs = vnv.NextEntryOffset
+            addr += next_offs
+    return result
 
 ################################################################################

@@ -34,6 +34,8 @@ http://semver.org/spec/v2.0.0.html).
     - hid_get_caps
     - enum_hid_devs
 - user.IsDialogMessage
+- ntdll.NtEnumerateSystemEnvironmentValuesEx
+- sample dump_firmware_vars.py
 
 ### Fixed
 
