@@ -34,6 +34,10 @@ http://semver.org/spec/v2.0.0.html).
     - hid_get_caps
     - enum_hid_devs
 - user.IsDialogMessage
+- ntdll.NtEnumerateSystemEnvironmentValuesEx
+- kernel.GetFirmwareEnvironmentVariableEx
+- sample dump_firmware_vars.py
+- sample sec_boot_certs.py
 
 ### Fixed
 

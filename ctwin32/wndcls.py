@@ -14,10 +14,8 @@ from .wtypes import (
     string_buffer,
     HANDLE,
     HWND,
-    LPARAM,
     POINT,
     PPOINT,
-    PVOID,
     UINT,
     WORD,
     )

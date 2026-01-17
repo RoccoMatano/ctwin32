@@ -2358,3 +2358,26 @@ def GetComputerNameEx(name_type=ComputerName.DnsHostname):
         raise_on_err(err)
 
 ################################################################################
+
+_GetFirmwareEnvironmentVariableEx = _k32.fun_fact(
+    "GetFirmwareEnvironmentVariableExW",
+    (DWORD, PWSTR, PWSTR, PVOID, DWORD, PDWORD)
+    )
+
+def GetFirmwareEnvironmentVariableEx(name, guid):
+    guid = str(guid) # for isinstance(guid, (GUID, UUID))
+    size = 32768
+    attrib = DWORD()
+    buf = byte_buffer(size)
+    get_fw_env_var = _GetFirmwareEnvironmentVariableEx
+    res = get_fw_env_var(name, guid, buf, size, ref(attrib))
+    while res == 0:
+        if (err := GetLastError()) == ERROR_INSUFFICIENT_BUFFER:
+            size *= 2
+            buf = byte_buffer(size)
+            res = get_fw_env_var(name, guid, buf, size, ref(attrib))
+        else:
+            raise_on_err(err)
+    return bytes(buf[:res]), attrib.value
+
+################################################################################

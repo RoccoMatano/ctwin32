@@ -104,6 +104,7 @@ ignore = [
     "PLR2004",  # avoiding magic values is good, banning them is bad
     "PTH123",   # open() should be replaced by Path.open()
     "PYI024",   # no dorky typing!!!
+    "RSE102",   # Prone to false positives
     "S101",     # Prone to false positives
     "S105",     # Prone to false positives
     "S602",     # Prone to false positives
