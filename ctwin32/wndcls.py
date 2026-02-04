@@ -700,7 +700,7 @@ def dlg_item_template(
     style |= WS_VISIBLE | WS_CHILD
     # bytes = template + class + title + creation data
     cls = (
-        _std_classes.get(cls.lower(), None) or
+        _std_classes.get(cls.lower()) or
         bytes(string_buffer(cls))
         )
     cdata = (

@@ -86,9 +86,9 @@ def get_ico_file_info(filename):
         entries = ICON_ENTRIES.from_buffer_copy(dta)
         image_info = [
             SimpleNamespace(
-                width=e.width if e.width else 256,
-                height=e.height if e.height else 256,
-                colors=e.colors if e.colors else 1 << min(e.bitcount, 24),
+                width=e.width or 256,
+                height=e.height or 256,
+                colors=e.colors or 1 << min(e.bitcount, 24),
                 size=e.bytesinres,
                 offset=e.imgoffest,
                 )
@@ -116,9 +116,9 @@ def get_executable_file_info(hmod):
         entries = ICON_ENTRIES.from_address(addr)
         image_info = [
             SimpleNamespace(
-                width=e.width if e.width else 256,
-                height=e.height if e.height else 256,
-                colors=e.colors if e.colors else 1 << min(e.bitcount, 24),
+                width=e.width or 256,
+                height=e.height or 256,
+                colors=e.colors or 1 << min(e.bitcount, 24),
                 ico_id=e.ico_id,
                 )
             for e in entries

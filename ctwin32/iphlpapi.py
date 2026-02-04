@@ -266,7 +266,7 @@ def _best_prefix_len(ip, prefixes):
             if int(ip) & mask == int(pfx) & mask:
                 best_len = plen
 
-    return best_len if best_len else ip.max_prefixlen
+    return best_len or ip.max_prefixlen
 
 ################################################################################
 
