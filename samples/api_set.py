@@ -25,7 +25,7 @@ if __name__ == "__main__":
     elif len(sys.argv) > 1:
         print(f"{sys.argv[1]} -> {api_set.lookup(sys.argv[1])}")
     else:
-        for entry, targets in api_set.enum_entries():
-            print(f"{entry:>58} -> {', '.join(targets)}")
+        for entry, hash, targets in sorted(api_set.enum_entries()):
+            print(f"{entry:>60} -> {hash:08x} {', '.join(targets)}")
 
 ################################################################################

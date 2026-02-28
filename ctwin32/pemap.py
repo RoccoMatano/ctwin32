@@ -393,6 +393,12 @@ class API_SET_VALUE_ENTRY(Struct):
         ("ValueLength", ULONG),
         )
 
+class API_SET_HASH_ENTRY(Struct):
+    _fields_ = (
+        ("Hash", ULONG),
+        ("Index", ULONG),
+        )
+
 ################################################################################
 
 class ApiSet():
@@ -403,9 +409,19 @@ class ApiSet():
         if apiset.Version == 6:
             self.base = base
             self.count = apiset.Count
+            self.hash_fact = apiset.HashFactor
+            self.hash_addr = base + apiset.HashOffset
             self.entry_addr = base + apiset.EntryOffset
         else:
             raise WinError(ERROR_INVALID_DATA)
+
+    ############################################################################
+
+    def _hash_at(self, idx):
+        ENTRY_SIZE = API_SET_HASH_ENTRY._size_
+        addr = self.hash_addr + idx * ENTRY_SIZE
+        hsh = API_SET_HASH_ENTRY.from_address(addr)
+        return hsh.Hash, hsh.Index
 
     ############################################################################
 
@@ -436,28 +452,79 @@ class ApiSet():
     def enum_entries(self):
         if self.base:
             for i in range(self.count):
-                entry, name = self._get_entry_info(i, False)
-                yield (name, list(self._enum_values(entry)))
+                entry_hsh, entry_idx = self._hash_at(i)
+                entry, name = self._get_entry_info(entry_idx, False)
+                yield (name, entry_hsh, list(self._enum_values(entry)))
 
     ############################################################################
 
-    def lookup(self, dllname):
-        if self.base:
-            dllname = dllname.lower()
-            # entries are sorted -> binary search
-            mini = 0
-            maxi = self.count - 1
-            while mini <= maxi:
-                curi = (mini + maxi) // 2
-                entry, name = self._get_entry_info(curi, True)
-                if dllname.startswith(name):
-                    if lst := list(self._enum_values(entry)):
-                        return lst[-1]
-                    break
-                if dllname < name:
-                    maxi = curi - 1
-                else:
-                    mini = curi + 1
+    def lookup(self, dllname, importer=None):
+
+        def pick_name(entry, importer):
+            result = ""
+            names = list(self._enum_values(entry))
+            if not names:
+                return result
+            result = names[0]
+            if importer:
+                importer = importer.lower()
+                for n in names:
+                    if n == importer:
+                        result = n
+                        break
+            return result
+
+        if not self.base:
+            return ""
+
+        norm = dllname.lower().rsplit("-", 1)[0]
+        target = 0
+        U32 = 0xffffffff
+        for c in norm:
+            target = (((target * self.hash_fact) & U32) + ord(c)) & U32
+
+        # entries are sorted -> binary search
+        mini = 0
+        maxi = self.count - 1
+        while mini <= maxi:
+            curi = (mini + maxi) // 2
+            entry_hsh, entry_idx = self._hash_at(curi)
+
+            if target < entry_hsh:
+                maxi = curi - 1
+            elif target > entry_hsh:
+                mini = curi + 1
+            else:
+                # candidate: verify the actual name (up to HashedLength)
+                entry, name = self._get_entry_info(entry_idx, True)
+                if norm == name:
+                    return pick_name(entry, importer)
+
+                # Hash collision is rare -> scan neighbors with the same hash
+
+                # scan left
+                left = curi - 1
+                while left >= 0:
+                    entry_hsh, entry_idx = self._hash_at(left)
+                    if entry_hsh != target:
+                        break
+                    entry, name = self._get_entry_info(entry_idx, True)
+                    if norm == name:
+                        return pick_name(entry, importer)
+                    left -= 1
+
+                # scan right
+                right = curi + 1
+                while right < self.count:
+                    entry_hsh, entry_idx = self._hash_at(right)
+                    if entry_hsh != target:
+                        break
+                    entry, name = self._get_entry_info(entry_idx, True)
+                    if norm == name:
+                        return pick_name(entry, importer)
+                    right += 1
+
+                break
 
         return ""
 
