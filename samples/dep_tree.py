@@ -129,7 +129,7 @@ def find_dll_path(name, search_info):
 
 def get_imported_mod(pe, rva_name, search_info):
     mod_name = pe.bstring(pe.offs_from_rva(rva_name)).lower()
-    if api := API_SET.lookup(mod_name):
+    if api := API_SET.lookup(mod_name, Path(pe.name).name):
         mod_name = api
     mpath = find_dll_path(mod_name, search_info)
     if mpath is None and "." not in mod_name:

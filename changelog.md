@@ -56,7 +56,8 @@ http://semver.org/spec/v2.0.0.html).
 - in sample hello_wnd.pyw place task dialog at mouse cursor
 - extend sample print_reparse_points.py to show where reparse points of type
   IO_REPARSE_TAG_APPEXECLINK and IO_REPARSE_TAG_LX_SYMLINK point to
-
+- extended API set lookup in pemap.py to use hashes instead of names
+- adapted samples api_set.py and dep_tree.py to changed pemap.py
 
 ## [4.0.0] - 2025-10-08
 
