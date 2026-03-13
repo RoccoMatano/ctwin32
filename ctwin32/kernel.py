@@ -65,11 +65,13 @@ from . import (
     raise_on_err,
     raise_on_zero,
     ref,
+    suppress_winerr,
     ENABLE_VIRTUAL_TERMINAL_PROCESSING,
     ERROR_ACCESS_DENIED,
     ERROR_FILE_NOT_FOUND,
     ERROR_HANDLE_EOF,
     ERROR_INSUFFICIENT_BUFFER,
+    ERROR_INVALID_PARAMETER,
     ERROR_MORE_DATA,
     ERROR_NO_MORE_FILES,
     ERROR_PIPE_CONNECTED,
@@ -2379,5 +2381,58 @@ def GetFirmwareEnvironmentVariableEx(name, guid):
         else:
             raise_on_err(err)
     return bytes(buf[:res]), attrib.value
+
+################################################################################
+
+class MEMORY_BASIC_INFORMATION(Struct):
+    _fields_ = (
+        ("BaseAddress", PVOID),
+        ("AllocationBase", PVOID),
+        ("AllocationProtect", DWORD),
+        ("PartitionId", WORD),
+        ("RegionSize", SIZE_T),
+        ("State", DWORD),
+        ("Protect", DWORD),
+        ("Type", DWORD),
+        )
+PMEMORY_BASIC_INFORMATION = POINTER(MEMORY_BASIC_INFORMATION)
+
+################################################################################
+
+_VirtualQuery = _k32.fun_fact(
+    "VirtualQuery",
+    (SIZE_T, PVOID, PMEMORY_BASIC_INFORMATION, SIZE_T)
+    )
+
+def VirtualQuery(addr):
+    mbi = MEMORY_BASIC_INFORMATION()
+    raise_on_zero(_VirtualQuery(addr, ref(mbi), mbi._size_))
+    return ns_from_struct(mbi)
+
+def enum_memory_info():
+    addr = 0
+    with suppress_winerr(ERROR_INVALID_PARAMETER):
+        while True:
+            yield (mbi := VirtualQuery(addr))
+            addr += mbi.RegionSize
+
+################################################################################
+
+_VirtualQueryEx = _k32.fun_fact(
+    "VirtualQueryEx",
+    (SIZE_T, HANDLE, PVOID, PMEMORY_BASIC_INFORMATION, SIZE_T)
+    )
+
+def VirtualQueryEx(hproc, addr):
+    mbi = MEMORY_BASIC_INFORMATION()
+    raise_on_zero(_VirtualQueryEx(hproc, addr, ref(mbi), mbi._size_))
+    return ns_from_struct(mbi)
+
+def enum_memory_info_ex(hproc):
+    addr = 0
+    with suppress_winerr(ERROR_INVALID_PARAMETER):
+        while True:
+            yield (mbi := VirtualQueryEx(hproc, addr))
+            addr += mbi.RegionSize
 
 ################################################################################

@@ -38,6 +38,9 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.GetFirmwareEnvironmentVariableEx
 - sample dump_firmware_vars.py
 - sample sec_boot_certs.py
+- kernel.VirtualQuery
+- kernel.VirtualQueryEx
+- sample enum_mods_vq.py
 
 ### Fixed
 
