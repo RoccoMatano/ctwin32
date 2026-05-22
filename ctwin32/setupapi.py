@@ -7,12 +7,15 @@
 
 import re
 import ctypes
+from types import SimpleNamespace as _namespace
 from .wtypes import (
     byte_buffer,
     string_buffer,
     BOOL,
     Struct,
     DWORD,
+    DWORDLONG,
+    FILETIME,
     GUID,
     HANDLE,
     HWND,
@@ -29,6 +32,7 @@ from .wtypes import (
     )
 from . import (
     ApiDll,
+    multi_str_from_addr,
     ref,
     raise_on_zero,
     suppress_winerr,
@@ -40,6 +44,8 @@ from . import (
     DICS_DISABLE,
     DICS_FLAG_CONFIGSPECIFIC,
     DIF_PROPERTYCHANGE,
+    MAX_PATH,
+    SPDRP_CLASS,
     SPDRP_DEVICEDESC,
     ERROR_NO_MORE_ITEMS,
     ERROR_NOT_FOUND,
@@ -133,6 +139,53 @@ def make_dev_iface_detail(size):
     ifd.cbSize = ifd._size_
     offs = SP_DEVICE_INTERFACE_DETAIL_DATA.DevicePath.offset
     return buf, ctypes.addressof(buf) + offs
+
+################################################################################
+
+_LINE_LEN = 256
+
+class SP_DRVINFO_DATA(Struct):
+    _pack_ = _SUA_PACK
+    _fields_ = (
+        ("cbSize", DWORD),
+        ("DriverType", DWORD),
+        ("Reserved", ULONG_PTR),
+        ("Description", WCHAR * _LINE_LEN),
+        ("MfgName", WCHAR * _LINE_LEN),
+        ("ProviderName", WCHAR * _LINE_LEN),
+        ("DriverDate", FILETIME),
+        ("DriverVersion", DWORDLONG),
+        )
+
+    def __init__(self):
+        self.cbSize = self._size_
+
+PSP_DRVINFO_DATA = POINTER(SP_DRVINFO_DATA)
+
+################################################################################
+
+class SP_DRVINFO_DETAIL_DATA(Struct):
+    _pack_ = _SUA_PACK
+    _fields_ = (
+        ("cbSize", DWORD),
+        ("InfDate", FILETIME),
+        ("CompatIDsOffset", DWORD),
+        ("CompatIDsLength", DWORD),
+        ("Reserved", ULONG_PTR),
+        ("SectionName", WCHAR * _LINE_LEN),
+        ("InfFileName", WCHAR * MAX_PATH),
+        ("DrvDescription", WCHAR * _LINE_LEN),
+        ("HardwareID", WCHAR * 1),
+        )
+
+PSP_DRVINFO_DETAIL_DATA = POINTER(SP_DRVINFO_DETAIL_DATA)
+
+def make_dev_drvinfo_detail(size):
+    buf = byte_buffer(size)
+    drvd = SP_DRVINFO_DETAIL_DATA.from_buffer(buf)
+    drvd.cbSize = drvd._size_
+    offs = SP_DRVINFO_DETAIL_DATA.HardwareID.offset
+    return buf, drvd, ctypes.addressof(buf) + offs
 
 ################################################################################
 
@@ -514,6 +567,13 @@ def desc_from_info_set(info_set, deinda):
         SPDRP_DEVICEDESC
         )[0]
 
+def class_from_info_set(info_set, deinda):
+    return SetupDiGetDeviceRegistryProperty(
+        info_set,
+        deinda,
+        SPDRP_CLASS
+        )[0]
+
 ################################################################################
 
 _SetupDiEnumDeviceInterfaces = _sua.fun_fact(
@@ -590,5 +650,95 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
             )
         )
     return ctypes.wstring_at(addr), deinda
+
+
+################################################################################
+
+_SetupDiBuildDriverInfoList = _sua.fun_fact(
+    "SetupDiBuildDriverInfoList",
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, DWORD)
+    )
+
+def SetupDiBuildDriverInfoList(info_set, deinda, driver_type):
+    raise_on_zero(_SetupDiBuildDriverInfoList(info_set, deinda, driver_type))
+
+################################################################################
+
+_SetupDiDestroyDriverInfoList = _sua.fun_fact(
+    "SetupDiDestroyDriverInfoList",
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, DWORD)
+    )
+
+def SetupDiDestroyDriverInfoList(info_set, deinda, driver_type):
+    raise_on_zero(_SetupDiDestroyDriverInfoList(info_set, deinda, driver_type))
+
+################################################################################
+
+_SetupDiEnumDriverInfo = _sua.fun_fact(
+    "SetupDiEnumDriverInfoW",
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, DWORD, DWORD, PSP_DRVINFO_DATA)
+    )
+
+def SetupDiEnumDriverInfo(info_set, deinda, driver_type, idx):
+    drv = SP_DRVINFO_DATA()
+    raise_on_zero(
+        _SetupDiEnumDriverInfo(info_set, deinda, driver_type, idx, ref(drv))
+        )
+    return drv
+
+################################################################################
+
+_SetupDiGetDriverInfoDetail = _sua.fun_fact(
+    "SetupDiGetDriverInfoDetailW",
+    (BOOL, HANDLE, PSP_DEVINFO_DATA, PSP_DRVINFO_DATA, PVOID, DWORD, PDWORD)
+    )
+
+def SetupDiGetDriverInfoDetail(info_set, deinda, drinda):
+    req_size = DWORD()
+    _SetupDiGetDriverInfoDetail(
+        info_set,
+        deinda,
+        ref(drinda),
+        None,
+        0,
+        ref(req_size),
+        )
+
+    buf, drvd, hwid_addr = make_dev_drvinfo_detail(req_size.value)
+
+    raise_on_zero(
+        _SetupDiGetDriverInfoDetail(
+            info_set,
+            deinda,
+            ref(drinda),
+            buf,
+            req_size.value,
+            ref(req_size),
+            )
+        )
+
+    hardware_ids = multi_str_from_addr(hwid_addr)
+    if not drvd.CompatIDsLength:
+        compat_ids = []
+    else:
+        addr = ctypes.addressof(buf) + drvd.CompatIDsOffset
+        compat_ids = multi_str_from_addr(addr)
+
+    return _namespace(
+        section_name=drvd.SectionName,
+        inf_file=drvd.InfFileName,
+        description=drvd.DrvDescription,
+        hardware_ids=hardware_ids,
+        compat_ids=compat_ids,
+        )
+
+################################################################################
+
+def enum_driver_info(info_set, deinda, driver_type):
+    idx = 0
+    with suppress_winerr(ERROR_NO_MORE_ITEMS):
+        while True:
+            yield SetupDiEnumDriverInfo(info_set, deinda, driver_type, idx)
+            idx += 1
 
 ################################################################################

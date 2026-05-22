@@ -41,6 +41,13 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.VirtualQuery
 - kernel.VirtualQueryEx
 - sample enum_mods_vq.py
+- setupapi.class_from_info_set
+- setupapi.SetupDiBuildDriverInfoList
+- setupapi.SetupDiDestroyDriverInfoList
+- setupapi.SetupDiEnumDriverInfo
+- setupapi.SetupDiGetDriverInfoDetail
+- setupapi.enum_driver_info
+- module newdev with function DiInstallDevice
 
 ### Fixed
 

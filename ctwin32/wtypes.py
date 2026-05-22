@@ -39,7 +39,7 @@ DWORD = ULONG = ctypes.c_ulong
 # this is not the case.
 
 LARGE_INTEGER = LONGLONG = ctypes.c_longlong
-ULARGE_INTEGER = ULONGLONG = ctypes.c_ulonglong
+ULARGE_INTEGER = ULONGLONG = DWORDLONG = ctypes.c_ulonglong
 
 UINT_PTR = WPARAM = SIZE_T = ULONG_PTR = ctypes.c_size_t
 INT_PTR = LPARAM = SSIZE_T = LRESULT = LONG_PTR = ctypes.c_ssize_t
