@@ -8289,3 +8289,7 @@ PF_MOVDIR64B_INSTRUCTION_AVAILABLE = 61
 
 SystemEnvironmentNameInformation = 1
 SystemEnvironmentValueInformation = 2
+
+SPDIT_NODRIVER = 0
+SPDIT_CLASSDRIVER = 1
+SPDIT_COMPATDRIVER = 2
