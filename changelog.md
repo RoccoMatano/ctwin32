@@ -48,6 +48,15 @@ http://semver.org/spec/v2.0.0.html).
 - setupapi.SetupDiGetDriverInfoDetail
 - setupapi.enum_driver_info
 - module newdev with function DiInstallDevice
+- module wintrust with functions
+    - WinVerifyTrust
+    - WTHelperGetProvCertFromChain
+    - WTHelperProvDataFromStateData
+    - WTHelperGetProvSignerFromChain
+    - CertGetNameString
+    - CertGetCertificateContextProperty
+    - verify_embedded_signature
+- sample verify_signature.py
 
 ### Fixed
 

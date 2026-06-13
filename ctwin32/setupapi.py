@@ -651,7 +651,6 @@ def SetupDiGetDeviceInterfaceDetail(info_set, did):
         )
     return ctypes.wstring_at(addr), deinda
 
-
 ################################################################################
 
 _SetupDiBuildDriverInfoList = _sua.fun_fact(
