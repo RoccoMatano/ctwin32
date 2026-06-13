@@ -10,7 +10,7 @@ from types import SimpleNamespace as _namespace
 import _ctypes
 import ctypes
 from ._constants import * # noqa: F403
-from .wtypes import DWORD, PWSTR, WCHAR_SIZE, WinError
+from .wtypes import DWORD, PVOID, PWSTR, WCHAR_SIZE, WinError
 from . import kuser_shared_data as _kusd
 ref = ctypes.byref
 
@@ -74,6 +74,14 @@ def raise_on_err(err):
 def raise_on_hr(hr):
     if hr < 0:
         raise WinError(hr)
+
+################################################################################
+
+def raise_on_nullptr(ptr):
+    if not isinstance(ptr, PVOID):
+        ptr = ctypes.cast(ptr, PVOID)
+    if ptr.value is None:
+        raise WinError()
 
 ################################################################################
 
