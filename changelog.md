@@ -31,22 +31,22 @@ http://semver.org/spec/v2.0.0.html).
     - HidD_GetManufacturerString
     - HidD_GetProductString
     - HidD_SetNumInputBuffers
-    - hid_get_caps
-    - enum_hid_devs
+    - hid\_get\_caps
+    - enum\_hid\_devs
 - user.IsDialogMessage
 - ntdll.NtEnumerateSystemEnvironmentValuesEx
 - kernel.GetFirmwareEnvironmentVariableEx
-- sample dump_firmware_vars.py
-- sample sec_boot_certs.py
+- sample dump\_firmware\_vars.py
+- sample sec\_boot\_certs.py
 - kernel.VirtualQuery
 - kernel.VirtualQueryEx
-- sample enum_mods_vq.py
-- setupapi.class_from_info_set
+- sample enum\_mods\_vq.py
+- setupapi.class\_from\_info\_set
 - setupapi.SetupDiBuildDriverInfoList
 - setupapi.SetupDiDestroyDriverInfoList
 - setupapi.SetupDiEnumDriverInfo
 - setupapi.SetupDiGetDriverInfoDetail
-- setupapi.enum_driver_info
+- setupapi.enum\_driver\_info
 - module newdev with function DiInstallDevice
 - module wintrust with functions
     - WinVerifyTrust
@@ -55,7 +55,7 @@ http://semver.org/spec/v2.0.0.html).
     - WTHelperGetProvSignerFromChain
     - CertGetNameString
     - CertGetCertificateContextProperty
-    - verify_embedded_signature
+    - verify\_embedded\_signature
 - sample verify_signature.py
 
 ### Fixed
@@ -73,8 +73,8 @@ http://semver.org/spec/v2.0.0.html).
   available in \_\_init\_\_.py
 - raise exception in pemap.ApiSet().\_\_init\_\_
 - in sample hello_wnd.pyw place task dialog at mouse cursor
-- extend sample print_reparse_points.py to show where reparse points of type
-  IO_REPARSE_TAG_APPEXECLINK and IO_REPARSE_TAG_LX_SYMLINK point to
+- extend sample print\_reparse\_points.py to show where reparse points of type
+  IO\_REPARSE\_TAG\_APPEXECLINK and IO\_REPARSE\_TAG\_LX\_SYMLINK point to
 - extended API set lookup in pemap.py to use hashes instead of names
 - adapted samples api_set.py and dep_tree.py to changed pemap.py
 
@@ -98,40 +98,40 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.RemoveDllDirectory
 - sample dep_tree.py
 - gdi.GetObject
-- advapi.open_system_token_for_session
-- module kuser_shared_data
-- advapi.get_token_privileges
+- advapi.open\_system\_token\_for\_session
+- module kuser\_shared\_data
+- advapi.get\_token\_privileges
 - user.IsWindowVisible
-- user.is_window_cloaked
+- user.is\_window\_cloaked
 - kernel.GetPriorityClass
 - kernel.SetPriorityClass
 - kernel.GetThreadPriority
 - kernel.SetThreadPriority
 - ntdll.NtSetInformationThread
-- ntdll.set_abs_thread_priority
-- ntdll.get_abs_thread_priority
+- ntdll.set\_abs\_thread\_priority
+- ntdll.get\_abs\_thread\_priority
 - ntdll.obj_attr
 - sample obj_dir.py
-- ntdll.enum_processes_ex
+- ntdll.enum\_processes\_ex
 
 ### Changed
 
 - rename UnicodeStrFromStr to UnicodeStrBuffer. Allow it to be initialized with
   a size and add the `str` property (**_not backwards compatible_**).
-- renamed ImgDelayDescr -> IMAGE_DELAYLOAD_DESCRIPTOR (**_not backwards compatible_**)
-- adapted sample run_s4u.py to use advapi.open_system_token_for_session
+- renamed ImgDelayDescr -> IMAGE\_DELAYLOAD\_DESCRIPTOR (**_not backwards compatible_**)
+- adapted sample run_s4u.py to use advapi.open\_system\_token\_for\_session
 - let sample dep_tree.py handle imports with missing extension (.dll)
-- renamed user.get_wnd_center -> user.get_window_center (**_not backwards compatible_**)
+- renamed user.get\_wnd\_center -> user.get\_window\_center (**_not backwards compatible_**)
 - renamed user.center_wnd -> user.center_window (**_not backwards compatible_**)
-- renamed user.build_wnd_list -> user.build_window_list (**_not backwards compatible_**)
+- renamed user.build\_wnd\_list -> user.build\_window\_list (**_not backwards compatible_**)
 - discontinue support for python 3.8 and 3.9 (**_not backwards compatible_**)
-- complete the partial definition of ntdll.SYSTEM_PROCESS_INFORMATION
+- complete the partial definition of ntdll.SYSTEM\_PROCESS\_INFORMATION
 - extend ntdll.enum_processes to also return the list of thread IDs for each
   process
 - removed workaround for strings with embedded zeros, that was required for
   python < 3.10
 - improved reporting of delayed imports in sample dep_tree.py
-- in wtypes renamed PTR_64_BIT -> PTR_HAS_64_BITS and PTR_32_BIT -> PTR_HAS_32_BITS
+- in wtypes renamed PTR\_64\_BIT -> PTR\_HAS\_64\_BITS and PTR\_32\_BIT -> PTR\_HAS\_32\_BITS
 
 ### Fixed
 
@@ -143,20 +143,20 @@ http://semver.org/spec/v2.0.0.html).
 ### Added
 
 - advapi.RegLoadAppKey
-- advapi.enum_event_log
+- advapi.enum\_event\_log
 - powrprof.PowerInformationWithPrivileges
 - advapi.CreateWellKnownSid
 - advapi.SetThreadToken
-- advapi.enable_token_privileges
+- advapi.enable\_token\_privileges
 - advapi.enable_privileges
 - advapi.AllocateLocallyUniqueId
-- advapi.make_token_groups
+- advapi.make\_token\_groups
 - secur.LsaDeregisterLogonProcess
 - secur.LsaConnectUntrusted
 - secur.LsaStrFromStr
 - secur.LsaLookupAuthenticationPackage
 - secur.LsaLogonUser
-- wtypes.wchar_len_sz
+- wtypes.wchar\_len\_sz
 - wtypes.UnicodeStrFromStr
 - wtypes.UnicodeStrArray
 - sample run_s4u.py
@@ -165,12 +165,12 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.GetCurrentProcessToken
 - advapi.GetCurrentThreadToken
 - advapi.GetCurrentThreadEffectiveToken
-- advapi.running_as_system
-- advapi.get_token_elevation_type
-- advapi.is_elevated_via_uac
+- advapi.running\_as\_system
+- advapi.get\_token\_elevation\_type
+- advapi.is\_elevated\_via\_uac
 - kernel.GetCurrentThread
 - ntdll.NtQueryInformationThread
-- ntdll.get_thread_basic_info
+- ntdll.get\_thread\_basic\_info
 - ntdll.NtGetNextThread
 - psapi.GetProcessImageFileName
 
@@ -180,8 +180,8 @@ http://semver.org/spec/v2.0.0.html).
   `wtsapi` (**_not backwards compatible_**)
 - replaced MIT license text with SPDX-License-Identifier in python files
 - moved LOWORD and HIWORD from `wtypes` to `ctwin32`
-- let ctwin32.ns_from_struct work recursively
-- adapted sample `uptime_evt.py` to use advapi.enum_event_log
+- let ctwin32.ns\_from\_struct work recursively
+- adapted sample `uptime_evt.py` to use advapi.enum\_event\_log
 - do not use the windows platform tags anymore when creating wheels as this
   was futile anyway (no more need for setup.py)
 - adapted sample `power_requests.py` to use
@@ -199,27 +199,27 @@ http://semver.org/spec/v2.0.0.html).
 ### Added
 
 - advapi.RegFlushKey
-- advapi.get_token_user
-- advapi.get_token_groups
+- advapi.get\_token\_user
+- advapi.get\_token\_groups
 - user.GetProcessWindowStation
 - user.GetThreadDesktop
 - user.GetUserObjectInformation
-- user.is_interactive_process
-- user.terminate_on_exception
+- user.is\_interactive\_process
+- user.terminate\_on\_exception
 - kernel.ReadFile
 - kernel.WriteFile
-- kernel.read_file_text
-- kernel.write_file_text
+- kernel.read\_file\_text
+- kernel.write\_file\_text
 - kernel.FlushFileBuffers
 - kernel.CreateNamedPipe
 - kernel.ConnectNamedPipe
 - kernel.DisconnectNamedPipe
-- kernel.create_named_pipe
+- kernel.create\_named\_pipe
 - sample named_pipe.py
-- kernel.get_local_tzinfo
+- kernel.get\_local\_tzinfo
 - kernel.FindFirstFileName
 - kernel.FindNextFileName
-- kernel.find_all_filenames
+- kernel.find\_all\_filenames
 - kernel.GetFileInformationByHandle
 - sample hardlinks.py
 - kernel.CreateFileMapping
@@ -243,79 +243,79 @@ http://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- fixed string length handling in sample dump_ver_res.py
-- fixed result processing in ntdll.get_directory_info
+- fixed string length handling in sample dump\_ver\_res.py
+- fixed result processing in ntdll.get\_directory\_info
 
 
 ## [2.6.0] - 2024-05-09
 
 ### Added
 
-- cfgmgr.CM_Get_Device_Interface_List_Size
-- cfgmgr.CM_Get_Device_Interface_List
-- ntdll.SYSTEM_BASIC_INFORMATION
-- ntdll.SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
+- cfgmgr.CM\_Get\_Device\_Interface\_List\_Size
+- cfgmgr.CM\_Get\_Device\_Interface\_List
+- ntdll.SYSTEM\_BASIC\_INFORMATION
+- ntdll.SYSTEM\_PROCESSOR\_PERFORMANCE\_INFORMATION
 - sample cnt_irq.py
 - gdi.SetBkColor
 - gdi.ExtTextOut
-- gdi.fill_solid_rect
+- gdi.fill\_solid\_rect
 - kernel.QueryInformationJobObject
 - sample timeit.py
-- sample dump_proc_env.py
+- sample dump\_proc\_env.py
 - wtypes.byte_buffer and wtypes.string_buffer
 - python 3.13 in pyproject.toml
 
 ### Changed
 
-- let sample 'restart_usb_port.py' use cfgmgr.CM_Get_Device_Interface_List
+- let sample 'restart\_usb\_port.py' use cfgmgr.CM\_Get\_Device\_Interface\_List
   instead of setupapi.SetupDiGetDeviceInterfaceDetail
 - support for addition and subtraction of FILETIME
-- add parameter 'inherit' to CreateEnvironmentBlock and create_env_block_as_dict
-- replaced ctypes.create_string|unicode_buffer with wtypes.byte_buffer and
+- add parameter 'inherit' to CreateEnvironmentBlock and create\_env\_block\_as\_dict
+- replaced ctypes.create\_string|unicode\_buffer with wtypes.byte_buffer and
   wtypes.string_buffer
 
 ### Fixed
 
-- fixed handling of "\0\0" in ctwin32.multi_str_from_str
+- fixed handling of "\0\0" in ctwin32.multi\_str\_from\_str
 
 ## [2.5.0] - 2024-03-11
 
 ### Added
 
 - kernel.CreateIoCompletionPort
-- kernel.create_io_completion_port
+- kernel.create\_io\_completion\_port
 - kernel.GetQueuedCompletionStatus
 - kernel.GetCommandLine
 - kernel.CreateJobObject
 - kernel.AssignProcessToJobObject
 - kernel.SetInformationJobObject
 - kernel.ResumeThread
-- sample wait_for_job.py
+- sample wait\_for\_job.py
 
 ## [2.4.0] - 2023-10-03
 
 ### Added
 
-- svc_util.running_as_trusted_installer
-- ntdll.get_proc_command_line
-- ntdll.get_proc_env_blk
-- ntdll.get_wow64_proc_env_blk
+- svc\_util.running\_as\_trusted\_installer
+- ntdll.get\_proc\_command\_line
+- ntdll.get\_proc\_env\_blk
+- ntdll.get\_wow64\_proc\_env\_blk
 - kernel.ReadProcessMemory
 - kernel.WriteProcessMemory
-- kernel.get_proc_env_as_dict
+- kernel.get\_proc\_env\_as\_dict
 - advapi.EncryptFile
 - advapi.DecryptFile
 - misc.UnDecorateSymbolName
 
 ### Changed
 
-- replaced function argc_argv_from_args by class wtypes.ArgcArgvFromArgs
+- replaced function argc\_argv\_from\_args by class wtypes.ArgcArgvFromArgs
   (removing shaky manual lifetime mamagement).
 - to improve efficiency a little, use `from_buffer` instead of `from_address`
   where approriate
 - improve usage of ntdll.NtQuerySystemInformation
 - use `id` instead of `pvoid_from_obj`
-- renamed wndcls.dlg_item_bytes to dlg_item_template
+- renamed wndcls.dlg\_item\_bytes to dlg\_item\_template
 - renamed wndcls.dlg_bytes to dlg_template
 
 ### Fixed
@@ -331,7 +331,7 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.PowerCreateRequest
 - kernel.PowerSetRequest
 - kernel.PowerClearRequest
-- kernel.create_power_request
+- kernel.create\_power\_request
 - ruff and flake8 config in pyproject.toml
 - kernel.GetDriveType
 - kernel.GetLogicalDriveStrings
@@ -342,14 +342,14 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.GetVolumePathNamesForVolumeName
 - sample volume_paths.py
 - ntdll.RtlGetCurrentPeb
-- cfgmgr.CM_Locate_DevNode
-- cfgmgr.CM_Get_DevNode_Registry_Property
-- sample restart_usb_port.py
+- cfgmgr.CM\_Locate\_DevNode
+- cfgmgr.CM\_Get\_DevNode\_Registry\_Property
+- sample restart\_usb\_port.py
 - sample api_set.py
 - advapi.DuplicateTokenEx
 - advapi.SetTokenInformation
 - advapi.CreateProcessAsUser
-- advapi.create_process_as_user
+- advapi.create\_process\_as\_user
 - advapi.StartServiceCtrlDispatcher
 - advapi.RegisterServiceCtrlHandler
 - advapi.SetServiceStatus
@@ -357,15 +357,15 @@ http://semver.org/spec/v2.0.0.html).
 - advapi.GetTokenInformation
 - kernel.dbg_print
 - module svc_util with functions
-  - func_as_system
-  - create_process_in_session_copy_token
-  - func_as_trusted_installer
-  - proc_as_trusted_installer
+  - func\_as\_system
+  - create\_process\_in\_session\_copy\_token
+  - func\_as\_trusted\_installer
+  - proc\_as\_trusted\_installer
 
 ### Changed
 
 - extended sample power_requests.py to demonstrate the effect of
-  kernel.create_power_request
+  kernel.create\_power\_request
 - 'multi-strings' (strings that represent a list of strings by joining its
   elements with `\0`) are now always returned as a list of plain strings.
 - greatly simplified sample lsc.py by using svc_util
@@ -378,10 +378,10 @@ http://semver.org/spec/v2.0.0.html).
 - member names in the following structures were missing prefixes (hungarian
   notation):
   - advapi.SERVICE_STATUS
-  - advapi.SERVICE_STATUS_PROCESS
-  - advapi.ENUM_SERVICE_STATUS_PROCESS
-  - advapi.QUERY_SERVICE_CONFIG
-  - misc.WTS_SESSION_INFO
+  - advapi.SERVICE\_STATUS\_PROCESS
+  - advapi.ENUM\_SERVICE\_STATUS\_PROCESS
+  - advapi.QUERY\_SERVICE\_CONFIG
+  - misc.WTS\_SESSION\_INFO
   - user.WINDOWPLACEMENT
   - wtypes.FILETIME
   - wtypes.SYSTEMTIME
@@ -396,7 +396,7 @@ http://semver.org/spec/v2.0.0.html).
 - kernel.FindNextFile
 - kernel.iter_dir
 - kernel.find_file
-- sample print_reparse_points.py
+- sample print\_reparse\_points.py
 - kernel.GetExitCodeProcess
 - user.LoadString
 - ntdll.NtPowerInformation
@@ -420,7 +420,7 @@ such an old version.
 
 - `__eq__ ` for `GUID`
 - sample fopa.py
-- sample dump_ver_res.py
+- sample dump\_ver\_res.py
 - the `samples` directory is now included in `sdist`
 
 ### Fixed
@@ -446,18 +446,18 @@ such an old version.
 
 - kernel.GetConsoleMode
 - kernel.SetConsoleMode
-- kernel.enable_virt_term
-- sample virt_term_seq.py
+- kernel.enable\_virt\_term
+- sample virt\_term\_seq.py
 - kernel.SetErrorMode
 - kernel.SetThreadErrorMode
 - module psapi with EnumProcesses, EnumProcessModules, EnumProcessModulesEx,
   GetMappedFileName, GetModuleFileNameEx and GetModuleInformation
-- user.build_wnd_list
+- user.build\_wnd\_list
 - kernel.create_file
 - kernel.ProcessIdToSessionId
 - kernel.GetCurrentDirectory
 - kernel.SetCurrentDirectory
-- argc_argv_from_args
+- argc\_argv\_from\_args
 - iphlpapi.GetIpNetTable2 and sample arp_table.py
 - iphlpapi.ConvertInterfaceGuidToLuid, iphlpapi.ConvertInterfaceIndexToLuid,
   iphlpapi.ConvertInterfaceLuidToAlias and iphlpapi.ConvertInterfaceLuidToName
@@ -468,7 +468,7 @@ such an old version.
 
 ### Fixed
 
-- in example remove_drive_by_letter.py the move of the CM_* functions to cfgmgr
+- in example remove\_drive\_by\_letter.py the move of the CM_* functions to cfgmgr
   was not yet implemented
 - kernel.SECURITY_ATTRIBUTES
 - kernel.GetSystemDirectory
@@ -503,7 +503,7 @@ such an old version.
 ### Added
 
 - kernel.GetModuleFileName
-- kernel.IsWow64Process and kernel.get_wow64_info
+- kernel.IsWow64Process and kernel.get\_wow64\_info
 - user.center_wnd
 - user.GetDlgItemText
 - user.CheckRadioButton
@@ -519,14 +519,14 @@ such an old version.
 
 ### Fixed
 
-- in kernel.load_message_string compare message ID as unsigned value
+- in kernel.load\_message\_string compare message ID as unsigned value
 - wtypes.POINT.as_lparam
 
 ## [1.8.0] - 2022-05-06
 
 ### Added
 
-- sample endis_bsl_usb.py
+- sample endis\_bsl\_usb.py
 - user.SetFocus and BaseWnd.set_focus
 - user.GetGUIThreadInfo
 - kernel.FreeLibrary
@@ -536,29 +536,29 @@ such an old version.
 - kernel.FindResource
 - kernel.SizeofResource
 - kernel.LoadResource
-- kernel.get_resource_info
+- kernel.get\_resource\_info
 - sample extract_ico.py
-- ctwin32.raise_on_zero and wtypes.ScdToBeClosed.raise_on_invalid
+- ctwin32.raise\_on\_zero and wtypes.ScdToBeClosed.raise\_on\_invalid
 - use WinDLL("\<name>") instead of windll.\<name>
 - kernel.GlobalGetAtomName
-- user.get_prop_dict
+- user.get\_prop\_dict
 - user.GetClipboardFormatName
 - user.EnumClipboardFormats
-- ctwin32.ns_from_struct
+- ctwin32.ns\_from\_struct
 - kernel.GetSystemInfo
-- misc.get_system_processor_power_info
-- user.\_SystemParametersInfo in order to implement get/set_non_client_metrics,
-  get/set_wheel_scroll_lines and get_work_area in user
+- misc.get\_system\_processor\_power\_info
+- user.\_SystemParametersInfo in order to implement get/set\_non\_client\_metrics,
+  get/set\_wheel\_scroll\_lines and get\_work\_area in user
 - module ctwin32.version_info
 - sample py_ver.py
-- kernel.load_message_string
+- kernel.load\_message\_string
 
 ### Changed
 
-- replaced calls to raise_if with raise_on_zero or raise_on_invalid where
+- replaced calls to raise_if with raise\_on\_zero or raise\_on\_invalid where
   applicable
 - move cfgmgr32.dll functionality from setupapi to new module cfgmgr
-- use ns_from_struct where appropriate
+- use ns\_from\_struct where appropriate
 - the namespaces returned by WTSEnumerateSessions are now using the standard
   win32 names (camel case instead of snake case)
 - moved definition of LOGFONT from gdi to wtypes
@@ -572,20 +572,20 @@ such an old version.
 
 ### Added
 - module bcrypt with functions required for creating and verifying signatures
-- samples rm_sign_tool.py and test_sign_tool.py
+- samples rm\_sign\_tool.py and test\_sign\_tool.py
 - extended bcrypt for encryption
 - sample simple_aes.py
 - sample senv.py
 - ENDIANNESS in wtypes
-- is_registry_string in advapi
+- is\_registry\_string in advapi
 - sample stopnow.py
 - shell.SHGetFolderPath
 - user.CreateIconFromResourceEx
-- wndcls.load_py_ico
+- wndcls.load\_py\_ico
 - kernel.GlobalAddAtom
-- kernel.global_add_atom
+- kernel.global\_add\_atom
 - kernel.GlobalDeleteAtom
-- doc/images/ctwin32.ico and wndcls.load_ctwin32_ico
+- doc/images/ctwin32.ico and wndcls.load\_ctwin32\_ico
 
 ### Changed
 
@@ -593,16 +593,16 @@ such an old version.
 - since py3.11 will support ARM64 on windows, also build a wheel with the
   corresponding platform tag
 - moved virtual disk constants from \_\_init\_\_.py to virtdisk.py
-- moved GAA_FLAG_* constants from \_\_init\_\_.py to iphlpapi.py
+- moved GAA\_FLAG\_* constants from \_\_init\_\_.py to iphlpapi.py
 - removed unused import from keyview.pyw
 - allow GetKeyNameText to return an empty string on purpose
 - use atom instead of string for SimpleWnd window property
 - revised this changelog
-- use wndcls.load_ctwin32_ico in samples calendar, hello_wnd and keyview
+- use wndcls.load\_ctwin32\_ico in samples calendar, hello_wnd and keyview
 
 ### Fixed
 
-- fixed wrong \_raise_failed_status import in misc
+- fixed wrong \_raise\_failed\_status import in misc
 - fixed and simplified wtypes.ScdToBeClosed.from_param (no more integer overflow)
 
 ## [1.6.0] - 2022-02-18
@@ -641,10 +641,10 @@ such an old version.
 - mostly internal refactorings, but with a small impact on the samples (ctypes
   is now included in ctwin32's namespace)
 - improved handling of `None` in ScdToBeClosed
-- extend list of SE_\*_NAME constants
+- extend list of SE\_\*\_NAME constants
 - let advapi.OpenProcessToken return a context manager object
 - moved definition of LUID and UNICODE_STRING to wtypes
-- renamed \_raise_failed_status to raise_failed_status in ntdll
+- renamed \_raise\_failed\_status to raise\_failed\_status in ntdll
 - be more precise about dealing with GUIDs in advapi
 - let HDEVINFOs be context managers in setupapi
 
@@ -652,7 +652,7 @@ such an old version.
 
 - fixed BaseWnd.invalidate_rect, BaseWnd.set_pos and BaseWnd.release_dc
 - fixed parameter quoting in shell.elevate
-- fix splitting strings in kernel.env_str_to_dict
+- fix splitting strings in kernel.env\_str\_to\_dict
 - fixed various return types in ntdll from ULONG to LONG by using LONG's
   alias NTSTATUS, which is now available in wtypes
 - fixed BaseWnd.\_\_init\_\_
@@ -719,8 +719,8 @@ such an old version.
 - user.GetClipboardData
 - user.IsClipboardFormatAvailable
 - user.CloseClipboard
-- user.txt_to_clip
-- user.txt_from_clip
+- user.txt\_to\_clip
+- user.txt\_from\_clip
 - module gdi
 - gdi.GetDeviceCaps
 - gdi.CreateFontIndirect
@@ -731,24 +731,24 @@ such an old version.
 - module comctl
 - comctl.TaskDialog
 - comctl.TaskDialogIndirect
-- comctl.tsk_dlg_callback
+- comctl.tsk\_dlg\_callback
 - kernel.GetSystemDirectory
 - CreateActCtx, ActivateActCtx, DeactivateActCtx amd ReleaseActCtx in kernel
-- comctl.tsk_dlg_centered
+- comctl.tsk\_dlg\_centered
 
 ### Changed
 
 - sample listpipes.py is using kernel.CreateFile instead of open and
   msvcrt.get_osfhandle.
 - moved definition of POINT and RECT from user to wtypes
-- simplified definition of PROC_THREAD_ATTRIBUTE constants
+- simplified definition of PROC\_THREAD\_ATTRIBUTE constants
 - advapi.OpenEventLog returns context manager EHANDLE
 - revised sample uptime_evt.py
 - advapi.OpenSCManager, advapi.OpenService and advapi.CreateService return
   context manager SC_HANDLE
 - moved \_EnumContext and \_EnumContextPtr from user to wtypes and renamed them
   to CallbackContext and CallbackContextPtr
-- sample hello_wnd.py now demonstrates comctl.tsk_dlg_callback on right-click
+- sample hello_wnd.py now demonstrates comctl.tsk\_dlg\_callback on right-click
 - setup activation context in comctl before loading comctl32.dll
 
 ## [1.4.0] - 2021-12-23
@@ -759,7 +759,7 @@ such an old version.
 - kernel.InitializeProcThreadAttributeList, kernel.UpdateProcThreadAttribute,
   kernel.DeleteProcThreadAttributeList and kernel.ProcThreadAttributeList
 - kernel.CreateProcess and kernel.create_process
-- user.EnumThreadWindows and user.get_thread_window_list
+- user.EnumThreadWindows and user.get\_thread\_window\_list
 - properties width, height and center of user.RECT
 - user.GetWindowRect
 - user.SetWindowPos
@@ -769,7 +769,7 @@ such an old version.
 - user.start_centered
 - shell.relegate
 - shell.CommandLineToArgv
-- cmdline_from_args
+- cmdline\_from\_args
 
 ### Changed
 
@@ -785,17 +785,17 @@ such an old version.
 - kernel.GetEnvironmentVariable
 - kernel.SetEnvironmentVariable
 - kernel.GetEnvironmentStrings
-- kernel.get_env_as_dict
+- kernel.get\_env\_as\_dict
 - kernel.SetEnvironmentStrings
 - kernel.ExpandEnvironmentStrings
 - advapi.RegDeleteValue
 - advapi.RegSetKeyValue
-- advapi.reg_enum_keys
-- advapi.reg_enum_values
-- advapi.reg_set_str
-- advapi.reg_set_dword
+- advapi.reg\_enum\_keys
+- advapi.reg\_enum\_values
+- advapi.reg\_set\_str
+- advapi.reg\_set\_dword
 - misc.CreateEnvironmentBlock
-- misc.create_env_block_as_dict
+- misc.create\_env\_block\_as\_dict
 
 ### Changed
 
@@ -808,17 +808,17 @@ such an old version.
 
 - kernel.CreateFile
 - kernel.DeviceIoControl
-- setupapi.CM_Get_Parent
-- setupapi.CM_Request_Device_Eject
+- setupapi.CM\_Get\_Parent
+- setupapi.CM\_Request\_Device\_Eject
 - setupapi.SetupDiEnumDeviceInterfaces
-- setupapi.enum_dev_interfaces
+- setupapi.enum\_dev\_interfaces
 - setupapi.SetupDiGetDeviceInterfaceDetail
-- All the above was added to implement the sample remove_drive_by_letter.py
+- All the above was added to implement the sample remove\_drive\_by\_letter.py
 
 ### Fixed
 
 - Fixed memory allocation race in ntdll.enum_processes
-- Fixed unreliable cleanup in setupapi.enum_info_set
+- Fixed unreliable cleanup in setupapi.enum\_info\_set
 
 ## [1.1.0] - 2021-11-06
 
@@ -828,7 +828,7 @@ such an old version.
   advapi.
 - The sample uptime_evt.py demonstrates a way how these functions can be used.
 - The module msi and the accompanying sample exbinmsi.py were added.
-- The functions get_directory_info and enum_directory_info were added to
+- The functions get\_directory\_info and enum\_directory\_info were added to
   ntdll. The sample listpipes.py demonstrates a way how these functions can
   be used.
 

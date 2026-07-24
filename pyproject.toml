@@ -49,15 +49,7 @@ select = ["ALL"]
 ignore = [
     "A001",     # shadowing a Python builtin
     "A002",     # shadowing a Python builtin
-    "ANN001",   # no dorky typing!!!
-    "ANN002",   # no dorky typing!!!
-    "ANN003",   # no dorky typing!!!
-    "ANN201",   # no dorky typing!!!
-    "ANN202",   # no dorky typing!!!
-    "ANN204",   # no dorky typing!!!
-    "ANN205",   # no dorky typing!!!
-    "ANN206",   # no dorky typing!!!
-    "ANN401",   # no dorky typing!!!
+    "ANN",      # no dorky typing!!!
     "ARG001",   # not using a parameter of a win32 API is very common
     "ARG002",   # not using a parameter of a win32 API is very common
     "C901",     # complex-structure
@@ -101,6 +93,7 @@ ignore = [
     "PLW1510",  # `subprocess.run` without explicit `check` argument
     "PLR0912",  # too many branches
     "PLR0913",  # some Win32 APIs have a lot of arguments
+    "PLR0917",  # some Win32 APIs have a lot of arguments
     "PLR2004",  # avoiding magic values is good, banning them is bad
     "PTH123",   # open() should be replaced by Path.open()
     "PYI024",   # no dorky typing!!!

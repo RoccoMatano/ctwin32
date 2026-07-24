@@ -73,7 +73,7 @@ for several instances of how ctwin32 can be used.
 While there is another Python module that does something very similar
 to ctwin32 ([pywin32-ctypes](https://github.com/enthought/pywin32-ctypes)),
 ctwin32 wraps significantly more API functions than pywin32-ctypes
-(as of November 2025: 423 / 21).
+(as of July 2026: 439 / 21).
 
 -----
 
