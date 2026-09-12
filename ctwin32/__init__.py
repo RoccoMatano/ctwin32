@@ -5,7 +5,6 @@
 #
 ################################################################################
 
-import sys as _sys
 from types import SimpleNamespace as _namespace
 import _ctypes
 import ctypes
@@ -32,12 +31,12 @@ class ApiDll:
         self._handle = _ctypes.LoadLibrary(
             name,
             LOAD_LIBRARY_SEARCH_DEFAULT_DIRS # noqa: F405 from _constants
-            )  & (_sys.maxsize * 2 + 1)
+            )  & PTR_MASK                    # noqa: F405 from _constants
         self._name = name
 
     def __repr__(self):
         cls = self.__class__.__name__
-        adr = id(self) & (_sys.maxsize * 2 + 1)
+        adr = id(self) & PTR_MASK            # noqa: F405 from _constants
         return f"<{cls} '{self._name}', handle {self._handle:#x} at {adr:#x}>"
 
     def __getattr__(self, name):
