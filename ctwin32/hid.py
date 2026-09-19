@@ -36,16 +36,16 @@ HID_MAX_STR_LEN = 4093
 HID_INTERFACE = GUID("4d1e55b2-f16f-11cf-88cb-001111000030")
 
 class HIDD_ATTRIBUTES(Struct):
-    _fields_ = [
+    _fields_ = (
         ("Size", DWORD),
         ("VendorID", WORD),
         ("ProductID", WORD),
         ("VersionNumber", WORD),
-        ]
+        )
 PHIDD_ATTRIBUTES = POINTER(HIDD_ATTRIBUTES)
 
 class HIDP_CAPS(Struct):
-    _fields_ = [
+    _fields_ = (
         ("Usage", WORD),
         ("UsagePage", WORD),
         ("InputReportByteLength", WORD),
@@ -62,7 +62,7 @@ class HIDP_CAPS(Struct):
         ("NumberFeatureButtonCaps", WORD),
         ("NumberFeatureValueCaps", WORD),
         ("NumberFeatureDataIndices", WORD),
-        ]
+        )
 PHIDP_CAPS = POINTER(HIDP_CAPS)
 
 ################################################################################

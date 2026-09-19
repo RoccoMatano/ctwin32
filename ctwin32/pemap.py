@@ -284,6 +284,7 @@ class pemap:
 
     ############################################################################
 
+    # ruff: ignore[RUF012]  not an instance but a class attribute
     _std_uint_getters = {1: u8, 2: u16, 4: u32, 8: u64}
 
     def uint(self, size, offs, idx=0):

@@ -81,6 +81,9 @@ ignore = [
     "FBT003",   # boolean-positional-value-in-call
     "G004",     # logging f-strings is not that bad
     "I001",     # tastes differ
+    "ICN001",   # total BS
+    "ICN002",   # total BS
+    "ICN003",   # total BS
     "ISC003",   # Explicitly concatenated string should be implicitly concatenated
     "N801",     # pep8 naming is not meant to be used everywhere
     "N802",     # pep8 naming is not suitable for Win32
