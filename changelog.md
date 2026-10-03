@@ -57,6 +57,7 @@ http://semver.org/spec/v2.0.0.html).
     - CertGetCertificateContextProperty
     - verify\_embedded\_signature
 - sample verify_signature.py
+- user.MonitorFromPoint
 
 ### Fixed
 

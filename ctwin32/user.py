@@ -64,6 +64,7 @@ from . import (
     INPUT_KEYBOARD,
     KEYEVENTF_KEYUP,
     LR_DEFAULTSIZE,
+    MONITOR_DEFAULTTONULL,
     MONITOR_DEFAULTTOPRIMARY,
     RID_INPUT,
     RIM_TYPEHID,
@@ -582,6 +583,15 @@ _MonitorFromWindow = _usr.fun_fact("MonitorFromWindow", (HANDLE, HWND, DWORD))
 
 def MonitorFromWindow(hwnd, flags=MONITOR_DEFAULTTOPRIMARY):
     return _MonitorFromWindow(hwnd, flags)
+
+################################################################################
+
+_MonitorFromPoint = _usr.fun_fact("MonitorFromPoint", (HANDLE, POINT, DWORD))
+
+def MonitorFromPoint(pt, flags=MONITOR_DEFAULTTONULL):
+    if isinstance(pt, tuple):
+        pt = POINT(pt[0], pt[1])
+    return _MonitorFromPoint(pt, flags)
 
 ################################################################################
 
