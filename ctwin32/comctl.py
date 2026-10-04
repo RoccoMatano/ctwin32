@@ -34,6 +34,7 @@ from . import (
     ApiDll,
     ref,
     kernel,
+    defer_exception,
     raise_on_zero,
     raise_on_hr,
     S_OK,
@@ -173,11 +174,14 @@ _TaskDialogCallback = ctypes.WINFUNCTYPE(
 @_TaskDialogCallback
 def _TskDlgCb(hwnd, msg, wp, lp, ctxt):
     # cannot propagate exceptions from callback
-    with kernel.terminate_on_exception():
+    try:
         cbc = ctxt.contents
         res = cbc.callback(hwnd, msg, wp, lp, cbc.context)
-        # return S_OK if the callback fails to return a value
-        return S_OK if res is None else res
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
+        res = S_OK
+    # return S_OK if the callback fails to return a value
+    return S_OK if res is None else res
 
 ################################################################################
 

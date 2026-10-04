@@ -70,13 +70,15 @@ class CalendarWnd(wndcls.SimpleWnd):
 
 if __name__ == "__main__":
 
-    icon = wndcls.load_ctwin32_ico()
-    style = WS_SYSMENU | WS_MINIMIZEBOX
-    wnd = CalendarWnd(wndcls.WndCreateParams("Calendar", icon, style))
-    wnd.show()
+    with wndcls.display_fatal_exception():
 
-    while msg := user.GetMessage():
-        user.TranslateMessage(msg)
-        user.DispatchMessage(msg)
+        icon = wndcls.load_ctwin32_ico()
+        style = WS_SYSMENU | WS_MINIMIZEBOX
+        wnd = CalendarWnd(wndcls.WndCreateParams("Calendar", icon, style))
+        wnd.show()
+
+        while msg := user.GetMessage():
+            user.TranslateMessage(msg)
+            user.DispatchMessage(msg)
 
 ################################################################################

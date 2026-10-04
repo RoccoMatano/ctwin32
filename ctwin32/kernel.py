@@ -61,6 +61,7 @@ from . import (
     multi_str_from_ubuf,
     ns_from_struct,
     ntdll,
+    defer_exception,
     raise_if,
     raise_on_err,
     raise_on_zero,
@@ -1428,13 +1429,16 @@ _EnumResNameCallback = ctypes.WINFUNCTYPE(
 @_EnumResNameCallback
 def _EnumResNameCb(hmod, typ, name, ctxt):
     # cannot propagate exceptions from callback
-    with terminate_on_exception():
+    try:
         typ = typ if not (typ >> 16) else ctypes.wstring_at(typ)
         name = name if not (name >> 16) else ctypes.wstring_at(name)
         cbc = ctxt.contents
         res = cbc.callback(hmod, typ, name, cbc.context)
-        # keep on enumerating if the callback fails to return a value
-        return res if res is not None else True
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
+        res = False
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
 
 _EnumResourceNames = _k32.fun_fact(
     "EnumResourceNamesW",
@@ -1451,17 +1455,12 @@ def EnumResourceNames(hmod, typ, callback, context):
 
 def get_resource_names(hmod, typ):
     names = []
-
-    @_EnumResNameCallback
     def collect(not_used1, not_used2, name, not_used3):
-        # cannot propagate exceptions from callback
-        with terminate_on_exception():
-            if name >= 0x10000:
-                name = PWSTR(name).value
-            names.append(name)
-            return True
-
-    raise_on_zero(_EnumResourceNames(hmod, typ, collect, None))
+        if name >= 0x10000:
+            name = PWSTR(name).value
+        names.append(name)
+        return True
+    raise_on_zero(EnumResourceNames(hmod, typ, collect, None))
     return names
 
 ################################################################################

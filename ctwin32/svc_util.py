@@ -17,6 +17,7 @@ from ctwin32 import (
     advapi,
     cmdline_from_args,
     kernel,
+    defer_exception,
     wtypes,
     CREATE_NEW_CONSOLE,
     DELETE,
@@ -66,11 +67,8 @@ def _load_func(file_name, func_name):
 
 @advapi.SERVICE_MAIN_FUNCTION
 def _service_main(argc, argv):
-    # Since this is a python callback that ctypes calls when requested
-    # by foreign C code, ctypes has no way of propagating any exception
-    # back to the python interpreter - those would simply be ignored.
-    # Therefore any exception has to terminate the process.
-    with kernel.terminate_on_exception():
+    # cannot propagate exceptions from callback
+    try:
         tid = kernel.GetCurrentThreadId()
         kernel.dbg_print(f"in service_main: {tid}")
 
@@ -109,6 +107,8 @@ def _service_main(argc, argv):
         svc_stat.dwCurrentState = SERVICE_STOPPED
         advapi.SetServiceStatus(hdl, svc_stat)
         kernel.dbg_print(f"returning from _service main: {tid}")
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
 
 ################################################################################
 

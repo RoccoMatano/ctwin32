@@ -20,10 +20,6 @@ from .wtypes import (
     WORD,
     )
 from . import (
-    ref,
-    kernel,
-    user,
-    gdi,
     BST_CHECKED,
     BST_UNCHECKED,
     BS_DEFPUSHBUTTON,
@@ -32,15 +28,18 @@ from . import (
     CS_HREDRAW,
     CS_VREDRAW,
     CW_USEDEFAULT,
+    defer_exception,
     DWLP_MSGRESULT,
     DS_MODALFRAME,
     DS_SETFONT,
     EM_SETPASSWORDCHAR,
     ES_AUTOHSCROLL,
     ES_LEFT,
+    gdi,
     GWLP_HINSTANCE,
     GWL_EXSTYLE,
     GWL_STYLE,
+    has_deferred_exception,
     HIWORD,
     HORZRES,
     HORZSIZE,
@@ -49,7 +48,11 @@ from . import (
     IDCANCEL,
     IDC_ARROW,
     IDOK,
+    kernel,
     LOWORD,
+    MB_OK,
+    MB_ICONERROR,
+    ref,
     SS_CENTER,
     SWP_NOACTIVATE,
     SWP_NOMOVE,
@@ -57,9 +60,11 @@ from . import (
     SWP_NOZORDER,
     SW_SHOW,
     SW_HIDE,
+    user,
     WA_INACTIVE,
     WM_ACTIVATE,
     WM_COMMAND,
+    WM_CREATE,
     WM_GETFONT,
     WM_INITDIALOG,
     WM_NCCREATE,
@@ -396,32 +401,37 @@ class SimpleWnd(BaseWnd):
     @user.WNDPROC
     @staticmethod
     def _wnd_proc_(hwnd, msg, wp, lp):
-        # Since this is a python callback that ctypes calls when requested
-        # by foreign C code, ctypes has no way of propagating any exception
-        # back to the python interpreter - those would simply be ignored.
-        # Therefore any exception has to terminate the process.
-        with kernel.terminate_on_exception():
+        if not has_deferred_exception():
+            # cannot propagate exceptions from callback
+            try:
+                if msg == WM_NCCREATE:
+                    cparam = user.CREATESTRUCT.from_address(lp).lpCreateParams
+                    self = ctypes.cast(cparam, ctypes.py_object).value
+                    if isinstance(self, SimpleWnd):
+                        self.hwnd = hwnd
+                        self.set_prop(_PROP_SELF, cparam)
+                        return self.on_message(msg, wp, lp)
+                    raise TypeError("not derived from SimpleWnd")
 
-            if msg == WM_NCCREATE:
-                cparam = user.CREATESTRUCT.from_address(lp).lpCreateParams
-                self = ctypes.cast(cparam, ctypes.py_object).value
-                if isinstance(self, SimpleWnd):
-                    self.hwnd = hwnd
-                    self.set_prop(_PROP_SELF, cparam)
-                    return self.on_message(msg, wp, lp)
-                raise TypeError("not derived from SimpleWnd")
+                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
+                    self = ctypes.cast(self_prop, ctypes.py_object).value
+                    res = self.on_message(msg, wp, lp)
+                    if msg == WM_NCDESTROY:
+                        self.del_prop(_PROP_SELF)
+                        self.hwnd = None
+                    return res
 
-            if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
-                self = ctypes.cast(self_prop, ctypes.py_object).value
-                res = self.on_message(msg, wp, lp)
-                if msg == WM_NCDESTROY:
-                    self.del_prop(_PROP_SELF)
-                    self.hwnd = None
-                return res
+                # Some kind of messages may arrive before WM_NCCREATE
+                # (e.g. WM_GETMINMAXINFO), i.e. still self_prop == None.
+                # fall through to final `return DefWindowProc...`
 
-            # Some kind of messages may arrive before WM_NCCREATE
-            # (e.g. WM_GETMINMAXINFO), i.e. still self_prop == None.
-            return user.DefWindowProc(hwnd, msg, wp, lp)
+            except BaseException as e: # noqa: BLE001
+                defer_exception(e)
+                if msg == WM_NCCREATE:
+                    return 0                # CreateWindow fails
+                if msg == WM_CREATE:
+                    return -1               # CreateWindow fails
+        return user.DefWindowProc(hwnd, msg, wp, lp)
 
     ############################################################################
 
@@ -570,42 +580,43 @@ class BaseDlg(BaseWnd):
     @user.DLGPROC
     @staticmethod
     def _dlg_proc_(hwnd, msg, wp, lp):
-        # Since this is a python callback that ctypes calls when requested
-        # by foreign C code, ctypes has no way of propagating any exception
-        # back to the python interpreter - those would simply be ignored.
-        # Therefore any exception has to terminate the process.
-        with kernel.terminate_on_exception():
-            if msg == WM_INITDIALOG:
-                self = ctypes.cast(lp, ctypes.py_object).value
-                if isinstance(self, BaseDlg):
-                    self.hwnd = hwnd
-                    self.set_prop(_PROP_SELF, lp)
-                    return self.on_init_dialog()
-                raise TypeError("not derived from BaseDlg")
+        if not has_deferred_exception():
+            # cannot propagate exceptions from callback
+            try:
+                if msg == WM_INITDIALOG:
+                    self = ctypes.cast(lp, ctypes.py_object).value
+                    if isinstance(self, BaseDlg):
+                        self.hwnd = hwnd
+                        self.set_prop(_PROP_SELF, lp)
+                        return self.on_init_dialog()
+                    raise TypeError("not derived from BaseDlg")
 
-            if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
-                self = ctypes.cast(self_prop, ctypes.py_object).value
-                if msg == WM_COMMAND:
-                    return self.on_command(
-                        LOWORD(wp),
-                        HIWORD(wp),
-                        HWND(lp)
-                        )
-                if msg == WM_NOTIFY:
-                    return self.on_notify(
-                        UINT(wp).value,
-                        ctypes.cast(lp, user.PNMHDR).contents
-                        )
-                if msg == WM_ACTIVATE and self.parent:
-                    hdr = user.NMHDR(hwnd, 0, user.MSDN_ACTIVATE)
-                    ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
-                    self.parent.send_notify(ma.hdr)
-                res = self.on_message(msg, wp, lp)
-                if (msg == WM_NCDESTROY):
-                    self.del_prop(_PROP_SELF)
-                    self.hwnd = None
-                return res
-            return False
+                if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
+                    self = ctypes.cast(self_prop, ctypes.py_object).value
+                    if msg == WM_COMMAND:
+                        return self.on_command(
+                            LOWORD(wp),
+                            HIWORD(wp),
+                            HWND(lp)
+                            )
+                    if msg == WM_NOTIFY:
+                        return self.on_notify(
+                            UINT(wp).value,
+                            ctypes.cast(lp, user.PNMHDR).contents
+                            )
+                    if msg == WM_ACTIVATE and self.parent:
+                        hdr = user.NMHDR(hwnd, 0, user.MSDN_ACTIVATE)
+                        ma = user.NM_MSD_ACTIVATE(hdr, wp != WA_INACTIVE)
+                        self.parent.send_notify(ma.hdr)
+                    res = self.on_message(msg, wp, lp)
+                    if (msg == WM_NCDESTROY):
+                        self.del_prop(_PROP_SELF)
+                        self.hwnd = None
+                    return res
+            except BaseException as e: # noqa: BLE001
+                user.EndDialog(hwnd, IDCANCEL)
+                defer_exception(e)
+        return False
 
     ############################################################################
 
@@ -811,5 +822,37 @@ class InputDlg(BaseDlg):
             )
 
         return self.answer if self.do_modal(template) == IDOK else None
+
+################################################################################
+
+class display_fatal_exception:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exctype, excinst, exctb):
+        if exctype is None or issubclass(exctype, SystemExit):
+            return False
+
+        try:
+            import traceback # noqa: PLC0415
+            info = "".join(traceback.format_exception(exctype, excinst, exctb))
+            try:
+                interactive = user.is_interactive_process()
+            except OSError:
+                interactive = False
+
+            if interactive:
+                user.txt_to_clip(info)
+                info += "\nThe above text has been copied to the clipboard."
+                user.MessageBox(
+                    None,
+                    info,
+                    "Terminating program",
+                    MB_OK | MB_ICONERROR
+                    )
+            else:
+                kernel.dbg_print(info)
+        finally:
+            kernel.ExitProcess(1)
 
 ################################################################################

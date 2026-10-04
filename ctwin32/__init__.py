@@ -8,6 +8,7 @@
 from types import SimpleNamespace as _namespace
 import _ctypes
 import ctypes
+from threading import local as _thread_local
 from ._constants import * # noqa: F403
 from .wtypes import DWORD, PVOID, PWSTR, WCHAR_SIZE, WinError
 from . import kuser_shared_data as _kusd
@@ -16,6 +17,31 @@ ref = ctypes.byref
 ################################################################################
 
 __version__ = "4.0.0"
+
+################################################################################
+
+# Exceptions that might get raised in callbacks invoked by C code cannot be
+# propagated back to the python interpreter by cytpes alone. We have to store
+# them and handle them later. `_deferred` is a thread local storage for such
+# exceptions.
+_deferred = _thread_local()
+
+# ctypes `errcheck` function for reraising stored exceptions
+def _raise_deferred_exception(result, func, args):
+    exc = getattr(_deferred, "exc", None)
+    if exc is not None:
+        _deferred.exc = None
+        try:
+            raise exc
+        finally:
+            del exc
+    return result
+
+def defer_exception(exc):
+    _deferred.exc = exc
+
+def has_deferred_exception():
+    return getattr(_deferred, "exc", None) is not None
 
 ################################################################################
 
@@ -44,10 +70,12 @@ class ApiDll:
         setattr(self, name, func)
         return func
 
-    def fun_fact(self, name, signature):
+    def fun_fact(self, name, signature, *, check=True):
         func = getattr(self, name)
         func.restype = signature[0]
         func.argtypes = signature[1:]
+        if check:
+            func.errcheck = _raise_deferred_exception
         return func
 
 ################################################################################

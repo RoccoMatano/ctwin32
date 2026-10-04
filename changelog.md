@@ -58,6 +58,8 @@ http://semver.org/spec/v2.0.0.html).
     - verify\_embedded\_signature
 - sample verify_signature.py
 - user.MonitorFromPoint
+- wndcls.display_fatal_exception as a simpler version of
+  kernel.terminate_on_exception specifically meant for GUI programs
 
 ### Fixed
 
@@ -78,6 +80,13 @@ http://semver.org/spec/v2.0.0.html).
   IO\_REPARSE\_TAG\_APPEXECLINK and IO\_REPARSE\_TAG\_LX\_SYMLINK point to
 - extended API set lookup in pemap.py to use hashes instead of names
 - adapted samples api_set.py and dep_tree.py to changed pemap.py
+- Once again: Revised exception handling in callbacks. This time, by using
+  ctypes' `errcheck` function and re-raising exceptions that are stored in
+  thread-local storage (see `__init__.defer_exception`,
+  `__init__.has_deferred_exception`, `__init__._raise_deferred_exception`,
+  and `__init__.ApiDll.fun_fact`)
+- adapted samples calendar.pyw, hello_wnd.pyw, keyview.pyw and totp_dlg.pyw to
+  take advantage of new `errcheck` and wndcls.display_fatal_exception
 
 ## [4.0.0] - 2025-10-08
 

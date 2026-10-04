@@ -170,12 +170,14 @@ class KeyViewWnd(wndcls.SimpleWnd):
 
 if __name__ == "__main__":
 
-    icon = wndcls.load_ctwin32_ico()
-    wnd = KeyViewWnd(wndcls.WndCreateParams("keyview", icon))
-    wnd.show()
+    with wndcls.display_fatal_exception():
 
-    while msg := user.GetMessage():
-        user.TranslateMessage(msg)
-        user.DispatchMessage(msg)
+        icon = wndcls.load_ctwin32_ico()
+        wnd = KeyViewWnd(wndcls.WndCreateParams("keyview", icon))
+        wnd.show()
+
+        while msg := user.GetMessage():
+            user.TranslateMessage(msg)
+            user.DispatchMessage(msg)
 
 ################################################################################

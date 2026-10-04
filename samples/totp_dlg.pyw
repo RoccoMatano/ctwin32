@@ -120,6 +120,7 @@ class TotpDlg(wndcls.BaseDlg):
 ################################################################################
 
 if __name__ == "__main__":
-    TotpDlg().do_modal()
+    with wndcls.display_fatal_exception():
+        TotpDlg().do_modal()
 
 ################################################################################

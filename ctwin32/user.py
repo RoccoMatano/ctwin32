@@ -54,6 +54,7 @@ from . import (
     ref,
     ntdll,
     kernel,
+    defer_exception,
     raise_if,
     raise_on_zero,
     raise_on_err,
@@ -185,11 +186,14 @@ _EnumWindowsCallback = ctypes.WINFUNCTYPE(
 @_EnumWindowsCallback
 def _EnumWndCb(hwnd, ctxt):
     # cannot propagate exceptions from callback
-    with kernel.terminate_on_exception():
+    try:
         cbc = ctxt.contents
         res = cbc.callback(hwnd, cbc.context)
-        # keep on enumerating if the callback fails to return a value
-        return res if res is not None else True
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
+        res = False
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
 
 ################################################################################
 
@@ -276,7 +280,13 @@ def PostMessage(hwnd, msg, wp, lp):
 
 ################################################################################
 
-PostQuitMessage = _usr.fun_fact("PostQuitMessage", (None, INT))
+PostQuitMessage = _usr.fun_fact(
+    "PostQuitMessage",
+    (None, INT),
+    # do not check for defered exceptions here, since PostQuitMessage takes part
+    # in handling exceptions in window procedures
+    check=False
+    )
 
 ################################################################################
 
@@ -687,7 +697,10 @@ def LoadIcon(hinst, cname):
 
 _DefWindowProc = _usr.fun_fact(
     "DefWindowProcW",
-    (LRESULT, HWND, UINT, WPARAM, LPARAM)
+    (LRESULT, HWND, UINT, WPARAM, LPARAM),
+    # do not check for defered exceptions here, since DefWindowProc takes part
+    # in handling exceptions in window procedures
+    check=False
     )
 
 def DefWindowProc(hwnd, msg, wp, lp):
@@ -1132,11 +1145,14 @@ _EnumPropsCallback = ctypes.WINFUNCTYPE(
 @_EnumPropsCallback
 def _EnumPropsCb(hwnd, name, data, ctxt):
     # cannot propagate exceptions from callback
-    with kernel.terminate_on_exception():
+    try:
         cbc = ctxt.contents
         res = cbc.callback(hwnd, name, data, cbc.context)
-        # keep on enumerating if the callback fails to return a value
-        return res if res is not None else True
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
+        res = False
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
 
 ################################################################################
 
@@ -1541,7 +1557,13 @@ def CreateDialogIndirectParam(templ, parent, dlg_func, init_param, hinst=None):
 
 ################################################################################
 
-_EndDialog = _usr.fun_fact("EndDialog", (BOOL, HWND, INT_PTR))
+_EndDialog = _usr.fun_fact(
+    "EndDialog",
+    (BOOL, HWND, INT_PTR),
+    # do not check for defered exceptions here, since EndDialog takes part
+    # in handling exceptions in window procedures
+    check=False
+    )
 
 def EndDialog(hdlg, result):
     raise_on_zero(_EndDialog(hdlg, result))
