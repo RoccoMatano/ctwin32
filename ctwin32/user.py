@@ -862,6 +862,51 @@ def GetMessage(hwnd=None, msg_min=0, msg_max=0):
 
 ################################################################################
 
+_PeekMessage = _usr.fun_fact(
+    "PeekMessageW",
+    (BOOL, PMSG, HWND, UINT, UINT, UINT)
+    )
+
+def PeekMessage(hwnd=None, msg_min=0, msg_max=0, remove_flag=0):
+    msg = MSG()
+    res = _PeekMessage(ref(msg), hwnd, msg_min, msg_max, remove_flag)
+    return msg if res else None
+
+################################################################################
+
+_GetQueueStatus = _usr.fun_fact("GetQueueStatus", (DWORD, UINT))
+
+def GetQueueStatus(flags):
+    return _GetQueueStatus(flags)
+
+################################################################################
+
+_ReplyMessage = _usr.fun_fact("ReplyMessage", (BOOL, LRESULT))
+
+def ReplyMessage(result):
+    return bool(_ReplyMessage(result))
+
+################################################################################
+
+class LASTINPUTINFO(Struct):
+    _fields_ = (
+        ("cbSize", UINT),
+        ("dwTime", DWORD),
+        )
+    def __init__(self):
+        self.cbSize = self._size_
+
+PLASTINPUTINFO = POINTER(LASTINPUTINFO)
+
+_GetLastInputInfo = _usr.fun_fact("GetLastInputInfo", (BOOL, PLASTINPUTINFO))
+
+def GetLastInputInfo():
+    lii = LASTINPUTINFO()
+    raise_on_zero(_GetLastInputInfo(ref(lii)))
+    return lii.dwTime
+
+################################################################################
+
 _TranslateMessage = _usr.fun_fact("TranslateMessage", (BOOL, PMSG))
 
 def TranslateMessage(msg):

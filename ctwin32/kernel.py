@@ -693,6 +693,17 @@ def get_local_tzinfo():
 
 ################################################################################
 
+_GetTickCount = _k32.fun_fact("GetTickCount", (DWORD,))
+_GetTickCount64 = _k32.fun_fact("GetTickCount64", (ULONGLONG,))
+
+def GetTickCount():
+    return _GetTickCount()
+
+def GetTickCount64():
+    return _GetTickCount64()
+
+################################################################################
+
 def GetCurrentThreadId():
     return _k32.GetCurrentThreadId()
 
@@ -706,8 +717,6 @@ def GetFileAttributes(fname):
 ################################################################################
 
 _SetFileAttributes = _k32.fun_fact("SetFileAttributesW", (BOOL, PWSTR, DWORD))
-
-################################################################################
 
 def SetFileAttributes(fname, attribs):
     raise_on_zero(_SetFileAttributes(fname, attribs))

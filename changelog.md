@@ -8,6 +8,15 @@ http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- kernel.GetTickCount
+- kernel.GetTickCount64
+- user.PeekMessage
+- user.GetQueueStatus
+- user.ReplyMessage
+- user.GetLastInputInfo
+
 ## [5.0.0] - 2026-10-10
 
 ### Added
