@@ -16,6 +16,7 @@ http://semver.org/spec/v2.0.0.html).
 - user.GetQueueStatus
 - user.ReplyMessage
 - user.GetLastInputInfo
+- 'Copy' button in sample 'totp_dlg.pyw'
 
 ## [5.0.0] - 2026-10-10
 

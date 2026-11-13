@@ -18,6 +18,7 @@ import time
 
 from ctwin32 import (
     EM_SETPASSWORDCHAR,
+    EN_CHANGE,
     ES_LEFT,
     DS_MODALFRAME,
     IDCANCEL,
@@ -40,10 +41,12 @@ class TotpDlg(wndcls.BaseDlg):
 
     TOTP_ID  = 100
     KEY_ID   = 101
+    COPY_ID  = 102
     ED_STYLE = ES_LEFT | WS_BORDER | WS_TABSTOP
     DLG_ITEMS = (
         (SS_CENTER | WS_GROUP, 7, 7, 201, 9, TOTP_ID, "static", ""),
         (ED_STYLE, 7, 19, 201, 13, KEY_ID, "edit", ""),
+        (WS_TABSTOP, 94, 39, 50, 14, COPY_ID, "button", "Copy"),
         (WS_TABSTOP, 158, 39, 50, 14, IDCANCEL, "button", "Cancel"),
         )
 
@@ -64,18 +67,14 @@ class TotpDlg(wndcls.BaseDlg):
         self.set_item_text(self.TOTP_ID, self.init_msg)
         self.set_timer(1, 1000)
         self.center(self.parent)
-        return True
-
-    ############################################################################
-
-    def on_command(self, cmd_id, notification, ctrl):
-        if cmd_id in (IDOK, IDCANCEL):
-            user.EndDialog(self.hwnd, cmd_id)
+        self.update_ui()
         return True
 
     ############################################################################
 
     def hotp(self, key, counter, digest="sha1"):
+        if not key:
+            return None
         try:
             key = base64.b32decode(key.upper() + "=" * ((8 - len(key)) % 8))
         except binascii.Error:
@@ -88,17 +87,42 @@ class TotpDlg(wndcls.BaseDlg):
 
     ############################################################################
 
+    def get_otp_rem(self, key):
+        tme = int(time.time())
+        rem = self.time_step - tme % self.time_step
+        otp = self.hotp(key, tme // self.time_step)
+        return (otp, rem) if otp else ()
+
+    ############################################################################
+
+    def update_ui(self):
+        txt = self.init_msg
+        enable_cpy = False
+        if otp_rem := self.get_otp_rem(self.get_item_text(self.KEY_ID)):
+            txt = f"TOTP = {otp_rem[0]} ({otp_rem[1]}s remain)"
+            enable_cpy = True
+        self.get_item(self.COPY_ID).enable(enable_cpy)
+        self.set_item_text(self.TOTP_ID, txt)
+
+    ############################################################################
+
+    def on_command(self, cmd_id, notification, ctrl):
+        if cmd_id in (IDOK, IDCANCEL):
+            user.EndDialog(self.hwnd, cmd_id)
+        elif cmd_id == self.COPY_ID:
+            if key := self.get_item_text(self.KEY_ID):
+                if otp_rem := self.get_otp_rem(key):
+                    user.txt_to_clip(otp_rem[0], self.hwnd)
+        elif cmd_id == self.KEY_ID and notification == EN_CHANGE:
+            self.update_ui()
+        return True
+
+    ############################################################################
+
     def on_message(self, msg, wp, lp):
         if msg == WM_TIMER:
-            txt = self.init_msg
-            if key := self.get_item_text(self.KEY_ID):
-                tme = int(time.time())
-                rem = self.time_step - tme % self.time_step
-                if otp := self.hotp(key, tme // self.time_step):
-                    txt = f"TOTP = {otp} ({rem}s remain)"
-            self.set_item_text(self.TOTP_ID, txt)
+            self.update_ui()
             return True
-
         return False
 
     ############################################################################
