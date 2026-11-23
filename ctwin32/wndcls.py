@@ -157,6 +157,9 @@ class BaseWnd:
     def get_parent(self):
         return BaseWnd(user.GetParent(self.hwnd))
 
+    def get_wnd(self, cmd):
+        return BaseWnd(user.GetWindow(self.hwnd, cmd))
+
     def get_menu(self):
         return user.GetMenu(self.hwnd)
 
@@ -165,8 +168,8 @@ class BaseWnd:
             self.hwnd,
             rc.left,
             rc.top,
-            rc.width(),
-            rc.height(),
+            rc.width,
+            rc.height,
             repaint
             )
 

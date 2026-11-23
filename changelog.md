@@ -18,6 +18,11 @@ http://semver.org/spec/v2.0.0.html).
 - user.GetLastInputInfo
 - 'Copy' button in sample 'totp_dlg.pyw'
 - extract_words and extract_ints
+- BaseWnd.get_wnd
+
+### Fixed
+
+- fix BaseWnd.move
 
 ## [5.0.0] - 2026-10-10
 
