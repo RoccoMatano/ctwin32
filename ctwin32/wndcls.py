@@ -35,12 +35,12 @@ from . import (
     EM_SETPASSWORDCHAR,
     ES_AUTOHSCROLL,
     ES_LEFT,
+    extract_words,
     gdi,
     GWLP_HINSTANCE,
     GWL_EXSTYLE,
     GWL_STYLE,
     has_deferred_exception,
-    HIWORD,
     HORZRES,
     HORZSIZE,
     HWND_TOP,
@@ -49,7 +49,6 @@ from . import (
     IDC_ARROW,
     IDOK,
     kernel,
-    LOWORD,
     MB_OK,
     MB_ICONERROR,
     ref,
@@ -594,11 +593,7 @@ class BaseDlg(BaseWnd):
                 if self_prop := user.get_prop_def(hwnd, _PROP_SELF):
                     self = ctypes.cast(self_prop, ctypes.py_object).value
                     if msg == WM_COMMAND:
-                        return self.on_command(
-                            LOWORD(wp),
-                            HIWORD(wp),
-                            HWND(lp)
-                            )
+                        return self.on_command(*extract_words(wp), HWND(lp))
                     if msg == WM_NOTIFY:
                         return self.on_notify(
                             UINT(wp).value,

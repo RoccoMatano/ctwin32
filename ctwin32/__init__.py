@@ -230,4 +230,14 @@ def LOWORD(dw):
 def HIWORD(dw):
     return (dw >> 16) & 0xffff
 
+def extract_words(lp):
+    return LOWORD(lp), HIWORD(lp)
+
+def extract_ints(lp):
+    lo, hi = extract_words(lp)
+    return (
+        lo - 0x10000 if lo & 0x8000 else lo,
+        hi - 0x10000 if hi & 0x8000 else hi,
+        )
+
 ################################################################################

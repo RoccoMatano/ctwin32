@@ -17,6 +17,7 @@ http://semver.org/spec/v2.0.0.html).
 - user.ReplyMessage
 - user.GetLastInputInfo
 - 'Copy' button in sample 'totp_dlg.pyw'
+- extract_words and extract_ints
 
 ## [5.0.0] - 2026-10-10
 
