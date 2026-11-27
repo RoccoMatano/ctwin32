@@ -5,14 +5,17 @@
 #
 ################################################################################
 
+import ctypes
 from .wtypes import (
     BOOL,
     BYTE,
     byte_buffer,
-    Struct,
+    CallbackContext,
+    CallbackContextPtr,
     DWORD,
     HANDLE,
     INT,
+    LOGFONT,
     LONG,
     PINT,
     PLOGFONT,
@@ -20,16 +23,20 @@ from .wtypes import (
     PRECT,
     PVOID,
     PWSTR,
+    Struct,
     UINT,
     WCHAR,
     )
 from . import (
     ApiDll,
+    DEFAULT_CHARSET,
+    defer_exception,
+    ETO_OPAQUE,
+    HGDI_ERROR,
     ref,
     raise_if,
     raise_on_zero,
-    ETO_OPAQUE,
-    HGDI_ERROR,
+    user,
     )
 
 _gdi = ApiDll("gdi32.dll")
@@ -162,5 +169,71 @@ def GetObject(hdl):
     buf = byte_buffer(size)
     raise_on_zero(_GetObject(hdl, size, buf))
     return buf
+
+################################################################################
+
+_EnumFontFamExProc = ctypes.WINFUNCTYPE(
+    INT,
+    PLOGFONT,
+    PTEXTMETRIC,
+    DWORD,
+    CallbackContextPtr,
+    )
+
+@_EnumFontFamExProc
+def _EnumFontFamCb(lf, tm, ft, ctxt):
+    # cannot propagate exceptions from callback
+    try:
+        lf = LOGFONT.from_buffer_copy(lf.contents)
+        tm = TEXTMETRIC.from_buffer_copy(tm.contents)
+        cbc = ctxt.contents
+        res = cbc.callback(lf, tm, ft, cbc.context)
+    except BaseException as e: # noqa: BLE001
+        defer_exception(e)
+        res = False
+    # keep on enumerating if the callback fails to return a value
+    return res if res is not None else True
+
+################################################################################
+
+_EnumFontFamiliesEx = _gdi.fun_fact(
+    "EnumFontFamiliesExW",
+    (INT, HANDLE, PLOGFONT, _EnumFontFamExProc, CallbackContextPtr, DWORD)
+    )
+
+def EnumFontFamiliesEx(hdc, lf, callback, context):
+    cbc = CallbackContext(callback, context)
+    relhdc = None
+    if hdc is None:
+        hdc = relhdc = user.GetDC(None)
+    try:
+        _EnumFontFamiliesEx(hdc, ref(lf), _EnumFontFamCb, ref(cbc), 0)
+    finally:
+        if relhdc:
+            user.ReleaseDC(None, relhdc)
+
+################################################################################
+
+def get_font_family_names(hdc=None):
+    fonts = set()
+    def accu(lf, tm, ft, fonts):
+        fonts.add(lf.lfFaceName)
+        return True
+
+    lf = LOGFONT(lfCharSet=DEFAULT_CHARSET)
+    EnumFontFamiliesEx(hdc, lf, accu, fonts)
+    return sorted(fonts)
+
+################################################################################
+
+def is_font_available(facename, hdc=None):
+    is_available = []
+    def search(lf, tm, ft, is_available):
+        is_available.append(1)
+        return False
+
+    lf = LOGFONT(lfCharSet=DEFAULT_CHARSET, lfFaceName=facename)
+    EnumFontFamiliesEx(hdc, lf, search, is_available)
+    return bool(is_available)
 
 ################################################################################

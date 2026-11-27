@@ -19,6 +19,9 @@ http://semver.org/spec/v2.0.0.html).
 - 'Copy' button in sample 'totp_dlg.pyw'
 - extract_words and extract_ints
 - BaseWnd.get_wnd
+- gdi.EnumFontFamiliesEx
+- gdi.get_font_family_names
+- gdi.is_font_available
 
 ### Fixed
 
